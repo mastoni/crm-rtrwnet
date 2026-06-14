@@ -1,0 +1,21 @@
+{
+  "name": "crm-rtrwnet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mastoni/crm-rtrwnet.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mastoni/crm-rtrwnet/issues"
+  },
+  "homepage": "https://github.com/mastoni/crm-rtrwnet#readme"
+}
