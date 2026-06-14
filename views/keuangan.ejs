@@ -1,0 +1,1326 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --d-bg: #eef2f9;
+            --d-card: #fff;
+            --d-border: #e0e7f3;
+            --d-text: #0d1b3e;
+            --d-muted: #6b7fa8;
+            --d-blue1: #1a6ef5;
+            --d-blue2: #0047cc;
+            --d-green: #00c896;
+            --d-red: #f5365c;
+            --d-orange: #fb8c00;
+            --d-cyan: #0077b6;
+        }
+
+        .keu-page {
+            background: var(--d-bg) !important;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ── Fintech cards ── */
+        /* ── STAT CARDS — single strip ── */
+        .fin-grid,
+        .fin-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .fin-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            min-height: 130px;
+            cursor: default;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+        }
+
+        .fin-card::before,
+        .fin-card::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        .fin-card .orb1,
+        .fin-card .orb2 {
+            display: none !important;
+        }
+
+        .fin-card:last-child {
+            border-right: none;
+        }
+
+        .fin-card:hover {
+            background: #fafbff;
+        }
+
+        .card-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+            transition: color .15s;
+        }
+
+        .card-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .card-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        @media(max-width:1400px) {
+            .card-val {
+                font-size: 26px;
+            }
+        }
+
+        .card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-top: 6px;
+        }
+
+        .card-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            align-self: flex-start;
+        }
+
+        .pill-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .pill-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .pill-red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .pill-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .pill-teal {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+        .pill-orange {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .pill-slate {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        .card-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .card-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sp-dot {}
+
+        @media(max-width:700px) {
+
+            .fin-grid,
+            .fin-grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .fin-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(even) {
+                border-right: none;
+            }
+
+            .fin-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:400px) {
+
+            .fin-grid,
+            .fin-grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .fin-card {
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .a1 {
+            animation: fadeUp .4s ease both
+        }
+
+        .a2 {
+            animation: fadeUp .4s .06s ease both
+        }
+
+        .a3 {
+            animation: fadeUp .4s .12s ease both
+        }
+
+        .a4 {
+            animation: fadeUp .4s .18s ease both
+        }
+
+        .a5 {
+            animation: fadeUp .4s .24s ease both
+        }
+
+        .a6 {
+            animation: fadeUp .4s .30s ease both
+        }
+
+        /* ── White card ── */
+        .w-card {
+            background: var(--d-card);
+            border: 1px solid var(--d-border);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(26, 110, 245, .05);
+        }
+
+        .wc-lbl {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--d-muted);
+        }
+
+        .wc-ttl {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--d-text);
+            margin-top: 2px;
+        }
+
+        /* ── Layout ── */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 340px minmax(0, 1fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        /* ── Form card ── */
+        .form-card {
+            background: #fff;
+            border: 1px solid var(--d-border);
+            border-radius: 20px;
+            padding: 20px;
+            position: sticky;
+            top: 76px;
+        }
+
+        .form-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--d-text);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-title .ft-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #1a6ef5, #0047cc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── Type tabs ── */
+        .type-tabs {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .type-tab {
+            padding: 7px 4px;
+            border-radius: 10px;
+            border: 1.5px solid var(--d-border);
+            background: #fff;
+            font-size: 10.5px;
+            font-weight: 600;
+            color: var(--d-muted);
+            cursor: pointer;
+            text-align: center;
+            transition: all .15s;
+        }
+
+        .type-tab:hover {
+            border-color: #1a6ef5;
+            color: #1a6ef5;
+        }
+
+        .type-tab.active {
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .type-tab[data-type="pemasukan"].active {
+            background: linear-gradient(135deg, #00d4a4, #007a5e);
+        }
+
+        .type-tab[data-type="pengeluaran"].active {
+            background: linear-gradient(135deg, #f5365c, #8b0f28);
+        }
+
+        .type-tab[data-type="hutang"].active {
+            background: linear-gradient(135deg, #fb8c00, #bf360c);
+        }
+
+        .type-tab[data-type="piutang"].active {
+            background: linear-gradient(135deg, #0096c7, #023e8a);
+        }
+
+        .type-tab[data-type="modal"].active {
+            background: linear-gradient(135deg, #1a6ef5, #003399);
+        }
+
+        /* ── Form fields ── */
+        .form-group {
+            margin-bottom: 13px;
+        }
+
+        .form-label {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--d-text);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .form-label span {
+            color: var(--d-red);
+            margin-left: 2px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid var(--d-border);
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--d-text);
+            background: #fff;
+            transition: border-color .15s;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--d-blue1);
+        }
+
+        .form-control::placeholder {
+            color: #b0bcd0;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* ── Amount input ── */
+        .amount-wrap {
+            position: relative;
+        }
+
+        .amount-prefix {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--d-muted);
+            pointer-events: none;
+        }
+
+        .amount-wrap .form-control {
+            padding-left: 38px;
+            font-family: 'DM Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* ── Conditional fields ── */
+        .cond-field {
+            display: none;
+        }
+
+        .cond-field.show {
+            display: block;
+        }
+
+        /* ── Submit btn ── */
+        .btn-submit {
+            width: 100%;
+            padding: 11px;
+            border-radius: 11px;
+            border: none;
+            background: linear-gradient(135deg, #1a6ef5, #0047cc);
+            color: #fff;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity .15s;
+            margin-top: 4px;
+        }
+
+        .btn-submit:hover {
+            opacity: .88;
+        }
+
+        .btn-submit:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        /* ── Filter bar ── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 6px 14px;
+            border-radius: 9px;
+            border: 1.5px solid var(--d-border);
+            background: #fff;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--d-muted);
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, #1a6ef5, #0047cc);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .filter-tab:hover:not(.active) {
+            border-color: #1a6ef5;
+            color: #1a6ef5;
+        }
+
+        .filter-select {
+            padding: 7px 11px;
+            border-radius: 9px;
+            border: 1.5px solid var(--d-border);
+            font-size: 12.5px;
+            font-family: 'DM Sans', sans-serif;
+            background: #fff;
+            color: var(--d-text);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .filter-select:focus {
+            border-color: var(--d-blue1);
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 160px;
+            padding: 7px 12px;
+            border: 1.5px solid var(--d-border);
+            border-radius: 9px;
+            font-size: 12.5px;
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            background: #fff;
+        }
+
+        .search-input:focus {
+            border-color: var(--d-blue1);
+        }
+
+        /* ── Table ── */
+        .keu-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        .keu-table th {
+            padding: 8px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--d-muted);
+            background: #f4f8ff;
+            text-align: left;
+        }
+
+        .keu-table th:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .keu-table th:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .keu-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f4ff;
+            vertical-align: middle;
+        }
+
+        .keu-table tbody tr:hover td {
+            background: #f8faff;
+        }
+
+        .keu-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ── Type badge ── */
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .tb-pemasukan {
+            background: #e6fff7;
+            color: #007a5e;
+        }
+
+        .tb-pengeluaran {
+            background: #fff0f2;
+            color: #c0183a;
+        }
+
+        .tb-hutang {
+            background: #fff8e6;
+            color: #b45309;
+        }
+
+        .tb-piutang {
+            background: #e0f4ff;
+            color: #0077b6;
+        }
+
+        .tb-modal {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        /* ── Status badge ── */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .sb-lunas {
+            background: #e6fff7;
+            color: #007a5e;
+        }
+
+        .sb-belum_lunas {
+            background: #fff0f2;
+            color: #c0183a;
+        }
+
+        .sb-cicilan {
+            background: #fff8e6;
+            color: #b45309;
+        }
+
+        /* ── Action buttons ── */
+        .btn-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+        }
+
+        .btn-edit {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .btn-edit:hover {
+            background: #1d4ed8;
+            color: #fff;
+        }
+
+        .btn-del {
+            background: #fff0f2;
+            color: #c0183a;
+        }
+
+        .btn-del:hover {
+            background: #c0183a;
+            color: #fff;
+        }
+
+        .btn-lunas {
+            background: #e6fff7;
+            color: #007a5e;
+            font-size: 10px;
+            font-weight: 700;
+            width: auto;
+            padding: 3px 9px;
+            border-radius: 20px;
+        }
+
+        .btn-lunas:hover {
+            background: #007a5e;
+            color: #fff;
+        }
+
+        /* ── Charts row ── */
+        .charts-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(200px, 1fr);
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        /* ── Category bar ── */
+        .cat-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 0;
+            border-bottom: 1px solid #f0f4ff;
+        }
+
+        .cat-item:last-child {
+            border-bottom: none;
+        }
+
+        .cat-bar-bg {
+            flex: 1;
+            height: 5px;
+            border-radius: 3px;
+            background: #eef2f9;
+            overflow: hidden;
+        }
+
+        .cat-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #f5365c, #ff7f7f);
+        }
+
+        /* ── Pagination ── */
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .page-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1.5px solid var(--d-border);
+            background: #fff;
+            color: var(--d-muted);
+            font-size: 12.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, #1a6ef5, #0047cc);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .page-btn:hover:not(.active) {
+            border-color: #1a6ef5;
+            color: #1a6ef5;
+        }
+
+        .page-info {
+            font-size: 12px;
+            color: var(--d-muted);
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(13, 27, 62, .55);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--d-text);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: none;
+            background: #f0f4ff;
+            color: var(--d-muted);
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── Responsive ── */
+        @media(max-width:1100px) {
+            .fin-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+        }
+
+        @media(max-width:900px) {
+            .main-layout {
+                grid-template-columns: 1fr !important;
+            }
+
+            .form-card {
+                position: static !important;
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        @media(max-width:640px) {
+            .fin-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0 !important;
+            }
+
+            .fin-card {
+                padding: 18px 20px !important;
+                min-height: auto !important;
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:last-child {
+                border-bottom: none;
+            }
+
+            .type-tabs {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+
+            .filter-bar {
+                flex-wrap: wrap;
+            }
+
+            .col-hide {
+                display: none !important;
+            }
+        }
+
+        /* ── Card active state ── */
+        .fin-card {
+            cursor: pointer;
+        }
+
+        .fin-card.fc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .fin-card.fc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .fin-card.fc-active .card-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .fin-card.fc-active .card-val {
+            color: #fff;
+        }
+
+        .fin-card.fc-active .card-sub {
+            color: rgba(255, 255, 255, .60);
+        }
+
+        .fin-card.fc-active .card-pill {
+            background: rgba(255, 255, 255, .20) !important;
+            color: rgba(255, 255, 255, .90) !important;
+        }
+
+        .fin-card.fc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .fin-card.fc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .fin-card.fc-active .sp-dot {
+            fill: #fff !important;
+        }
+    </style>
+
+    <main class="page-content">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px"
+            class="a1">
+            <div>
+                <h1 style="font-size:22px;font-weight:800;color:var(--d-text);margin:0 0 4px">Keuangan</h1>
+                <p style="font-size:13px;color:var(--d-muted);margin:0">Pemasukan, pengeluaran, hutang, piutang & modal
+                </p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+                <select id="filterMonth" class="filter-select" onchange="loadAll()">
+                    <option value="1">Januari</option>
+                    <option value="2">Februari</option>
+                    <option value="3">Maret</option>
+                    <option value="4">April</option>
+                    <option value="5">Mei</option>
+                    <option value="6">Juni</option>
+                    <option value="7">Juli</option>
+                    <option value="8">Agustus</option>
+                    <option value="9">September</option>
+                    <option value="10">Oktober</option>
+                    <option value="11">November</option>
+                    <option value="12">Desember</option>
+                </select>
+                <select id="filterYear" class="filter-select" onchange="loadAll()"></select>
+            </div>
+        </div>
+
+        <!-- Sync Banner -->
+        <div id="sync-banner" class="a2"
+            style="background:linear-gradient(135deg,#1a6ef5,#0047cc);border-radius:16px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px">
+                <div
+                    style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </div>
+                <div>
+                    <div style="font-size:13px;font-weight:700;color:#fff">Sinkronisasi Pembayaran Pelanggan</div>
+                    <div style="font-size:11.5px;color:rgba(255,255,255,.7)" id="sync-desc">Otomatis impor pembayaran
+                        dari modul Pembayaran sebagai Pemasukan</div>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+                <div id="sync-status" style="font-size:11.5px;color:rgba(255,255,255,.7)"></div>
+                <button onclick="syncPayments()" id="sync-btn"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s"
+                    onmouseover="this.style.background='rgba(255,255,255,.25)'"
+                    onmouseout="this.style.background='rgba(255,255,255,.15)'">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Sync Bulan Ini
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+
+        <div class="fin-grid" style="grid-template-columns:repeat(5,1fr)">
+            <div class="fin-card fc-active" id="fc-masuk" onclick="keuCardClick(this)">
+                <div class="card-lbl">Pemasukan</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="kpi-masuk">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-green" id="cp-masuk">—</span>
+                            <span class="card-sub" id="kpi-masuk-sub">Bulan ini</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-masuk" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-masuk-fill" d="" fill="#16a34a" opacity=".12" />
+                            <path class="sp-line" id="sp-masuk-line" d="" stroke="#16a34a" />
+                            <circle class="sp-dot" id="sp-masuk-dot" r="2.5" fill="#16a34a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fc-keluar" onclick="keuCardClick(this)">
+                <div class="card-lbl">Pengeluaran</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="kpi-keluar">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-red" id="cp-keluar">—</span>
+                            <span class="card-sub" id="kpi-keluar-sub">Bulan ini</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-keluar" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-keluar-fill" d="" fill="#dc2626" opacity=".12" />
+                            <path class="sp-line" id="sp-keluar-line" d="" stroke="#dc2626" />
+                            <circle class="sp-dot" id="sp-keluar-dot" r="2.5" fill="#dc2626" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fc-cashflow" onclick="keuCardClick(this)">
+                <div class="card-lbl">Net Cashflow</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="kpi-cashflow">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-blue" id="cp-cashflow">—</span>
+                            <span class="card-sub">Pemasukan - pengeluaran</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-cashflow" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-cashflow-fill" d="" fill="#2563eb" opacity=".12" />
+                            <path class="sp-line" id="sp-cashflow-line" d="" stroke="#2563eb" />
+                            <circle class="sp-dot" id="sp-cashflow-dot" r="2.5" fill="#2563eb" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fc-hutang" onclick="keuCardClick(this)">
+                <div class="card-lbl">Hutang</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="kpi-hutang">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-orange" id="cp-hutang">—</span>
+                            <span class="card-sub" id="kpi-hutang-sub">Outstanding</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-hutang" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-hutang-fill" d="" fill="#c2410c" opacity=".12" />
+                            <path class="sp-line" id="sp-hutang-line" d="" stroke="#c2410c" />
+                            <circle class="sp-dot" id="sp-hutang-dot" r="2.5" fill="#c2410c" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fc-piutang" onclick="keuCardClick(this)">
+                <div class="card-lbl">Piutang</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="kpi-piutang">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-amber" id="cp-piutang">—</span>
+                            <span class="card-sub" id="kpi-piutang-sub">Outstanding</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-piutang" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-piutang-fill" d="" fill="#d97706" opacity=".12" />
+                            <path class="sp-line" id="sp-piutang-line" d="" stroke="#d97706" />
+                            <circle class="sp-dot" id="sp-piutang-dot" r="2.5" fill="#d97706" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts + Category -->
+        <div class="charts-row a3">
+            <div class="w-card" style="padding:20px 22px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                    <div>
+                        <div class="wc-lbl">Tren Cashflow</div>
+                        <div class="wc-ttl">6 Bulan Terakhir</div>
+                    </div>
+                    <div style="display:flex;gap:14px;align-items:center;">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span
+                                style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block;flex-shrink:0;"></span>
+                            <span style="font-size:11px;color:#64748b;font-weight:500;">Pemasukan</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span
+                                style="width:10px;height:10px;border-radius:2px;background:#ef4444;display:inline-block;flex-shrink:0;"></span>
+                            <span style="font-size:11px;color:#64748b;font-weight:500;">Pengeluaran</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span
+                                style="width:10px;height:10px;border-radius:2px;background:#2563eb;display:inline-block;flex-shrink:0;"></span>
+                            <span style="font-size:11px;color:#64748b;font-weight:500;">Net</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="trendChart" style="min-height:260px;width:100%;"></div>
+            </div>
+            <div class="w-card" style="padding:20px 22px;">
+                <div style="margin-bottom:14px">
+                    <div class="wc-lbl">Pengeluaran per Kategori</div>
+                    <div class="wc-ttl" id="cat-title">Bulan Ini</div>
+                </div>
+                <div id="cat-list">
+                    <div style="text-align:center;padding:24px;color:var(--d-muted);font-size:12.5px">Tidak ada data
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main layout: form + table -->
+        <div class="main-layout a4">
+
+            <!-- ── FORM ── -->
+            <div class="form-card">
+                <div class="form-title">
+                    <div class="ft-icon"><svg width="15" height="15" fill="none" stroke="white" stroke-width="2.5"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg></div>
+                    <span id="form-title-text">Input Transaksi</span>
+                </div>
+
+                <!-- Type tabs -->
+                <div class="type-tabs">
+                    <button class="type-tab" data-type="pemasukan" onclick="setType('pemasukan')">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24" style="margin:0 auto 3px;display:block">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Masuk</button>
+                    <button class="type-tab" data-type="pengeluaran" onclick="setType('pengeluaran')">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24" style="margin:0 auto 3px;display:block">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4m0 0l6-6M4 12l6 6" />
+                        </svg>
+                        Keluar</button>
+                    <button class="type-tab" data-type="hutang" onclick="setType('hutang')">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24" style="margin:0 auto 3px;display:block">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        Hutang</button>
+                    <button class="type-tab" data-type="piutang" onclick="setType('piutang')">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24" style="margin:0 auto 3px;display:block">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+                        </svg>
+                        Piutang</button>
+                    <button class="type-tab" data-type="modal" onclick="setType('modal')">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24" style="margin:0 auto 3px;display:block">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H3m14 0h2m-2 0v-3.5a.5.5 0 01.5-.5H21a.5.5 0 01.5.5V21M3 21H1m2 0v-3.5A.5.5 0 012.5 17H3m0 4h2M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 8v-4a1 1 0 011-1h2a1 1 0 011 1v4" />
+                        </svg>
+                        Modal</button>
+                </div>
+
+                <input type="hidden" id="form-type" value="pemasukan">
+                <input type="hidden" id="form-edit-id" value="">
+
+                <div class="form-group">
+                    <label class="form-label">Kategori <span>*</span></label>
+                    <input type="text" id="f-category" class="form-control"
+                        placeholder="e.g. Gaji, Operasional, Sewa..." list="cat-suggestions" autocomplete="off">
+                    <datalist id="cat-suggestions"></datalist>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Deskripsi <span>*</span></label>
+                    <input type="text" id="f-description" class="form-control" placeholder="Keterangan singkat...">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Jumlah (Rp) <span>*</span></label>
+                        <div class="amount-wrap">
+                            <span class="amount-prefix">Rp</span>
+                            <input type="text" id="f-amount" class="form-control" placeholder="0" inputmode="numeric"
+                                oninput="formatAmountInput(this)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tanggal <span>*</span></label>
+                        <input type="date" id="f-date" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">No. Referensi / Kwitansi</label>
+                    <input type="text" id="f-ref" class="form-control" placeholder="INV-001, KWT-2026...">
+                </div>
+
+                <!-- Hutang/Piutang fields -->
+                <div id="cond-party" class="cond-field">
+                    <div class="form-group">
+                        <label class="form-label">Nama Pihak <span>*</span></label>
+                        <input type="text" id="f-party" class="form-control" placeholder="Nama vendor / pelanggan...">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Jatuh Tempo</label>
+                            <input type="date" id="f-due" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select id="f-status" class="form-control">
+                                <option value="belum_lunas">Belum Lunas</option>
+                                <option value="cicilan">Cicilan</option>
+                                <option value="lunas">Lunas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal fields -->
+                <div id="cond-modal" class="cond-field">
+                    <div class="form-group">
+                        <label class="form-label">Sumber Modal</label>
+                        <input type="text" id="f-source" class="form-control"
+                            placeholder="Investor, Pinjaman Bank, Tabungan...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Catatan</label>
+                    <textarea id="f-notes" class="form-control" placeholder="Catatan tambahan..."></textarea>
+                </div>
+
+                <button class="btn-submit" id="submit-btn" onclick="submitForm()">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span id="submit-label">Simpan Transaksi</span>
+                </button>
+                <button id="cancel-edit-btn" onclick="cancelEdit()"
+                    style="display:none;width:100%;margin-top:8px;padding:9px;border-radius:10px;border:1.5px solid var(--d-border);background:#fff;color:var(--d-muted);font-size:13px;font-weight:600;cursor:pointer">Batal
+                    Edit</button>
+            </div>
+
+            <!-- ── TABLE ── -->
+            <div>
+                <div class="w-card">
+                    <!-- Filter bar -->
+                    <div
+                        style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <div class="wc-lbl" style="margin:0">Daftar Transaksi</div>
+                            <span id="tbl-count"
+                                style="font-size:11px;background:#eef2f9;padding:2px 8px;border-radius:20px;color:var(--d-muted);font-weight:600"></span>
+                        </div>
+                        <div class="filter-bar" style="margin:0">
+                            <input type="text" class="search-input" placeholder="Cari..." id="tbl-search"
+                                oninput="debounceSearch()" style="width:160px">
+                        </div>
+                    </div>
+
+                    <!-- Type filter tabs -->
+                    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+                        <button class="filter-tab active" data-filter="semua"
+                            onclick="setFilter('semua',this)">Semua</button>
+                        <button class="filter-tab" data-filter="pemasukan" onclick="setFilter('pemasukan',this)"><span
+                                style="width:7px;height:7px;border-radius:50%;background:#00c896;display:inline-block;margin-right:5px;vertical-align:middle"></span>Pemasukan</button>
+                        <button class="filter-tab" data-filter="pengeluaran"
+                            onclick="setFilter('pengeluaran',this)"><span
+                                style="width:7px;height:7px;border-radius:50%;background:#f5365c;display:inline-block;margin-right:5px;vertical-align:middle"></span>Pengeluaran</button>
+                        <button class="filter-tab" data-filter="hutang" onclick="setFilter('hutang',this)"><span
+                                style="width:7px;height:7px;border-radius:50%;background:#fb8c00;display:inline-block;margin-right:5px;vertical-align:middle"></span>Hutang</button>
+                        <button class="filter-tab" data-filter="piutang" onclick="setFilter('piutang',this)"><span
+                                style="width:7px;height:7px;border-radius:50%;background:#0096c7;display:inline-block;margin-right:5px;vertical-align:middle"></span>Piutang</button>
+                        <button class="filter-tab" data-filter="modal" onclick="setFilter('modal',this)"><span
+                                style="width:7px;height:7px;border-radius:50%;background:#1a6ef5;display:inline-block;margin-right:5px;vertical-align:middle"></span>Modal</button>
+                    </div>
+
+                    <div style="overflow-x:auto">
+                        <table class="keu-table">
+                            <thead>
+                                <tr>
+                                    <th>Tgl</th>
+                                    <th>Tipe</th>
+                                    <th>Kategori / Deskripsi</th>
+                                    <th class="col-hide">Pihak / Ref</th>
+                                    <th>Status</th>
+                                    <th style="text-align:right">Jumlah</th>
+                                    <th style="width:80px;text-align:center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="keu-tbody">
+                                <tr>
+                                    <td colspan="7" style="text-align:center;padding:32px;color:var(--d-muted)">
+                                        Memuat...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <%- include('layouts/footer') %>

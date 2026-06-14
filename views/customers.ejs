@@ -1,0 +1,1134 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --d-bg: #eef2f9;
+            --d-card: #fff;
+            --d-border: #e0e7f3;
+            --d-text: #0d1b3e;
+            --d-muted: #6b7fa8;
+            --d-blue1: #1a6ef5;
+            --d-blue2: #0047cc;
+            --d-green: #00c896;
+            --d-red: #f5365c;
+            --d-orange: #fb8c00;
+        }
+
+        .pay-page {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--d-bg) !important;
+        }
+
+        /* ── Fin-card ── */
+        /* ── STAT CARDS — single strip ── */
+        .fin-grid,
+        .fin-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .fin-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            min-height: 130px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+        }
+
+        .fin-card::before,
+        .fin-card::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        .fin-card .b1,
+        .fin-card .b2,
+        .fin-card .b3,
+        .fin-card .orb,
+        .fin-card .orb1,
+        .fin-card .orb2 {
+            display: none !important;
+        }
+
+        .fin-card:last-child {
+            border-right: none;
+        }
+
+        .fin-card:hover {
+            background: #fafbff;
+        }
+
+        .fin-card.fc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .fin-card.fc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .fin-card.fc-active .xc-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .fin-card.fc-active .xc-val {
+            color: #fff;
+        }
+
+        .fin-card.fc-active .xc-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        .fin-card.fc-active .xc-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            align-self: flex-start;
+            transition: all .15s;
+        }
+
+        .fin-card.fc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .fin-card.fc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .fin-card.fc-active .sp-dot {
+            fill: #fff !important;
+        }
+
+        .xc-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            transition: color .15s;
+        }
+
+        .xc-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .xc-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .xc-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        @media(max-width:1400px) {
+            .xc-val {
+                font-size: 26px;
+            }
+        }
+
+        .xc-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-top: 6px;
+        }
+
+        .xc-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            align-self: flex-start;
+            transition: all .15s;
+        }
+
+        .xc-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .xc-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .xc-red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .xc-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .xc-teal {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+        .xc-orange {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .xc-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        .xc-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .xc-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sp-dot {}
+
+        @media(max-width:700px) {
+
+            .fin-grid,
+            .fin-grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .fin-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(even) {
+                border-right: none;
+            }
+
+            .fin-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:400px) {
+
+            .fin-grid,
+            .fin-grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .fin-card {
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        /* ── White card ── */
+        .w-card {
+            background: var(--d-card);
+            border: 1px solid var(--d-border);
+            border-radius: 22px;
+            box-shadow: 0 2px 12px rgba(26, 110, 245, .05);
+        }
+
+
+
+        /* ── Buttons ── */
+        .btn-fin {
+            padding: 9px 18px;
+            border-radius: 11px;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary-fin {
+            background: var(--d-blue1);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(26, 110, 245, .3);
+        }
+
+        .btn-primary-fin:hover {
+            background: var(--d-blue2);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(26, 110, 245, .4);
+        }
+
+        .btn-ghost {
+            background: var(--d-card);
+            color: var(--d-text);
+            border: 1.5px solid var(--d-border);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--d-blue1);
+            color: var(--d-blue1);
+            background: #f0f5ff;
+        }
+
+        .btn-green-fin {
+            background: #e6fff7;
+            color: #00a07a;
+            border: 1.5px solid #a7f3d0;
+        }
+
+        .btn-green-fin:hover {
+            background: #ccfff0;
+            border-color: #00c896;
+        }
+
+        .btn-sync {
+            background: #eef3ff;
+            color: var(--d-blue1);
+            border: 1.5px solid #bfdbfe;
+        }
+
+        .btn-sync:hover {
+            background: #dbeafe;
+        }
+
+        /* ── Search/filter ── */
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            box-sizing: border-box;
+            border: 1.5px solid var(--d-border);
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            color: var(--d-text);
+            background: #fff;
+            transition: border-color .15s, box-shadow .15s;
+            outline: none;
+        }
+
+        .search-wrap input:focus {
+            border-color: var(--d-blue1);
+            box-shadow: 0 0 0 3px rgba(26, 110, 245, .1);
+        }
+
+        .search-wrap .si {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--d-muted);
+            pointer-events: none;
+        }
+
+        .filter-select {
+            padding: 10px 14px;
+            border: 1.5px solid var(--d-border);
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: var(--d-text);
+            background: #fff;
+            cursor: pointer;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        .filter-select:focus {
+            border-color: var(--d-blue1);
+        }
+
+        /* ── Table ── */
+        .cust-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 860px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .cust-table thead th {
+            text-align: left;
+            padding: 10px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .04em;
+            color: var(--d-muted);
+            border-bottom: 1px solid var(--d-border);
+            background: #f8faff;
+            white-space: nowrap;
+        }
+
+        .cust-table tbody tr {
+            border-bottom: 1px solid #f0f4fc;
+            transition: background .1s;
+        }
+
+        .cust-table tbody tr:hover {
+            background: #f4f8ff;
+        }
+
+        .cust-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .cust-table td {
+            padding: 13px 16px;
+            vertical-align: middle;
+            font-size: 13px;
+            color: var(--d-text);
+        }
+
+        .av-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .cid-badge {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--d-blue1);
+            background: #eef3ff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .cust-name-link {
+            color: var(--d-text);
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color .15s;
+        }
+
+        .cust-name-link:hover {
+            color: var(--d-blue1);
+        }
+
+        /* Status badges */
+        .sb {
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 11px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid transparent;
+        }
+
+        .sb-active {
+            background: #f0fdf9;
+            color: #059669;
+            border-color: #c6f6d5;
+        }
+
+        .sb-inactive {
+            background: #f7f8fc;
+            color: var(--d-muted);
+            border-color: #e2e8f0;
+        }
+
+        .sb-suspended {
+            background: #fff4f5;
+            color: var(--d-red);
+            border-color: #fecdd3;
+        }
+
+        .sb-overdue {
+            background: #fff4f5;
+            color: var(--d-red);
+            border-color: #fecdd3;
+        }
+
+        .sb-due-soon {
+            background: #fffbf0;
+            color: var(--d-orange);
+            border-color: #fde68a;
+        }
+
+        .sb-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        /* Due date colors */
+        .due-ok {
+            color: var(--d-muted);
+        }
+
+        .due-soon-c {
+            color: var(--d-orange);
+        }
+
+        .due-overdue {
+            color: var(--d-red);
+        }
+
+        /* Row action buttons */
+        .rb {
+            padding: 4px 13px;
+            border-radius: 7px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            white-space: nowrap;
+            border: 1px solid;
+        }
+
+        .rb-wa {
+            background: #fff;
+            color: #059669;
+            border-color: #a7f3d0;
+        }
+
+        .rb-wa:hover {
+            background: #f0fdf9;
+        }
+
+        .rb-edit {
+            background: #fff;
+            color: var(--d-blue1);
+            border-color: #bfdbfe;
+        }
+
+        .rb-edit:hover {
+            background: #eef3ff;
+        }
+
+        .rb-del {
+            background: #fff;
+            color: #cbd5e0;
+            border-color: #e2e8f0;
+        }
+
+        .rb-del:hover {
+            color: var(--d-red);
+            border-color: #fecdd3;
+            background: #fff4f5;
+        }
+
+        /* Pagination */
+        .pg-btn {
+            padding: 6px 12px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all .15s;
+            border: 1.5px solid var(--d-border);
+            color: var(--d-muted);
+            background: var(--d-card);
+        }
+
+        .pg-btn:hover {
+            border-color: var(--d-blue1);
+            color: var(--d-blue1);
+        }
+
+        .pg-btn.active {
+            background: var(--d-blue1);
+            color: #fff;
+            border-color: var(--d-blue1);
+            box-shadow: 0 3px 10px rgba(26, 110, 245, .3);
+        }
+
+        /* Toast */
+        .toast-ok {
+            background: #e6fff7;
+            border: 1px solid #a7f3d0;
+            color: #00875a;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 13.5px;
+        }
+
+        .toast-err {
+            background: #fff0f2;
+            border: 1px solid #fecdd3;
+            color: var(--d-red);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 13.5px;
+        }
+
+        /* Modal */
+        .modal-ov {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(13, 27, 62, .55);
+            z-index: 9999;
+            align-items: flex-start;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 28px 16px;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-ov.active {
+            display: flex;
+        }
+
+        .modal-bx {
+            background: #fff;
+            border-radius: 22px;
+            width: 600px;
+            max-width: 100%;
+            padding: 30px;
+            position: relative;
+            margin: auto;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, .18);
+        }
+
+        .modal-ttl {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--d-text);
+            margin: 0 0 22px;
+        }
+
+        .modal-cls {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: var(--d-bg);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--d-muted);
+            font-size: 16px;
+            transition: background .15s;
+        }
+
+        .modal-cls:hover {
+            background: var(--d-border);
+        }
+
+        .flbl {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--d-muted);
+            margin-bottom: 5px;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .finput {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 12px;
+            border: 1.5px solid var(--d-border);
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            color: var(--d-text);
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+            background: #fff;
+        }
+
+        .finput:focus {
+            border-color: var(--d-blue1);
+            box-shadow: 0 0 0 3px rgba(26, 110, 245, .1);
+        }
+
+        .finput::placeholder {
+            color: #b0bcdc;
+        }
+
+        textarea.finput {
+            resize: vertical;
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .a1 {
+            animation: fadeUp .45s ease both
+        }
+
+        .a2 {
+            animation: fadeUp .45s .07s ease both
+        }
+
+        .a3 {
+            animation: fadeUp .45s .14s ease both
+        }
+
+        .a4 {
+            animation: fadeUp .45s .21s ease both
+        }
+
+        .a5 {
+            animation: fadeUp .45s .28s ease both
+        }
+
+        @keyframes spin {
+            to {
+                transform: translateY(-50%) rotate(360deg)
+            }
+        }
+
+        /* Responsive */
+        @media(max-width:1100px) {
+            .fin-grid-4 {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        @media(max-width:640px) {
+            .col-hide-mob {
+                display: none !important;
+            }
+
+            .btn-fin span {
+                display: none;
+            }
+        }
+
+        /* ── Standardize card height (match queue.ejs) ── */
+        .xc-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        .xc-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+            transition: color .15s;
+        }
+
+        .xc-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        .xc-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-top: 6px;
+        }
+
+        .xc-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .xc-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        @media(max-width:1400px) {
+            .xc-val {
+                font-size: 26px;
+            }
+        }
+    </style>
+
+    <main class="page-content">
+
+        <!-- Toast -->
+        <div id="toastOk" class="toast-ok  a1" style="display:none"></div>
+        <div id="toastErr" class="toast-err a1" style="display:none"></div>
+
+        <!-- ══ PAGE HEADER ══ -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px"
+            class="a1">
+            <div>
+                <div style="font-size:22px;font-weight:800;color:var(--d-text)">Customer Data</div>
+                <div style="font-size:13px;color:var(--d-muted);margin-top:2px" id="headerSubtitle">Manajemen pelanggan
+                    ISP</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button onclick="syncDueDates()" class="btn-fin btn-ghost" id="btnSyncDue">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Auto Due Date</span>
+                </button>
+                <button onclick="openBulkWA()" class="btn-fin btn-green-fin">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span>WA Massal</span>
+                </button>
+                <button onclick="openAddCustomer()" class="btn-fin btn-primary-fin">
+                    <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Tambah Customer</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ══ ROW 1: 4 Fin-cards ══ -->
+
+        <div class="fin-grid">
+            <div class="fin-card fc-active" id="xc-total" data-filter="total" onclick="custCardClick(this)">
+                <div class="xc-lbl">Total Customer</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="scTotal">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-blue" id="xp-total">—</span>
+                            <span class="xc-sub" id="scTotalSub">—</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12" />
+                            <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb" />
+                            <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="xc-overdue" data-filter="overdue" onclick="custCardClick(this)">
+                <div class="xc-lbl">Overdue</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="scOverdue">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-orange" id="xp-overdue">—</span>
+                            <span class="xc-sub">Jatuh tempo terlewat</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-overdue" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-overdue-fill" d="" fill="#c2410c" opacity=".12" />
+                            <path class="sp-line" id="sp-overdue-line" d="" stroke="#c2410c" />
+                            <circle class="sp-dot" id="sp-overdue-dot" r="2.5" fill="#c2410c" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="xc-duesoon" data-filter="duesoon" onclick="custCardClick(this)">
+                <div class="xc-lbl">Jatuh Tempo</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="scDueSoon">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-amber" id="xp-duesoon">—</span>
+                            <span class="xc-sub">Segera jatuh tempo</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-duesoon" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-duesoon-fill" d="" fill="#d97706" opacity=".12" />
+                            <path class="sp-line" id="sp-duesoon-line" d="" stroke="#d97706" />
+                            <circle class="sp-dot" id="sp-duesoon-dot" r="2.5" fill="#d97706" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="xc-revenue" data-filter="revenue" onclick="custCardClick(this)">
+                <div class="xc-lbl">Revenue</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="scRevenue">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-green" id="xp-revenue">—</span>
+                            <span class="xc-sub">Estimasi bulan ini</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-revenue" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-revenue-fill" d="" fill="#16a34a" opacity=".12" />
+                            <path class="sp-line" id="sp-revenue-line" d="" stroke="#16a34a" />
+                            <circle class="sp-dot" id="sp-revenue-dot" r="2.5" fill="#16a34a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ TABLE CARD ══ -->
+        <div class="w-card a5">
+            <div style="display:flex;align-items:center;gap:10px;padding:18px 20px 0;flex-wrap:wrap">
+                <div class="search-wrap" style="flex:1;max-width:300px">
+                    <svg class="si" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input type="text" id="searchCustomer" placeholder="Cari nama, CID, HP, paket…">
+                    <div id="srchSpin"
+                        style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--d-blue1)"
+                            stroke-width="2.5" style="animation:spin .6s linear infinite">
+                            <path
+                                d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                        </svg>
+                    </div>
+                </div>
+                <select id="filterStatus" class="filter-select">
+                    <option value="">Semua Status</option>
+                    <option value="active">Aktif</option>
+                    <option value="inactive">Nonaktif</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="due_soon">Jatuh Tempo 3 Hari</option>
+                </select>
+                <select id="filterDue" class="filter-select">
+                    <option value="">Semua Due</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="soon">Due 3 Hari</option>
+                    <option value="none">Tanpa Due Date</option>
+                </select>
+                <div style="font-size:12.5px;color:var(--d-muted);margin-left:auto" id="customerCount">–</div>
+            </div>
+
+            <!-- Table -->
+            <div style="overflow-x:auto;margin-top:14px">
+                <table class="cust-table">
+                    <thead>
+                        <tr>
+                            <th>CID</th>
+                            <th>Nama</th>
+                            <th class="col-hide-mob">No HP</th>
+                            <th>Paket</th>
+                            <th class="col-hide-mob">Biaya/Bln</th>
+                            <th class="col-hide-mob">Aktivasi</th>
+                            <th>Jatuh Tempo</th>
+                            <th>Status</th>
+                            <th style="text-align:right;padding-right:20px">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerTable">
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:52px;color:var(--d-muted)">
+                                <div style="font-size:34px;margin-bottom:10px">📋</div>
+                                <div style="font-size:14px;font-weight:600;color:var(--d-text)">Memuat data…</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div id="customerPagination"
+                style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-top:1px solid var(--d-border)">
+            </div>
+        </div>
+
+        <!-- ══ CUSTOMER MODAL ══ -->
+        <div id="customerModal" class="modal-ov">
+            <div class="modal-bx a2">
+                <button class="modal-cls" onclick="closeModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+                <h3 id="customerModalTitle" class="modal-ttl">Tambah Customer</h3>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div>
+                        <label class="flbl">Customer ID</label>
+                        <input type="text" id="custId" class="finput" placeholder="Otomatis"
+                            oninput="onCustIdInput(this.value)">
+                        <div id="custIdStatus" style="margin-top:4px"></div>
+                    </div>
+                    <div>
+                        <label class="flbl">Nama Lengkap</label>
+                        <input type="text" id="custName" class="finput" placeholder="Nama Pelanggan">
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div>
+                        <label class="flbl">No WhatsApp</label>
+                        <input type="text" id="custPhone" class="finput" placeholder="08...">
+                    </div>
+                    <div>
+                        <label class="flbl">Email <span
+                                style="font-weight:400;color:#94a3b8;text-transform:none">(Opsional)</span></label>
+                        <input type="email" id="custEmail" class="finput" placeholder="email@domain.com">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px">
+                    <label class="flbl">Alamat Lengkap</label>
+                    <textarea id="custAddress" class="finput" rows="2" placeholder="Alamat pemasangan..."></textarea>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div>
+                        <label class="flbl">Paket Internet</label>
+                        <select id="custPackage" class="finput">
+                            <option value="">Pilih paket...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="flbl">Status</label>
+                        <select id="custStatus" class="finput">
+                            <option value="active">Aktif</option>
+                            <option value="isolated">Isolir</option>
+                            <option value="suspended">Suspend</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div>
+                        <label class="flbl">Tgl Pemasangan / Aktivasi</label>
+                        <input type="date" id="custInstallDate" class="finput" onchange="onActivationDateChange()">
+                    </div>
+                    <div>
+                        <label class="flbl">Tgl Jatuh Tempo (Selanjutnya)</label>
+                        <input type="date" id="custDueDate" class="finput">
+                    </div>
+                </div>
+
+                <hr style="border:0;border-top:1px solid var(--d-border);margin:20px 0">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                    <div>
+                        <label class="flbl">Router MikroTik</label>
+                        <select id="custMikrotikId" class="finput">
+                            <option value="">— Pilih router —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="flbl">PPPoE Username <span
+                                style="font-weight:400;color:#94a3b8;text-transform:none">(Opsional)</span></label>
+                        <input type="text" id="custPPPoE" class="finput" placeholder="user@flynet">
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px">
+                    <div>
+                        <label class="flbl">Static IP <span
+                                style="font-weight:400;color:#94a3b8;text-transform:none">(Opsional)</span></label>
+                        <input type="text" id="custStaticIP" class="finput" placeholder="10.10.x.x">
+                    </div>
+                    <div>
+                        <label class="flbl">SN ONT / Modem <span
+                                style="font-weight:400;color:#94a3b8;text-transform:none">(Opsional)</span></label>
+                        <input type="text" id="custOntSn" class="finput" placeholder="ZTEG...">
+                    </div>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:10px">
+                    <button class="btn-fin btn-ghost" onclick="closeModal()">Batal</button>
+                    <button id="saveCustomerBtn" class="btn-fin btn-primary-fin">Simpan Customer</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <%- include('layouts/footer') %>

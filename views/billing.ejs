@@ -1,0 +1,799 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --d-bg: #eef2f9;
+            --d-card: #fff;
+            --d-border: #e0e7f3;
+            --d-text: #0d1b3e;
+            --d-muted: #6b7fa8;
+            --d-blue1: #1a6ef5;
+        }
+
+        .bill-page {
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ── STAT CARDS — single strip ── */
+        .fin-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .fin-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+            min-height: 108px;
+        }
+
+        .fin-card::before,
+        .fin-card::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        .fin-card .orb1,
+        .fin-card .orb2 {
+            display: none !important;
+        }
+
+        .fin-card:last-child {
+            border-right: none;
+        }
+
+        .fin-card:hover {
+            background: #fafbff;
+        }
+
+        .card-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+        }
+
+        .card-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .card-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+        }
+
+        @media(max-width:1400px) {
+            .card-val {
+                font-size: 26px;
+            }
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .card-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .pill-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .pill-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .pill-red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .pill-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .card-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sp-dot {}
+
+        @media(max-width:700px) {
+            .fin-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .fin-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(even) {
+                border-right: none;
+            }
+
+            .fin-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:400px) {
+            .fin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .fin-card {
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .fc-sub {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .7);
+        }
+
+        .fc-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .fc-bar {
+            height: 4px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, .2);
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .fc-bar-f {
+            height: 100%;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, .8);
+            transition: width .7s;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .a1 {
+            animation: fadeUp .4s ease both
+        }
+
+        .a2 {
+            animation: fadeUp .4s .07s ease both
+        }
+
+        .a3 {
+            animation: fadeUp .4s .14s ease both
+        }
+
+        .a4 {
+            animation: fadeUp .4s .21s ease both
+        }
+
+        .a5 {
+            animation: fadeUp .4s .28s ease both
+        }
+
+        /* Table card */
+        .bill-card {
+            background: #fff;
+            border: 1px solid var(--d-border);
+            border-radius: 22px;
+            overflow: hidden;
+        }
+
+        .bill-card-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #f0f4ff;
+        }
+
+        .bill-search {
+            position: relative;
+            flex: 1;
+            min-width: 180px;
+            max-width: 260px;
+        }
+
+        .bill-search svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .bill-search input {
+            width: 100%;
+            padding: 8px 12px 8px 32px;
+            border: 1.5px solid var(--d-border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            box-sizing: border-box;
+            background: #f8faff;
+            transition: all .15s;
+        }
+
+        .bill-search input:focus {
+            border-color: var(--d-blue1);
+            background: #fff;
+        }
+
+        .bill-filter select {
+            padding: 8px 12px;
+            border: 1.5px solid var(--d-border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            background: #f8faff;
+            color: var(--d-text);
+            cursor: pointer;
+        }
+
+        .bill-count {
+            margin-left: auto;
+            font-size: 12px;
+            color: var(--d-muted);
+            font-weight: 600;
+        }
+
+        .bill-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .bill-table thead th {
+            padding: 10px 16px;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--d-muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            background: #f8faff;
+            text-align: left;
+            white-space: nowrap;
+            border-bottom: 1px solid #f0f4ff;
+        }
+
+        .bill-table tbody td {
+            padding: 13px 16px;
+            border-bottom: 1px solid #f8faff;
+            vertical-align: middle;
+        }
+
+        .bill-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .bill-table tbody tr:hover td {
+            background: #f8faff;
+        }
+
+        /* Status badges */
+        .pm-cash {
+            background: #f0fdf4;
+            color: #16a34a;
+            padding: 2px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .pm-transfer {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 2px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .pm-qris {
+            background: #fdf4ff;
+            color: #9333ea;
+            padding: 2px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .pm-gateway {
+            background: #fff7ed;
+            color: #ea580c;
+            padding: 2px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .pm-ewallet {
+            background: #f0f9ff;
+            color: #0891b2;
+            padding: 2px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .pm-other {
+            background: #f8fafc;
+            color: #64748b;
+            padding: 2px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .st-paid {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .st-unpaid {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #fef3c7;
+            color: #d97706;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .st-overdue {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .st-cancelled {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* Action buttons */
+        .act-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 7px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid;
+            transition: all .12s;
+            white-space: nowrap;
+        }
+
+        .act-inv {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .act-inv:hover {
+            background: #dbeafe;
+        }
+
+        .act-wa {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #16a34a;
+        }
+
+        .act-wa:hover {
+            background: #dcfce7;
+        }
+
+        .act-pay {
+            background: linear-gradient(135deg, #1a6ef5, #0047cc);
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .act-pay:hover {
+            opacity: .9;
+        }
+
+        .tbl-empty {
+            padding: 50px 20px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .tbl-empty svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 10px;
+            opacity: .35;
+        }
+
+        .bill-pagination {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-top: 1px solid #f0f4ff;
+        }
+
+        .pg-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--d-border);
+            background: #fff;
+            color: var(--d-text);
+            transition: background .15s;
+        }
+
+        .pg-btn:hover {
+            background: #f4f8ff;
+        }
+
+        .pg-btn.active {
+            background: var(--d-blue1);
+            border-color: var(--d-blue1);
+            color: #fff;
+        }
+
+        @media(max-width:640px) {
+            .col-hide-sm {
+                display: none !important;
+            }
+        }
+
+        /* ── Card active state ── */
+        .fin-card {
+            cursor: pointer;
+        }
+
+        .fin-card.fc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .fin-card.fc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .fin-card.fc-active .card-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .fin-card.fc-active .card-val {
+            color: #fff;
+        }
+
+        .fin-card.fc-active .card-sub {
+            color: rgba(255, 255, 255, .60);
+        }
+
+        .fin-card.fc-active .card-pill {
+            background: rgba(255, 255, 255, .20) !important;
+            color: rgba(255, 255, 255, .90) !important;
+        }
+
+        .fin-card.fc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .fin-card.fc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .fin-card.fc-active .sp-dot {
+            fill: #fff !important;
+        }
+    </style>
+
+    <main class="page-content">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;"
+            class="a1">
+            <div>
+                <h1 style="font-size:22px;font-weight:800;color:#0d1b3e;margin:0 0 4px;">Billing & Invoice</h1>
+                <p style="font-size:13px;color:var(--d-muted);margin:0;" id="billHeaderSub">Manajemen tagihan dan
+                    invoice pelanggan</p>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button onclick="markOverdue()"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #e2e8f0;background:#fff;color:#374151;transition:all .15s;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    Mark Overdue
+                </button>
+                <button onclick="openGenerate()"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Generate Invoice
+                </button>
+            </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="fin-grid">
+
+            <!-- Lunas -->
+            <div class="fin-card fc-active" id="bcard-paid" data-filter="paid" onclick="bilCardClick(this)">
+                <div class="card-lbl">Lunas</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="fcPaid">0</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-green" id="cp-paid">—</span>
+                            <span class="card-sub" id="fcRevenueSub">Invoice lunas</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-paid" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-paid-fill" d="" fill="#16a34a" opacity=".12" />
+                            <path class="sp-line" id="sp-paid-line" d="" stroke="#16a34a" />
+                            <circle class="sp-dot" id="sp-paid-dot" r="2.5" fill="#16a34a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Belum Bayar -->
+            <div class="fin-card" id="bcard-unpaid" data-filter="unpaid" onclick="bilCardClick(this)">
+                <div class="card-lbl">Belum Bayar</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="fcUnpaid">0</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-blue" id="cp-unpaid">—</span>
+                            <span class="card-sub">Invoice unpaid</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-unpaid" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-unpaid-fill" d="" fill="#2563eb" opacity=".12" />
+                            <path class="sp-line" id="sp-unpaid-line" d="" stroke="#2563eb" />
+                            <circle class="sp-dot" id="sp-unpaid-dot" r="2.5" fill="#2563eb" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overdue -->
+            <div class="fin-card" id="bcard-overdue" data-filter="overdue" onclick="bilCardClick(this)">
+                <div class="card-lbl">Overdue</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="fcOverdue">0</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-red" id="cp-overdue">—</span>
+                            <span class="card-sub">Jatuh tempo lewat</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-overdue" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-overdue-fill" d="" fill="#dc2626" opacity=".12" />
+                            <path class="sp-line" id="sp-overdue-line" d="" stroke="#dc2626" />
+                            <circle class="sp-dot" id="sp-overdue-dot" r="2.5" fill="#dc2626" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue -->
+            <div class="fin-card" id="bcard-revenue" data-filter="" onclick="bilCardClick(this)">
+                <div class="card-lbl">Revenue</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="fcRevenueVal">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-amber" id="cp-revenue">—</span>
+                            <span class="card-sub" id="fcRevenueAmt">Penerimaan bulan ini</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-revenue" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-revenue-fill" d="" fill="#d97706" opacity=".12" />
+                            <path class="sp-line" id="sp-revenue-line" d="" stroke="#d97706" />
+                            <circle class="sp-dot" id="sp-revenue-dot" r="2.5" fill="#d97706" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Invoice Table -->
+        <div class="bill-card a5">
+            <div class="bill-card-header">
+                <div>
+                    <div
+                        style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--d-muted);">
+                        Daftar Invoice</div>
+                    <div style="font-size:12px;color:var(--d-muted);margin-top:2px;" id="billSub">–</div>
+                </div>
+                <div class="bill-search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8" />
+                        <path stroke-linecap="round" d="M21 21l-4.35-4.35" />
+                    </svg>
+                    <input type="text" id="searchInvoice" placeholder="Cari invoice, nama, CID...">
+                </div>
+                <div class="bill-filter">
+                    <select id="invoiceStatus">
+                        <option value="">Semua Status</option>
+                        <option value="unpaid">Unpaid</option>
+                        <option value="paid">Paid</option>
+                        <option value="overdue">Overdue</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="bill-count" id="billCount">–</div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="bill-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Pelanggan</th>
+                            <th>Tagihan</th>
+                            <th>Jatuh Tempo</th>
+                            <th class="col-hide-sm">Periode</th>
+                            <th>Status & Pembayaran</th>
+                            <th class="col-hide-sm">Metode</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoiceTable">
+                        <tr>
+                            <td colspan="7">
+                                <div class="tbl-empty"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <p>Memuat data...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="bill-pagination" id="billPagination"></div>
+        </div>
+
+    </main>
+
+    <%- include('layouts/footer') %>

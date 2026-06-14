@@ -1,0 +1,158 @@
+<%- include('header') %>
+
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .page-title { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    
+    .ticket-grid { display: grid; grid-template-columns: 350px 1fr; gap: 24px; align-items: start; }
+
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .form-card h3 { margin-bottom: 20px; font-size: 16px; font-weight: 700; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+
+    .ticket-list { display: flex; flex-direction: column; gap: 16px; }
+    .ticket-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: 0.2s; }
+    .ticket-item:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    
+    .ticket-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .ticket-title { font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+    .ticket-id { font-size: 12px; font-family: monospace; color: var(--text-muted); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+    
+    .ticket-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+    .status-open { background: #fee2e2; color: #dc2626; }
+    .status-progress { background: #fef3c7; color: #d97706; }
+    .status-resolved { background: #dcfce7; color: #16a34a; }
+
+    .ticket-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px; }
+    .ticket-meta { font-size: 11px; color: #94a3b8; display: flex; gap: 16px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+
+    @media (max-width: 900px) {
+        .ticket-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="page-header">
+    <div class="page-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+        </svg>
+        Bantuan & Tiket
+    </div>
+</div>
+
+<div class="ticket-grid">
+    <!-- Form Create -->
+    <div class="form-card">
+        <h3>Buat Tiket Baru</h3>
+        <form id="ticketForm">
+            <div class="form-group">
+                <label>Judul Kendala</label>
+                <input type="text" id="title" placeholder="Contoh: Internet Mati Total" required>
+            </div>
+            <div class="form-group">
+                <label>Prioritas</label>
+                <select id="priority">
+                    <option value="low">Rendah (Low)</option>
+                    <option value="medium" selected>Sedang (Medium)</option>
+                    <option value="high">Tinggi (High)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Detail Kendala</label>
+                <textarea id="description" rows="4" placeholder="Jelaskan kendala yang Anda alami..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Kirim Tiket</button>
+        </form>
+    </div>
+
+    <!-- Ticket List -->
+    <div>
+        <h3 style="font-size:16px; margin-bottom:20px; padding-left:5px;">Riwayat Tiket Saya</h3>
+        <div class="ticket-list" id="ticketList">
+            <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">Memuat tiket...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const loadTickets = async () => {
+        try {
+            const r = await fetch('/api/tickets');
+            const res = await r.json();
+            const list = document.getElementById('ticketList');
+            
+            if(!res.success || res.data.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); background:white; border-radius:12px; border:1px solid var(--border);">Belum ada riwayat tiket aduan.</div>';
+                return;
+            }
+
+            let html = '';
+            res.data.forEach(t => {
+                const date = new Date(t.created_at).toLocaleString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+                let statusClass = 'status-progress';
+                let statusText = 'Diproses';
+                if(t.status === 'open') { statusClass = 'status-open'; statusText = 'Menunggu'; }
+                if(t.status === 'resolved' || t.status === 'closed') { statusClass = 'status-resolved'; statusText = 'Selesai'; }
+
+                html += `
+                <div class="ticket-item">
+                    <div class="ticket-head">
+                        <div>
+                            <div class="ticket-title">${t.title}</div>
+                            <span class="ticket-id">${t.ticket_number}</span>
+                        </div>
+                        <div class="ticket-status ${statusClass}">${statusText}</div>
+                    </div>
+                    <div class="ticket-desc">${t.description}</div>
+                    <div class="ticket-meta">
+                        <span>🗓️ ${date}</span>
+                        <span>🔥 Prioritas: ${t.priority.toUpperCase()}</span>
+                    </div>
+                </div>`;
+            });
+            list.innerHTML = html;
+        } catch(e) { console.error(e); }
+    };
+
+    document.getElementById('ticketForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('title').value;
+        const priority = document.getElementById('priority').value;
+        const description = document.getElementById('description').value;
+        const btn = e.target.querySelector('button');
+        
+        btn.disabled = true;
+        btn.textContent = 'Mengirim...';
+
+        try {
+            const r = await fetch('/api/tickets', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title, priority, description })
+            });
+            const res = await r.json();
+            if(res.success) {
+                alert('Tiket berhasil dikirim!');
+                e.target.reset();
+                loadTickets();
+            } else {
+                alert('Gagal mengirim tiket');
+            }
+        } catch(err) {
+            alert('Kesalahan jaringan');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Kirim Tiket';
+        }
+    });
+
+    loadTickets();
+</script>
+
+<%- include('footer') %>

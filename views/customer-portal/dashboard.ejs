@@ -1,0 +1,165 @@
+<%- include('header') %>
+
+<style>
+    .dash-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .point-card {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        padding: 30px 24px;
+        border-radius: var(--radius);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        grid-column: span 1;
+    }
+
+    .point-card .lbl { font-size: 14px; font-weight: 600; opacity: 0.9; margin-bottom: 10px; }
+    .point-card .val { font-size: 42px; font-weight: 800; line-height: 1; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+    .point-card .val svg { width: 32px; height: 32px; color: #fbbf24; }
+    .point-card .sub { font-size: 12px; opacity: 0.8; }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        grid-column: span 2;
+    }
+
+    .action-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        text-decoration: none;
+        color: var(--text-main);
+        transition: all 0.2s;
+    }
+
+    .action-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transform: translateY(-2px);
+    }
+
+    .action-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .bg-blue { background: var(--primary-light); color: var(--primary); }
+    .bg-orange { background: #fff7ed; color: #ea580c; }
+
+    .action-info h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .action-info p { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+
+    .info-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+    }
+    
+    .panel-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+
+    @media (max-width: 900px) {
+        .dash-grid { grid-template-columns: 1fr; }
+        .point-card { grid-column: span 1; }
+        .quick-actions { grid-column: span 1; }
+    }
+    @media (max-width: 500px) {
+        .quick-actions { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="dash-grid">
+    <div class="point-card">
+        <div class="lbl">Total Poin Reward Anda</div>
+        <div class="val" id="myPoints">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            ...
+        </div>
+        <div class="sub">Tukarkan poin dengan berbagai hadiah menarik!</div>
+    </div>
+
+    <div class="quick-actions">
+        <a href="/rewards" class="action-card">
+            <div class="action-icon bg-blue">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="14" rx="2" />
+                    <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
+                </svg>
+            </div>
+            <div class="action-info">
+                <h3>Katalog Hadiah</h3>
+                <p>Lihat item yang bisa Anda tukar dengan poin reward</p>
+            </div>
+        </a>
+        <a href="/tickets" class="action-card">
+            <div class="action-icon bg-orange">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+            </div>
+            <div class="action-info">
+                <h3>Bantuan & Tiket</h3>
+                <p>Laporkan gangguan atau buat tiket bantuan teknis</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="info-panel">
+    <div class="panel-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
+            <polyline points="13 2 13 9 20 9" />
+        </svg>
+        Informasi Layanan
+    </div>
+    <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
+        <p>Selamat datang di Portal Pelanggan SKMNet. Di sini Anda bisa melihat informasi langganan, membuat tiket aduan secara mandiri, dan menukarkan Poin Reward.</p>
+        <br>
+        <strong>Cara mendapatkan Poin Reward:</strong>
+        <ul style="margin-left: 20px; margin-top: 10px;">
+            <li>Bayar tagihan <strong>tepat waktu (hari H)</strong>: +10 Poin</li>
+            <li>Bayar tagihan <strong>sebelum jatuh tempo</strong>: Tambahan +1 poin untuk setiap hari lebih awal!</li>
+            <li>⚠️ <strong>Keterlambatan</strong> akan mengurangi 1 Poin untuk setiap hari keterlambatan.</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const r = await fetch('/api/me');
+            const res = await r.json();
+            if(res.success && res.data) {
+                document.getElementById('myPoints').innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    ${res.data.points || 0}
+                `;
+            }
+        } catch(e) { console.error(e); }
+    });
+</script>
+
+<%- include('footer') %>

@@ -1,0 +1,1284 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --pp-blue: #2563eb;
+            --pp-blue-d: #1d4ed8;
+            --pp-blue-l: #eff6ff;
+            --pp-green: #16a34a;
+            --pp-green-d: #15803d;
+            --pp-green-l: #f0fdf4;
+            --pp-red: #dc2626;
+            --pp-red-d: #b91c1c;
+            --pp-red-l: #fef2f2;
+            --pp-amber: #d97706;
+            --pp-amber-d: #b45309;
+            --pp-amber-l: #fffbeb;
+            --pp-teal: #0891b2;
+            --pp-teal-l: #ecfeff;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --muted: #64748b;
+            --faint: #94a3b8;
+            --rc: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .pp {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* ── HEADER ── */
+        .pp-hdr {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .pp-hdr-l h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text);
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pp-hdr-l p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .pp-hdr-r {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid;
+            transition: all .15s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .btn svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        .btn-outline {
+            background: #fff;
+            border-color: var(--border);
+            color: #374151;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .btn-red {
+            background: var(--pp-red);
+            border-color: var(--pp-red);
+            color: #fff;
+        }
+
+        .btn-red:hover {
+            background: var(--pp-red-d);
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        /* Live chip */
+        .live-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 13px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--pp-green-l);
+            border: 1px solid #bbf7d0;
+            color: var(--pp-green);
+        }
+
+        .live-chip .ldot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--pp-green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .35;
+                transform: scale(.75)
+            }
+        }
+
+        /* ── STAT CARDS — single strip with dividers ── */
+        .pp-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        @media(max-width:900px) {
+            .pp-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width:500px) {
+            .pp-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pp-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+        }
+
+        .pp-card:last-child {
+            border-right: none;
+        }
+
+        .pp-card:hover {
+            background: #fafbff;
+        }
+
+        /* Active — biru solid */
+        .pp-card.pc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .pp-card.pc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .pp-card.pc-active .card-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .pp-card.pc-active .card-val {
+            color: #fff;
+        }
+
+        .pp-card.pc-active .card-sub {
+            color: rgba(255, 255, 255, .60);
+        }
+
+        .pp-card.pc-active .card-pill {
+            background: rgba(255, 255, 255, .20) !important;
+            color: rgba(255, 255, 255, .90) !important;
+        }
+
+        .pp-card.pc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .pp-card.pc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .pp-card.pc-active .sp-dot {
+            fill: #fff !important;
+        }
+
+        /* label */
+        .card-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+            transition: color .15s;
+        }
+
+        /* body: angka kiri + sparkline kanan */
+        .card-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* angka */
+        .card-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        @media(max-width:1400px) {
+            .card-val {
+                font-size: 26px;
+            }
+        }
+
+        /* meta: pill + sub */
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .card-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all .15s;
+        }
+
+        .pill-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .pill-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .pill-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .pill-slate {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        /* sparkline */
+        .card-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .card-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sp-dot {}
+
+        /* ── Mobile responsive borders ── */
+        @media (max-width: 768px) {
+            .pp-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .pp-card:last-child {
+                border-bottom: none;
+            }
+
+            .pp-card.pc-active {
+                border-color: #2563eb;
+            }
+        }
+
+        @media (min-width: 441px) and (max-width: 768px) {
+            .pp-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .pp-card:nth-child(even) {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .pp-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .pp-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .pp-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        /* ── CONTROLS ── */
+        .pp-ctrl {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--rc);
+            padding: 13px 18px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pp-ctrl-l {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pp-ctrl-l svg {
+            color: var(--muted);
+            flex-shrink: 0;
+        }
+
+        .pp-ctrl-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .pp-ctrl-r {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap svg {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--faint);
+            pointer-events: none;
+            width: 14px;
+            height: 14px;
+        }
+
+        .search-wrap input {
+            padding: 8px 12px 8px 33px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+            font-family: inherit;
+            color: var(--text);
+            width: 240px;
+            transition: all .15s;
+        }
+
+        .search-wrap input:focus {
+            border-color: var(--pp-blue);
+            background: #fff;
+            box-shadow: 0 0 0 3px #2563eb14;
+        }
+
+        .pp-ctrl select {
+            padding: 8px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+            color: #374151;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .pp-ctrl select:focus {
+            border-color: var(--pp-blue);
+        }
+
+        /* ── TABLE ── */
+        .pp-tbl-wrap {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--rc);
+            overflow: hidden;
+        }
+
+        .pp-tbl-hdr {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pp-tbl-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .session-count {
+            font-size: 11px;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: var(--muted);
+            padding: 2px 9px;
+            border-radius: 20px;
+        }
+
+        .pp-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .pp-table thead tr {
+            background: #f8fafc;
+        }
+
+        .pp-table th {
+            padding: 10px 16px;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        .pp-table tbody tr {
+            border-bottom: 1px solid #f8fafc;
+            transition: background .1s;
+        }
+
+        .pp-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .pp-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .pp-table td {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        .num-cell {
+            color: var(--faint);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .username-cell {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .svc-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .svc-pppoe {
+            background: var(--pp-blue-l);
+            color: var(--pp-blue);
+            border: 1px solid #bfdbfe;
+        }
+
+        .svc-l2tp {
+            background: var(--pp-amber-l);
+            color: var(--pp-amber);
+            border: 1px solid #fde68a;
+        }
+
+        .svc-other {
+            background: #f1f5f9;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+
+        .ip-badge {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #334155;
+            padding: 4px 9px;
+            border-radius: 6px;
+            display: inline-block;
+            border: 1px solid #e2e8f0;
+        }
+
+        .mac-cell {
+            font-family: monospace;
+            font-size: 11.5px;
+            color: var(--muted);
+        }
+
+        .uptime-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11.5px;
+            font-weight: 700;
+            background: var(--pp-teal-l);
+            color: var(--pp-teal);
+            border: 1px solid #a5f3fc;
+            border-radius: 6px;
+            padding: 3px 9px;
+        }
+
+        /* Empty / loading */
+        .tbl-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--faint);
+        }
+
+        .tbl-empty svg {
+            width: 36px;
+            height: 36px;
+            opacity: .35;
+            margin-bottom: 10px;
+        }
+
+        .tbl-empty p {
+            font-size: 13px;
+            margin: 0;
+        }
+
+        @media(max-width:768px) {
+            .pp-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .search-wrap input {
+                width: 180px;
+            }
+
+            .pp-table th:nth-child(5),
+            .pp-table td:nth-child(5) {
+                display: none;
+            }
+        }
+
+        /* ── Tabs ── */
+        .pp-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all .15s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .pp-tab svg {
+            flex-shrink: 0;
+        }
+
+        .pp-tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+
+        .pp-tab:hover:not(.active) {
+            color: #374151;
+            background: #f8fafc;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .pp-tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: #f1f5f9;
+            color: #64748b;
+            border-radius: 100px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .pp-tab.active .pp-tab-badge {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        /* ── Modal overlay ── */
+        .pp-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .pp-modal-overlay.show {
+            display: flex !important;
+        }
+
+        .pp-modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px;
+            width: 92%;
+            max-width: 520px;
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+            animation: ppIn .2s ease;
+        }
+
+        @keyframes ppIn {
+            from {
+                opacity: 0;
+                transform: translateY(14px)scale(.97)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .pp-modal-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .pp-modal-hdr h3 {
+            font-size: 16px;
+            font-weight: 800;
+            margin: 0;
+            color: #0f172a;
+        }
+
+        .pp-modal-close {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: none;
+            background: #f8fafc;
+            cursor: pointer;
+            font-size: 18px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+        }
+
+        .pp-modal-close:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .pp-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media(max-width:480px) {
+            .pp-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pp-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .pp-form-group.full {
+            grid-column: 1/-1;
+        }
+
+        .pp-form-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .pp-form-label span {
+            color: #dc2626;
+        }
+
+        .pp-form-control {
+            padding: 9px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 9px;
+            font-size: 13px;
+            font-family: inherit;
+            color: #0f172a;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+            background: #fff;
+            width: 100%;
+        }
+
+        .pp-form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+        }
+
+        .pp-form-control::placeholder {
+            color: #94a3b8;
+        }
+
+        .pp-form-hint {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .pp-modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .btn-pp-save {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background .15s;
+        }
+
+        .btn-pp-save:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-pp-save:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .btn-pp-cancel {
+            background: #f8fafc;
+            color: #374151;
+            border: 1.5px solid #e2e8f0;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .15s;
+        }
+
+        .btn-pp-cancel:hover {
+            background: #f1f5f9;
+        }
+
+        /* ── Secrets table extras ── */
+        #secrets-panel {
+            display: none;
+        }
+
+        .svc-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .svc-badge.svc-pppoe {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .svc-badge.svc-l2tp {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .svc-badge.svc-pptp {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .svc-badge.svc-any {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-blue {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+
+        .btn-blue:hover {
+            background: #1d4ed8;
+        }
+    </style>
+
+    <main class="page-content">
+
+        <!-- Header -->
+        <div class="pp-hdr">
+            <div class="pp-hdr-l">
+                <h1>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        style="color:var(--pp-blue)">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                        <path d="M16 3.13a4 4 0 010 7.75" />
+                    </svg>
+                    PPPoE Active Sessions
+                </h1>
+                <p>Monitor sesi PPPoE aktif secara real-time</p>
+            </div>
+            <div class="pp-hdr-r">
+                <div class="live-chip"><span class="ldot"></span>LIVE</div>
+                <span style="font-size:12px;color:var(--faint);">Auto-refresh: 10s</span>
+                <button class="btn btn-outline btn-sm" id="btnRefresh">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23,4 23,10 17,10" />
+                        <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
+                    </svg>
+                    Refresh
+                </button>
+                <button class="btn btn-blue btn-sm" id="btnAddUser" onclick="openUserModal(null)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Tambah User PPPoE
+                </button>
+            </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="pp-cards">
+
+            <!-- Active Sessions -->
+            <div class="pp-card pc-active" id="pc-total" data-filter="all" onclick="pcClick(this)">
+                <div class="card-lbl">Active Sessions</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="statTotal">0</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-blue" id="pp-pill-total">— sesi</span>
+                            <span class="card-sub">Total sesi aktif</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12" />
+                            <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb" />
+                            <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PPPoE -->
+            <div class="pp-card" id="pc-pppoe" data-filter="pppoe" onclick="pcClick(this)">
+                <div class="card-lbl">PPPoE</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="statPppoe">0</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-green" id="pp-pill-pppoe">— sesi</span>
+                            <span class="card-sub">Sesi PPPoE</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-pppoe" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-pppoe-fill" d="" fill="#16a34a" opacity=".12" />
+                            <path class="sp-line" id="sp-pppoe-line" d="" stroke="#16a34a" />
+                            <circle class="sp-dot" id="sp-pppoe-dot" r="2.5" fill="#16a34a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- L2TP -->
+            <div class="pp-card" id="pc-l2tp" data-filter="l2tp" onclick="pcClick(this)">
+                <div class="card-lbl">L2TP</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="statL2tp">0</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-amber" id="pp-pill-l2tp">— sesi</span>
+                            <span class="card-sub">Sesi L2TP</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-l2tp" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-l2tp-fill" d="" fill="#d97706" opacity=".12" />
+                            <path class="sp-line" id="sp-l2tp-line" d="" stroke="#d97706" />
+                            <circle class="sp-dot" id="sp-l2tp-dot" r="2.5" fill="#d97706" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other -->
+            <div class="pp-card" id="pc-other" data-filter="other" onclick="pcClick(this)">
+                <div class="card-lbl">Other</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="statOther">0</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-slate" id="pp-pill-other">— sesi</span>
+                            <span class="card-sub">Sesi lainnya</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-other" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-other-fill" d="" fill="#475569" opacity=".12" />
+                            <path class="sp-line" id="sp-other-line" d="" stroke="#475569" />
+                            <circle class="sp-dot" id="sp-other-dot" r="2.5" fill="#475569" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── SESSIONS / SECRETS TABLE ── -->
+        <div class="pp-tbl-wrap" id="sessions-panel">
+            <div class="pp-tbl-hdr">
+                <!-- Tab navigation -->
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                    <div style="display:flex;gap:0;border-bottom:2px solid #f1f5f9;">
+                        <button id="tab-sessions" class="pp-tab active" onclick="switchTab('sessions')">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                            </svg>
+                            Active Sessions <span class="pp-tab-badge" id="tb-sessions">0</span><span id="sessionCount"
+                                style="display:none;">0 sesi</span>
+                        </button>
+                        <button id="tab-secrets" class="pp-tab" onclick="switchTab('secrets')">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0110 0v4" />
+                            </svg>
+                            PPP Secrets <span class="pp-tab-badge" id="tb-secrets">0</span>
+                        </button>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                        <div class="search-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input type="text" id="searchInput" placeholder="Cari username, IP, caller-id...">
+                        </div>
+                        <select id="filterService">
+                            <option value="">All Services</option>
+                            <option value="pppoe">PPPoE</option>
+                            <option value="l2tp">L2TP</option>
+                            <option value="pptp">PPTP</option>
+                        </select>
+                    </div>
+                </div><!-- /flex row -->
+            </div><!-- /pp-tbl-hdr -->
+            <div style="overflow-x:auto;">
+                <table class="pp-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Username</th>
+                            <th>Service</th>
+                            <th>IP Address</th>
+                            <th>Caller ID / MAC</th>
+                            <th>Uptime</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pppoeTbody" data-session-count="true">
+                        <tr>
+                            <td colspan="7">
+                                <div class="tbl-empty">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                        <circle cx="9" cy="7" r="4" />
+                                    </svg>
+                                    <p>Memuat sesi...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── PPP SECRETS PANEL ── -->
+        <div id="secrets-panel">
+            <div class="pp-tbl" style="margin-bottom:20px;">
+                <div class="pp-tbl-hdr">
+                    <div class="pp-tbl-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pp-blue)"
+                            stroke-width="2.5">
+                            <rect x="3" y="11" width="18" height="11" rx="2" />
+                            <path d="M7 11V7a5 5 0 0110 0v4" />
+                        </svg>
+                        PPP Secrets
+                        <span class="session-count" id="secretsCount">0 user</span>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <div class="search-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input type="text" id="secretsSearch" placeholder="Cari username..."
+                                oninput="filterSecrets(this.value)">
+                        </div>
+                        <select id="secretsFilterService"
+                            onchange="filterSecrets(document.getElementById('secretsSearch').value)"
+                            style="padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:12px;font-family:inherit;background:#f8fafc;outline:none;">
+                            <option value="">All Services</option>
+                            <option value="pppoe">PPPoE</option>
+                            <option value="l2tp">L2TP</option>
+                            <option value="any">Any</option>
+                        </select>
+                        <button class="btn btn-blue btn-sm" onclick="openUserModal(null)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13"
+                                height="13">
+                                <line x1="12" y1="5" x2="12" y2="19" />
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            Tambah
+                        </button>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="pp-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Username</th>
+                                <th>Service</th>
+                                <th>Profile</th>
+                                <th>Local IP</th>
+                                <th>Remote IP</th>
+                                <th>Status</th>
+                                <th>Comment</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="secretsTbody">
+                            <tr>
+                                <td colspan="9">
+                                    <div class="tbl-empty">
+                                        <p>Memuat secrets...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── MODAL CREATE/EDIT USER PPPOE ── -->
+        <div class="pp-modal-overlay" id="userModal">
+            <div class="pp-modal">
+                <div class="pp-modal-hdr">
+                    <h3 id="modalTitle">Tambah User PPPoE</h3>
+                    <button class="pp-modal-close" onclick="closeUserModal()">×</button>
+                </div>
+                <input type="hidden" id="editSecretId">
+                <div class="pp-form-grid">
+                    <div class="pp-form-group">
+                        <label class="pp-form-label">Username <span>*</span></label>
+                        <input class="pp-form-control" id="f-name" placeholder="e.g. user@isp">
+                    </div>
+                    <div class="pp-form-group">
+                        <label class="pp-form-label">Password <span>*</span></label>
+                        <div style="position:relative;">
+                            <input class="pp-form-control" id="f-password" type="password" placeholder="Password"
+                                style="padding-right:38px;">
+                            <button onclick="togglePwd('f-password',this)"
+                                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:#94a3b8;font-size:13px;">👁</button>
+                        </div>
+                    </div>
+                    <div class="pp-form-group">
+                        <label class="pp-form-label">Service</label>
+                        <select class="pp-form-control" id="f-service">
+                            <option value="pppoe">PPPoE</option>
+                            <option value="l2tp">L2TP</option>
+                            <option value="pptp">PPTP</option>
+                            <option value="any">Any</option>
+                        </select>
+                    </div>
+                    <div class="pp-form-group">
+                        <label class="pp-form-label">Profile</label>
+                        <select class="pp-form-control" id="f-profile">
+                            <option value="PPoE">PPoE</option>
+                            <option value="default">default</option>
+                            <option value="default-encryption">default-encryption</option>
+                        </select>
+                        <span class="pp-form-hint" id="profile-hint" style="color:#2563eb;"></span>
+                    </div>
+                    <div class="pp-form-group">
+                        <label class="pp-form-label">Local Address</label>
+                        <input class="pp-form-control" id="f-local-address" placeholder="e.g. 10.0.0.1">
+                        <span class="pp-form-hint">Kosongkan = dari pool</span>
+                    </div>
+                    <div class="pp-form-group">
+                        <label class="pp-form-label">Remote Address</label>
+                        <input class="pp-form-control" id="f-remote-address" placeholder="e.g. 10.0.0.2">
+                        <span class="pp-form-hint">Kosongkan = dari pool</span>
+                    </div>
+                    <div class="pp-form-group">
+                        <label class="pp-form-label">Caller ID (MAC)</label>
+                        <input class="pp-form-control" id="f-caller-id" placeholder="e.g. AA:BB:CC:DD:EE:FF">
+                        <span class="pp-form-hint">Opsional — filter MAC address</span>
+                    </div>
+                    <div class="pp-form-group">
+                        <label class="pp-form-label">Status</label>
+                        <select class="pp-form-control" id="f-disabled">
+                            <option value="false">Aktif (Enabled)</option>
+                            <option value="true">Nonaktif (Disabled)</option>
+                        </select>
+                    </div>
+                    <div class="pp-form-group full">
+                        <label class="pp-form-label">Comment</label>
+                        <input class="pp-form-control" id="f-comment" placeholder="Keterangan opsional...">
+                    </div>
+                </div>
+                <div class="pp-modal-footer">
+                    <button class="btn-pp-cancel" onclick="closeUserModal()">Batal</button>
+                    <button class="btn-pp-save" id="btnSaveUser" onclick="saveUser()">
+                        <span id="saveBtnText">Simpan</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <%- include('layouts/footer') %>

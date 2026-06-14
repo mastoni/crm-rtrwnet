@@ -1,0 +1,2201 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --ot-blue: #2563eb;
+            --ot-blue-d: #1d4ed8;
+            --ot-blue-l: #eff6ff;
+            --ot-green: #16a34a;
+            --ot-green-d: #15803d;
+            --ot-green-l: #f0fdf4;
+            --ot-red: #dc2626;
+            --ot-red-d: #b91c1c;
+            --ot-red-l: #fef2f2;
+            --ot-amber: #d97706;
+            --ot-amber-d: #b45309;
+            --ot-amber-l: #fffbeb;
+            --ot-teal: #0891b2;
+            --ot-teal-l: #ecfeff;
+            --ot-slate: #475569;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --muted: #64748b;
+            --faint: #94a3b8;
+            --rc: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .ot {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* HEADER */
+        .ot-hdr {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .ot-hdr-l h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text);
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ot-hdr-l p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ot-hdr-r {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid;
+            transition: all .15s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .btn svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        .btn-outline {
+            background: #fff;
+            border-color: var(--border);
+            color: #374151;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .btn-blue {
+            background: var(--ot-blue);
+            border-color: var(--ot-blue);
+            color: #fff;
+        }
+
+        .btn-blue:hover {
+            background: var(--ot-blue-d);
+        }
+
+        .btn-amber {
+            background: var(--ot-amber);
+            border-color: var(--ot-amber);
+            color: #fff;
+        }
+
+        .btn-amber:hover {
+            background: var(--ot-amber-d);
+        }
+
+        .btn-red {
+            background: var(--ot-red);
+            border-color: var(--ot-red);
+            color: #fff;
+        }
+
+        .btn-red:hover {
+            background: var(--ot-red-d);
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        .btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* Live chip */
+        .live-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 13px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--ot-green-l);
+            border: 1px solid #bbf7d0;
+            color: var(--ot-green);
+        }
+
+        .live-chip .ldot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--ot-green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .35;
+                transform: scale(.75)
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        /* STAT CARDS — Modern Fresh */
+        /* ── STAT CARDS — single strip with dividers ── */
+        .ot-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .ot-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+        }
+
+        .ot-card:last-child {
+            border-right: none;
+        }
+
+        .ot-card:hover {
+            background: #fafbff;
+        }
+
+        /* Reset ornamen lama — paksa hapus ::before dan ::after */
+        .ot-card::before,
+        .ot-card::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        /* Active — biru solid */
+        .ot-card.otc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .ot-card.otc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .ot-card.otc-active .card-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .ot-card.otc-active .card-val {
+            color: #fff;
+        }
+
+        .ot-card.otc-active .card-sub {
+            color: rgba(255, 255, 255, .60);
+        }
+
+        .ot-card.otc-active .card-pill {
+            background: rgba(255, 255, 255, .20) !important;
+            color: rgba(255, 255, 255, .90) !important;
+        }
+
+        .ot-card.otc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .ot-card.otc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .ot-card.otc-active .sp-dot {
+            fill: #fff !important;
+        }
+
+        /* ── Custom GenieACS Server card ── */
+        .ot-card-server {
+            padding: 18px 22px 16px !important;
+            gap: 10px !important;
+            justify-content: space-between;
+        }
+
+        .srv-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .srv-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: #ecfdf5;
+            color: #059669;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background .15s, color .15s;
+        }
+
+        .srv-icon svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+
+        .srv-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 10.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            white-space: nowrap;
+            transition: background .15s, color .15s;
+        }
+
+        .srv-pd {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: srvpulse 2s infinite;
+        }
+
+        @keyframes srvpulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .35
+            }
+        }
+
+        /* Error / disconnected states */
+        .srv-pill.err {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .srv-pill.err .srv-pd {
+            background: #ef4444;
+            animation: none;
+        }
+
+        .srv-icon.err {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .srv-pill.warn {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .srv-pill.warn .srv-pd {
+            background: #f59e0b;
+        }
+
+        .srv-icon.warn {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .srv-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .srv-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.2;
+            letter-spacing: -.2px;
+        }
+
+        .srv-url {
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            font-size: 11px;
+            color: #64748b;
+            letter-spacing: -.2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+
+        .srv-foot {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #eef2f7;
+            font-size: 10.5px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .srv-foot b {
+            color: #334155;
+            font-weight: 700;
+            font-family: 'Geist Mono', ui-monospace, monospace;
+        }
+
+        .srv-foot .latok {
+            color: #15803d;
+        }
+
+        .srv-dot-sep {
+            color: #cbd5e1;
+        }
+
+        /* When active (card clicked to filter), invert colors */
+        .ot-card-server.otc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .ot-card-server.otc-active .srv-icon {
+            background: rgba(255, 255, 255, .18);
+            color: #fff;
+        }
+
+        .ot-card-server.otc-active .srv-pill {
+            background: rgba(255, 255, 255, .20);
+            color: #fff;
+        }
+
+        .ot-card-server.otc-active .srv-pd {
+            background: #bbf7d0;
+        }
+
+        .ot-card-server.otc-active .srv-name {
+            color: #fff;
+        }
+
+        .ot-card-server.otc-active .srv-url {
+            color: rgba(255, 255, 255, .75);
+        }
+
+        .ot-card-server.otc-active .srv-foot {
+            color: rgba(255, 255, 255, .70);
+            border-top-color: rgba(255, 255, 255, .20);
+        }
+
+        .ot-card-server.otc-active .srv-foot b {
+            color: #fff;
+        }
+
+        .ot-card-server.otc-active .srv-foot .latok {
+            color: #bbf7d0;
+        }
+
+        .ot-card-server.otc-active .srv-dot-sep {
+            color: rgba(255, 255, 255, .35);
+        }
+
+        /* label */
+        .card-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+            transition: color .15s;
+        }
+
+        /* body */
+        .card-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* angka */
+        .card-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        @media(max-width:1400px) {
+            .card-val {
+                font-size: 26px;
+            }
+        }
+
+        /* meta */
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .card-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all .15s;
+        }
+
+        .pill-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .pill-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .pill-red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .pill-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .pill-slate {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .pill-teal {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        /* sparkline */
+        .card-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .card-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sp-dot {}
+
+        /* responsive */
+        @media(max-width:700px) {
+            .ot-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .ot-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .ot-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+            }
+
+            .ot-card:nth-child(even) {
+                border-right: none;
+            }
+
+            .ot-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:400px) {
+            .ot-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .ot-card {
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .ot-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .card-sub {
+            font-size: 12px;
+            opacity: .8;
+            font-weight: 500;
+        }
+
+        /* ALERT */
+        .ot-alert {
+            display: none;
+            background: var(--ot-red-l);
+            border: 1.5px solid #fecaca;
+            border-left: 4px solid var(--ot-red);
+            border-radius: 10px;
+            padding: 11px 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ot-red);
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ot-alert.show {
+            display: flex;
+        }
+
+        /* TABLE WRAPPER */
+        .ot-tbl-wrap {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--rc);
+            overflow: hidden;
+        }
+
+        .ot-tbl-hdr {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .ot-tbl-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ot-count {
+            font-size: 11px;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: var(--muted);
+            padding: 2px 9px;
+            border-radius: 20px;
+        }
+
+        /* Filter chips */
+        .filter-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .fchip {
+            padding: 5px 13px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all .15s;
+            font-family: inherit;
+        }
+
+        .fchip:hover {
+            border-color: var(--ot-blue);
+            color: var(--ot-blue);
+        }
+
+        .fchip.active {
+            background: var(--ot-blue);
+            border-color: var(--ot-blue);
+            color: #fff;
+        }
+
+        .fchip.online.active {
+            background: var(--ot-green);
+            border-color: var(--ot-green);
+        }
+
+        .fchip.offline.active {
+            background: var(--ot-red);
+            border-color: var(--ot-red);
+        }
+
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap svg {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--faint);
+            pointer-events: none;
+            width: 14px;
+            height: 14px;
+        }
+
+        .search-wrap input {
+            padding: 8px 12px 8px 33px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+            font-family: inherit;
+            color: var(--text);
+            width: 220px;
+            transition: all .15s;
+        }
+
+        .search-wrap input:focus {
+            border-color: var(--ot-blue);
+            background: #fff;
+            box-shadow: 0 0 0 3px #2563eb14;
+        }
+
+        .ot-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .ot-table thead tr {
+            background: #fafbfc;
+        }
+
+        .ot-table th {
+            padding: 11px 14px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            text-align: left;
+            border-bottom: 1px solid #eef2f7;
+            white-space: nowrap;
+        }
+
+        .ot-table tbody tr {
+            border-bottom: 1px solid #f5f7fa;
+            transition: background .15s;
+            cursor: pointer;
+        }
+
+        .ot-table tbody tr:hover {
+            background: #fafbff;
+        }
+
+        .ot-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .ot-table tbody tr.row-offline {
+            opacity: .55;
+        }
+
+        .ot-table td {
+            padding: 14px;
+            font-size: 13px;
+            color: #374151;
+            vertical-align: middle;
+            overflow: hidden;
+        }
+
+        /* More breathing space for narrow metric cols */
+        .ot-table th:nth-child(4),
+        .ot-table td:nth-child(4),
+        .ot-table th:nth-child(5),
+        .ot-table td:nth-child(5),
+        .ot-table th:nth-child(6),
+        .ot-table td:nth-child(6),
+        .ot-table th:nth-child(7),
+        .ot-table td:nth-child(7) {
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+
+        /* ── Responsive: aggressive column hiding, keep table format ── */
+        /* < 1280px: hide Uptime, hide tanggal sub di Last Inform */
+        @media(max-width:1280px) {
+
+            .ot-table th:nth-child(7),
+            .ot-table td:nth-child(7) {
+                display: none;
+            }
+
+            /* Uptime */
+            .inform-sub {
+                display: none;
+            }
+        }
+
+        /* < 1024px: hide Clients + SSID */
+        @media(max-width:1024px) {
+
+            .ot-table th:nth-child(5),
+            .ot-table td:nth-child(5) {
+                display: none;
+            }
+
+            /* Clients */
+            .ot-table th:nth-child(8),
+            .ot-table td:nth-child(8) {
+                display: none;
+            }
+
+            /* SSID */
+        }
+
+        /* < 900px: hide Suhu + WAN IP */
+        @media(max-width:900px) {
+
+            .ot-table th:nth-child(6),
+            .ot-table td:nth-child(6) {
+                display: none;
+            }
+
+            /* Suhu */
+            .ot-table th:nth-child(9),
+            .ot-table td:nth-child(9) {
+                display: none;
+            }
+
+            /* WAN IP */
+        }
+
+        /* < 720px: hide Customer + Last Inform */
+        @media(max-width:720px) {
+
+            .ot-table th:nth-child(3),
+            .ot-table td:nth-child(3) {
+                display: none;
+            }
+
+            /* Customer */
+            .ot-table th:nth-child(10),
+            .ot-table td:nth-child(10) {
+                display: none;
+            }
+
+            /* Last Inform */
+        }
+
+        /* Mobile compact: < 640px — tighten padding, smaller fonts, keep table */
+        @media(max-width:640px) {
+            .ot-table th {
+                padding: 9px 8px;
+                font-size: 9px;
+                letter-spacing: .04em;
+            }
+
+            .ot-table td {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+
+            .ot-table th:nth-child(4),
+            .ot-table td:nth-child(4),
+            .ot-table th:nth-child(5),
+            .ot-table td:nth-child(5),
+            .ot-table th:nth-child(6),
+            .ot-table td:nth-child(6),
+            .ot-table th:nth-child(7),
+            .ot-table td:nth-child(7) {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+
+            .num-cell {
+                font-size: 10px;
+            }
+
+            .sn-num {
+                font-size: 11px;
+            }
+
+            .sn-sub {
+                font-size: 9.5px;
+            }
+
+            .rx-val {
+                font-size: 11px;
+            }
+
+            .rx-lbl {
+                font-size: 8.5px;
+            }
+
+            .dev-val {
+                font-size: 10.5px;
+            }
+
+            .ip-badge {
+                font-size: 9.5px;
+                padding: 1.5px 5px;
+            }
+
+            .act-btn {
+                width: 26px;
+                height: 26px;
+            }
+
+            .act-btn svg {
+                width: 12px;
+                height: 12px;
+            }
+
+            /* Override earlier hide rules — show Customer + Uptime in mobile */
+            .ot-table th:nth-child(3),
+            .ot-table td:nth-child(3) {
+                display: table-cell !important;
+            }
+
+            /* Customer */
+            .ot-table th:nth-child(7),
+            .ot-table td:nth-child(7) {
+                display: table-cell !important;
+            }
+
+            /* Uptime */
+            /* Compact Customer in mobile */
+            .cust-name {
+                font-size: 11px;
+            }
+
+            .cust-id {
+                font-size: 9px;
+            }
+
+            .cust-empty {
+                font-size: 9.5px;
+            }
+
+            .cust-empty::before {
+                width: 4px;
+                height: 4px;
+            }
+
+            /* Compact uptime */
+            .dev-val.uptime-txt {
+                font-size: 10px;
+            }
+
+            /* Card list container — tetap allow horizontal scroll jika ada cell yang min-content lebih lebar */
+            .ot-tbl-wrap>div[style*="overflow-x"] {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        .num-cell {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+        }
+
+        /* Serial + Model combined cell — text-only stack, no icon */
+        .sn-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+
+        .sn-num {
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -.2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sn-sub {
+            font-size: 10.5px;
+            color: #94a3b8;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Model cell (legacy) */
+        .model-cell {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* Customer cell */
+        .cust-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .cust-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cust-id {
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .cust-empty {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10.5px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        .cust-empty::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        /* RX power tier cell — text only (no icon) */
+        .rx-txt {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            line-height: 1.1;
+            min-width: 0;
+        }
+
+        .rx-val {
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: -.2px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .rx-val.good {
+            color: #15803d;
+        }
+
+        .rx-val.weak {
+            color: #b45309;
+        }
+
+        .rx-val.bad {
+            color: #b91c1c;
+        }
+
+        .rx-lbl {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .rx-lbl.good {
+            color: #16a34a;
+        }
+
+        .rx-lbl.weak {
+            color: #d97706;
+        }
+
+        .rx-lbl.bad {
+            color: #dc2626;
+        }
+
+        .rx-empty {
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+        /* SSID cell */
+        .ssid-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .ssid-ic {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ssid-ic svg {
+            width: 11px;
+            height: 11px;
+            stroke-width: 2.2;
+        }
+
+        .ssid-txt {
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+            flex: 1;
+        }
+
+        /* WAN IP badge */
+        .ip-badge {
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            font-size: 10.5px;
+            font-weight: 600;
+            background: var(--ot-blue-l);
+            color: var(--ot-blue-d);
+            border: 1px solid #dbeafe;
+            border-radius: 5px;
+            padding: 2px 7px;
+            letter-spacing: -.2px;
+            white-space: nowrap;
+        }
+
+        .ip-empty {
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+        /* Per-metric cell: clients / temp / uptime */
+        .dev-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .dev-ic {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .dev-ic svg {
+            width: 11px;
+            height: 11px;
+            stroke-width: 2.2;
+        }
+
+        .dev-ic.clients {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .dev-ic.temp {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .dev-ic.temp.hot {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .dev-ic.uptime {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .dev-val {
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -.2px;
+            line-height: 1.1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dev-val.warn {
+            color: #b45309;
+        }
+
+        .dev-val.hot {
+            color: #b91c1c;
+        }
+
+        .dev-val .u {
+            font-size: 9.5px;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-left: 1px;
+        }
+
+        .dev-val.uptime-txt {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .dev-empty {
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+        /* Status pill (kept for modal & optional use) */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            white-space: nowrap;
+        }
+
+        .sdot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: currentColor;
+        }
+
+        .pill-online {
+            background: var(--ot-green-l);
+            color: #15803d;
+        }
+
+        .pill-online .sdot {
+            animation: pulse 2s infinite;
+        }
+
+        .pill-offline {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        /* Last inform */
+        .inform-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            font-size: 10.5px;
+            line-height: 1.3;
+        }
+
+        .inform-ago {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .inform-sub {
+            font-size: 9.5px;
+            color: #94a3b8;
+            font-variant-numeric: tabular-nums;
+            margin-top: 0;
+        }
+
+        /* Action buttons */
+        .act-btns {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+
+        .act-btn {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border-radius: 8px;
+            border: 1px solid #e8eaed;
+            background: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+            color: #64748b;
+            font-family: inherit;
+        }
+
+        .act-btn svg {
+            width: 13px;
+            height: 13px;
+            stroke-width: 1.9;
+        }
+
+        .act-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px -1px rgba(15, 23, 42, .08);
+        }
+
+        .act-detail:hover {
+            color: var(--ot-blue);
+            border-color: #bfdbfe;
+            background: var(--ot-blue-l);
+        }
+
+        .act-wifi:hover {
+            color: #7c3aed;
+            border-color: #ddd6fe;
+            background: #f5f3ff;
+        }
+
+        .act-reboot:hover {
+            color: var(--ot-amber);
+            border-color: #fde68a;
+            background: var(--ot-amber-l);
+        }
+
+        /* Empty state */
+        .tbl-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--faint);
+        }
+
+        .tbl-empty svg {
+            width: 36px;
+            height: 36px;
+            opacity: .35;
+            margin-bottom: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tbl-empty p {
+            font-size: 13px;
+            margin: 4px 0 0;
+        }
+
+        /* Pagination */
+        .ot-tbl-footer {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f8fafc;
+        }
+
+        .pg-info {
+            font-size: 12px;
+            color: var(--faint);
+        }
+
+        /* ── MODAL REDESIGN ── */
+        .ot-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .6);
+            backdrop-filter: blur(6px);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .ot-modal-overlay.show {
+            display: flex;
+        }
+
+        .ot-modal-box {
+            background: #fff;
+            border-radius: 24px;
+            width: 92%;
+            max-width: 820px;
+            max-height: 92vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, .22);
+        }
+
+        /* Header */
+        .ot-modal-hdr {
+            padding: 22px 24px 16px;
+            flex-shrink: 0;
+            border-bottom: 1.5px solid #f1f5f9;
+        }
+
+        .modal-hdr-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .ot-modal-hdr-l h3 {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text);
+            margin: 0 0 3px;
+        }
+
+        .ot-modal-hdr-l p {
+            font-size: 11px;
+            color: var(--faint);
+            margin: 0;
+            font-family: monospace;
+        }
+
+        .ot-modal-hdr-r {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .ot-modal-close {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 10px;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            transition: all .15s;
+        }
+
+        .ot-modal-close:hover {
+            background: #e2e8f0;
+            color: var(--text);
+        }
+
+        .ot-modal-close svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        .ot-modal-body {
+            overflow-y: auto;
+            padding: 18px 24px;
+            flex: 1;
+        }
+
+        .ot-modal-footer {
+            padding: 12px 24px;
+            border-top: 1.5px solid #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        /* Info grid — 4 kolom */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        @media(max-width:600px) {
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .info-item {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
+
+        .info-lbl {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: var(--faint);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 5px;
+        }
+
+        .info-val {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            word-break: break-all;
+            line-height: 1.3;
+        }
+
+        .info-val.mono {
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        /* Signal bar — dark modern */
+        .signal-panel {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            border-radius: 16px;
+            padding: 18px 22px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .sig-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 80px;
+        }
+
+        .sig-lbl {
+            font-size: 9px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sig-lbl svg {
+            width: 10px;
+            height: 10px;
+            stroke: rgba(255, 255, 255, .5);
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        .sig-val {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            font-family: monospace;
+            letter-spacing: -.5px;
+        }
+
+        .sig-val.good {
+            color: #4ade80;
+        }
+
+        .sig-val.warn {
+            color: #fbbf24;
+        }
+
+        .sig-val.bad {
+            color: #f87171;
+        }
+
+        .sig-val.dim {
+            color: rgba(255, 255, 255, .3);
+        }
+
+        .sig-divider {
+            width: 1px;
+            background: rgba(255, 255, 255, .1);
+            height: 40px;
+            align-self: center;
+            flex-shrink: 0;
+        }
+
+        .sig-spacer {
+            flex: 1;
+        }
+
+        .sig-ssid-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .sig-ssid-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+        }
+
+        .sig-ssid-lbl {
+            font-size: 9px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sig-ssid-val {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Tabs */
+        .m-tabs {
+            display: flex;
+            gap: 2px;
+            margin: 0 -24px 16px;
+            padding: 0 24px;
+            border-bottom: 2px solid #f1f5f9;
+            overflow-x: auto;
+            overflow-y: visible;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            flex-wrap: nowrap;
+        }
+
+        .m-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .m-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 11px 16px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--muted);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all .15s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .m-tab svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        .m-tab:hover {
+            color: #1e78ff;
+        }
+
+        .m-tab.active {
+            color: #1e78ff;
+            border-bottom-color: #1e78ff;
+        }
+
+        .m-panel {
+            display: none;
+        }
+
+        .m-panel.active {
+            display: block;
+        }
+
+        /* WiFi form */
+        .wifi-band-box {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+        }
+
+        .wifi-band-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .wifi-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .wifi-badge-2g {
+            background: #eff6ff;
+            color: #1e78ff;
+            border: 1.5px solid #bfdbfe;
+        }
+
+        .wifi-badge-5g {
+            background: #fffbeb;
+            color: #ff8800;
+            border: 1.5px solid #fed7aa;
+        }
+
+        .wifi-badge svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        .form-row {
+            margin-bottom: 12px;
+        }
+
+        .form-row label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--faint);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 6px;
+        }
+
+        .form-row input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--text);
+            outline: none;
+            background: #fff;
+            transition: border .15s;
+        }
+
+        .form-row input:focus {
+            border-color: #1e78ff;
+            box-shadow: 0 0 0 3px #1e78ff14;
+        }
+
+        .pw-wrap {
+            position: relative;
+        }
+
+        .pw-wrap input {
+            padding-right: 44px;
+        }
+
+        .pw-eye {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--faint);
+            display: flex;
+            align-items: center;
+            padding: 0;
+        }
+
+        .pw-eye svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+        }
+
+        /* Task cards */
+        .task-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        @media(max-width:500px) {
+            .task-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .task-card {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .task-card-hdr {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .task-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .task-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .ti-amber {
+            background: #fffbeb;
+            color: #ff8800;
+        }
+
+        .ti-red {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .ti-blue {
+            background: #eff6ff;
+            color: #1e78ff;
+        }
+
+        .task-card h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .task-card p {
+            font-size: 12px;
+            color: var(--muted);
+            margin: 0 0 12px;
+            line-height: 1.5;
+        }
+
+        /* Settings modal */
+        .settings-modal-box {
+            max-width: 460px !important;
+        }
+
+        .settings-form-row {
+            margin-bottom: 14px;
+        }
+
+        .settings-form-row label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--faint);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 6px;
+        }
+
+        .settings-form-row input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--text);
+            outline: none;
+            background: #fff;
+        }
+
+        .settings-form-row input:focus {
+            border-color: #1e78ff;
+        }
+
+        .settings-form-row small {
+            font-size: 11px;
+            color: var(--faint);
+            margin-top: 4px;
+            display: block;
+        }
+
+        /* Signal history */
+        .hist-btn {
+            padding: 5px 13px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+            background: #fff;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
+            font-family: inherit;
+        }
+
+        .hist-btn:hover {
+            border-color: #1e78ff;
+            color: #1e78ff;
+        }
+
+        .hist-btn.active {
+            background: #1e78ff;
+            color: #fff;
+            border-color: #1e78ff;
+        }
+
+        /* Inline alert */
+        .inline-alert {
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+            margin-top: 8px;
+        }
+
+        .inline-alert.success {
+            background: #f0fdf4;
+            border: 1.5px solid #bbf7d0;
+            color: #16a34a;
+        }
+
+        .inline-alert.error {
+            background: #fef2f2;
+            border: 1.5px solid #fecaca;
+            color: #dc2626;
+        }
+
+        .inline-alert.info {
+            background: #eff6ff;
+            border: 1.5px solid #bfdbfe;
+            color: #1e78ff;
+        }
+    </style>
+
+    <main class="page-content">
+
+        <!-- Header -->
+        <div class="ot-hdr">
+            <div class="ot-hdr-l">
+                <h1>
+                    ONT Management
+                </h1>
+                <p>
+                    Monitoring & konfigurasi ONT via GenieACS TR-069
+                    <span id="last-refresh-label" style="margin-left:8px;font-size:11px;color:var(--faint);"></span>
+                </p>
+            </div>
+            <div class="ot-hdr-r">
+                <div class="live-chip"><span class="ldot"></span>LIVE</div>
+                <button class="btn btn-outline btn-sm" onclick="GeniePage.refresh()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <polyline points="23,4 23,10 17,10" />
+                        <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
+                    </svg>
+                    Refresh
+                </button>
+                <button class="btn btn-blue btn-sm" onclick="GeniePage.openSettings()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                    </svg>
+                    Pengaturan Server
+                </button>
+            </div>
+        </div>
+
+        <!-- Alert -->
+        <div class="ot-alert" id="genie-alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span id="genie-alert-msg">GenieACS tidak dapat dijangkau</span>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="ot-cards">
+
+            <div class="ot-card otc-active" id="otc-total" data-filter="all" onclick="otcClick(this)">
+                <div class="card-lbl">Total ONT</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="stat-total">—</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-blue" id="ot-pill-total">— device</span>
+                            <span class="card-sub">Semua perangkat</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12" />
+                            <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb" />
+                            <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ot-card" id="otc-online" data-filter="online" onclick="otcClick(this)">
+                <div class="card-lbl">Online</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="stat-online">—</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-green" id="ot-pill-online">— ONT</span>
+                            <span class="card-sub">ONT aktif</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-online" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-online-fill" d="" fill="#16a34a" opacity=".12" />
+                            <path class="sp-line" id="sp-online-line" d="" stroke="#16a34a" />
+                            <circle class="sp-dot" id="sp-online-dot" r="2.5" fill="#16a34a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ot-card" id="otc-offline" data-filter="offline" onclick="otcClick(this)">
+                <div class="card-lbl">Offline</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="stat-offline">—</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-red" id="ot-pill-offline">— ONT</span>
+                            <span class="card-sub">ONT tidak aktif</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-offline" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-offline-fill" d="" fill="#dc2626" opacity=".12" />
+                            <path class="sp-line" id="sp-offline-line" d="" stroke="#dc2626" />
+                            <circle class="sp-dot" id="sp-offline-dot" r="2.5" fill="#dc2626" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ot-card ot-card-server" id="otc-server" data-filter="server" onclick="otcClick(this)">
+                <div class="srv-hdr">
+                    <div class="card-lbl" style="margin:0;">Status Server</div>
+                    <span class="srv-pill" id="srv-pill">
+                        <span class="srv-pd"></span>
+                        <span id="stat-server">—</span>
+                    </span>
+                </div>
+                <div class="srv-stack">
+                    <span class="srv-name">GenieACS NBI</span>
+                    <span class="srv-url" id="stat-server-url">—</span>
+                </div>
+                <div class="srv-foot">
+                    <span>TR-069</span>
+                    <span class="srv-dot-sep">·</span>
+                    <span id="srv-latency">Latency <b>—</b></span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Table -->
+        <div class="ot-tbl-wrap">
+            <div class="ot-tbl-hdr">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                    <div class="ot-tbl-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ot-blue)"
+                            stroke-width="2.5">
+                            <rect x="2" y="6" width="20" height="12" rx="2" />
+                            <path d="M6 10h.01M6 14h.01M10 10h8" />
+                        </svg>
+                        Daftar ONT / CPE
+                        <span class="ot-count" id="ont-count-label">0 device</span>
+                    </div>
+                    <div class="filter-chips">
+                        <button class="fchip active" onclick="GeniePage.setFilter('')">Semua</button>
+                        <button class="fchip online" onclick="GeniePage.setFilter('online')">Online</button>
+                        <button class="fchip offline" onclick="GeniePage.setFilter('offline')">Offline</button>
+                    </div>
+                </div>
+                <div class="search-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" id="genie-search" placeholder="Cari serial, SSID, model..."
+                        oninput="GeniePage.debounce()">
+                </div>
+            </div>
+
+            <div style="overflow-x:auto">
+                <table class="ot-table">
+                    <thead>
+                        <tr>
+                            <th style="width:42px;">#</th>
+                            <th style="width:200px;">Serial / Model</th>
+                            <th style="width:140px;">Customer</th>
+                            <th style="width:118px;">RX Power</th>
+                            <th style="width:88px;">Clients</th>
+                            <th style="width:96px;">Suhu</th>
+                            <th style="width:108px;">Uptime</th>
+                            <th>SSID 2.4G</th>
+                            <th style="width:108px;">WAN IP</th>
+                            <th style="width:104px;">Last Inform</th>
+                            <th style="width:108px;text-align:right;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="genie-tbody">
+                        <tr>
+                            <td colspan="11">
+                                <div class="tbl-empty">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                                        <path d="M6 10h.01M6 14h.01M10 10h8" />
+                                    </svg>
+                                    <p>Memuat data ONT...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="ot-tbl-footer">
+                <span class="pg-info" id="genie-pg-info"></span>
+            </div>
+        </div>
+
+    </main>
+
+    <%- include('layouts/footer') %>

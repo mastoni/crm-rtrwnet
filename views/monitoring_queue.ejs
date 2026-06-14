@@ -1,0 +1,1946 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --q-blue: #2563eb;
+            --q-blue-d: #1d4ed8;
+            --q-blue-l: #eff6ff;
+            --q-green: #16a34a;
+            --q-green-d: #15803d;
+            --q-green-l: #f0fdf4;
+            --q-red: #dc2626;
+            --q-red-d: #b91c1c;
+            --q-red-l: #fef2f2;
+            --q-amber: #d97706;
+            --q-amber-d: #b45309;
+            --q-amber-l: #fffbeb;
+            --q-teal: #0891b2;
+            --q-teal-l: #ecfeff;
+            --q-orange: #ea580c;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --muted: #64748b;
+            --faint: #94a3b8;
+            --rc: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .q {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* ── HEADER ── */
+        .q-hdr {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .q-hdr-l h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text);
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .q-hdr-l p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .q-hdr-r {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid;
+            transition: all .15s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .btn svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        .btn-outline {
+            background: #fff;
+            border-color: var(--border);
+            color: #374151;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .btn-blue {
+            background: var(--q-blue);
+            border-color: var(--q-blue);
+            color: #fff;
+        }
+
+        .btn-blue:hover {
+            background: var(--q-blue-d);
+        }
+
+        .btn-red {
+            background: var(--q-red);
+            border-color: var(--q-red);
+            color: #fff;
+        }
+
+        .btn-red:hover {
+            background: var(--q-red-d);
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        .btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* Live chip */
+        .live-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 13px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--q-green-l);
+            border: 1px solid #bbf7d0;
+            color: var(--q-green);
+        }
+
+        .live-chip .ldot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--q-green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .35;
+                transform: scale(.75)
+            }
+        }
+
+        /* ── STAT CARDS — single strip with dividers ── */
+        .q-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+
+        .q-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+        }
+
+        .q-card:last-child {
+            border-right: none;
+        }
+
+        .q-card:hover {
+            background: #fafbff;
+        }
+
+        /* Active — biru solid */
+        .q-card.qc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .q-card.qc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .q-card.qc-active .card-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .q-card.qc-active .card-val {
+            color: #fff;
+        }
+
+        .q-card.qc-active .card-sub {
+            color: rgba(255, 255, 255, .60);
+        }
+
+        .q-card.qc-active .card-pill {
+            background: rgba(255, 255, 255, .20) !important;
+            color: rgba(255, 255, 255, .90) !important;
+        }
+
+        .q-card.qc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .q-card.qc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .q-card.qc-active .sp-dot {
+            fill: #fff !important;
+        }
+
+        /* label */
+        .card-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+            transition: color .15s;
+        }
+
+        /* body */
+        .card-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* angka */
+        .card-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        @media(max-width:1400px) {
+            .card-val {
+                font-size: 26px;
+            }
+        }
+
+        /* meta */
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .card-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all .15s;
+        }
+
+        .pill-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .pill-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .pill-slate {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .pill-teal {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+        .pill-orange {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        /* sparkline */
+        .card-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .card-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sp-dot {}
+
+        /* ── Responsive stat cards ── */
+        @media(max-width:1000px) {
+            .q-cards {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .q-card:nth-child(3) {
+                border-right: none;
+            }
+
+            .q-card:nth-child(-n+3) {
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .q-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:600px) {
+            .q-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .q-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .q-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+            }
+
+            .q-card:nth-child(even) {
+                border-right: none;
+            }
+
+            .q-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:400px) {
+            .q-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .q-card {
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .q-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .q-card.qc-active {
+            border-color: #2563eb;
+        }
+
+
+        /* ── CONNECTION BANNER ── */
+        .conn-banner {
+            border-radius: 10px;
+            padding: 11px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1.5px solid;
+        }
+
+        .conn-success {
+            background: var(--q-green-l);
+            color: #15803d;
+            border-color: #bbf7d0;
+        }
+
+        .conn-info {
+            background: var(--q-blue-l);
+            color: var(--q-blue);
+            border-color: #bfdbfe;
+        }
+
+        .conn-error {
+            background: var(--q-red-l);
+            color: var(--q-red);
+            border-color: #fecaca;
+        }
+
+        /* ── TABLE ── */
+        .q-tbl-wrap {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--rc);
+            overflow: hidden;
+        }
+
+        .q-tbl-hdr {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .q-tbl-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .q-count {
+            font-size: 11px;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: var(--muted);
+            padding: 2px 9px;
+            border-radius: 20px;
+        }
+
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap svg {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--faint);
+            pointer-events: none;
+            width: 14px;
+            height: 14px;
+        }
+
+        .search-wrap input {
+            padding: 8px 12px 8px 33px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+            font-family: inherit;
+            color: var(--text);
+            width: 220px;
+            transition: all .15s;
+        }
+
+        .search-wrap input:focus {
+            border-color: var(--q-blue);
+            background: #fff;
+            box-shadow: 0 0 0 3px #2563eb14;
+        }
+
+        .q-tbl-hdr select {
+            padding: 8px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+            color: #374151;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .q-tbl-hdr select:focus {
+            border-color: var(--q-blue);
+        }
+
+        .q-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+
+        .q-table thead tr {
+            background: #fafbfc;
+        }
+
+        .q-table th {
+            padding: 11px 14px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            text-align: left;
+            border-bottom: 1px solid #eef2f7;
+            white-space: nowrap;
+        }
+
+        .q-table tbody tr {
+            border-bottom: 1px solid #f5f7fa;
+            transition: background .15s;
+        }
+
+        .q-table tbody tr:hover {
+            background: #fafbff;
+        }
+
+        .q-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .q-table tbody tr.row-disabled {
+            opacity: .6;
+        }
+
+        .q-table td {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        .num-cell {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            width: 36px;
+        }
+
+        .name-cell {
+            font-weight: 700;
+            color: var(--text);
+            cursor: pointer;
+            letter-spacing: -.2px;
+            line-height: 1.3;
+            font-size: 13px;
+        }
+
+        .name-cell:hover {
+            color: var(--q-blue);
+        }
+
+        .comment-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .target-cell {
+            min-width: 220px;
+            max-width: 360px;
+        }
+
+        .ip-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .ip-chip {
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            font-size: 10.5px;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            padding: 1.5px 6px;
+            letter-spacing: -.2px;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .ip-chip:hover {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
+
+        .ip-chip.single {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #dbeafe;
+        }
+
+        .ip-more {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #64748b;
+            background: #fff;
+            border: 1px dashed #cbd5e1;
+            border-radius: 5px;
+            padding: 1.5px 6px;
+            cursor: pointer;
+            transition: all .15s;
+            font-family: inherit;
+        }
+
+        .ip-more:hover {
+            background: #f8fafc;
+            color: var(--q-blue);
+            border-color: var(--q-blue);
+            border-style: solid;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .pill-on {
+            background: var(--q-green-l);
+            color: #15803d;
+        }
+
+        .pill-off {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        .sdot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .sdot-on {
+            animation: pulse 2s infinite;
+        }
+
+        .bw-cell {
+            min-width: 180px;
+        }
+
+        .bw-line {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 5px;
+        }
+
+        .bw-line:last-child {
+            margin-bottom: 0;
+        }
+
+        .bw-arr {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 8px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .arr-rx {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .arr-tx {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .bw-val {
+            font-size: 11.5px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            min-width: 66px;
+            letter-spacing: -.2px;
+        }
+
+        .bw-val.rx {
+            color: #1d4ed8;
+        }
+
+        .bw-val.tx {
+            color: #c2410c;
+        }
+
+        .bw-bar {
+            flex: 1;
+            height: 4px;
+            background: #f1f5f9;
+            border-radius: 2px;
+            overflow: hidden;
+            min-width: 30px;
+        }
+
+        .bw-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width .5s ease, background .3s;
+        }
+
+        .bw-pct {
+            font-size: 10px;
+            font-weight: 700;
+            color: #94a3b8;
+            width: 28px;
+            text-align: right;
+            flex-shrink: 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .bw-pct.warn {
+            color: #c2410c;
+        }
+
+        .bw-pct.danger {
+            color: #dc2626;
+        }
+
+        .bw-limit-sub {
+            font-size: 10px;
+            color: #94a3b8;
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            margin-top: 3px;
+            padding-top: 3px;
+            border-top: 1px dashed #eef2f7;
+            display: flex;
+            gap: 10px;
+        }
+
+        .bw-limit-sub span {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .bw-limit-sub span.unlim {
+            color: #cbd5e1;
+            font-style: italic;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .prio-box {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            gap: 1px;
+        }
+
+        .prio-val {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+            letter-spacing: -.5px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .prio-lbl {
+            font-size: 8px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .prio-box.hi {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .prio-box.hi .prio-val {
+            color: #b91c1c;
+        }
+
+        .prio-box.hi .prio-lbl {
+            color: #dc2626;
+        }
+
+        .prio-box.mid {
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+
+        .prio-box.mid .prio-val {
+            color: #b45309;
+        }
+
+        .prio-box.mid .prio-lbl {
+            color: #d97706;
+        }
+
+        .act-btns {
+            display: flex;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+
+        .act-btn {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: 9px;
+            border: 1px solid #e8eaed;
+            background: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+            font-family: inherit;
+            color: #64748b;
+        }
+
+        .act-btn svg {
+            width: 15px;
+            height: 15px;
+            stroke-width: 1.8;
+        }
+
+        .act-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px -1px rgba(15, 23, 42, .08);
+        }
+
+        .act-edit:hover {
+            color: var(--q-blue);
+            border-color: #bfdbfe;
+            background: var(--q-blue-l);
+        }
+
+        .act-pause {
+            color: #b45309;
+        }
+
+        .act-pause:hover {
+            color: #b45309;
+            border-color: #fde68a;
+            background: var(--q-amber-l);
+        }
+
+        .act-play {
+            color: #15803d;
+        }
+
+        .act-play:hover {
+            color: #15803d;
+            border-color: #bbf7d0;
+            background: var(--q-green-l);
+        }
+
+        .act-del {
+            color: #dc2626;
+        }
+
+        .act-del:hover {
+            color: #dc2626;
+            border-color: #fecaca;
+            background: var(--q-red-l);
+        }
+
+        /* Empty */
+        .tbl-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--faint);
+        }
+
+        .tbl-empty svg {
+            width: 36px;
+            height: 36px;
+            opacity: .35;
+            margin-bottom: 10px;
+        }
+
+        .tbl-empty p {
+            font-size: 13px;
+            margin: 0;
+        }
+
+        /* ── DETAIL PANEL (modernized) ── */
+        #detailPanel {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .5);
+            z-index: 1100;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        @media(min-width:640px) {
+            #detailPanel {
+                align-items: center;
+            }
+        }
+
+        .detail-box {
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-width: 680px;
+            max-height: 92vh;
+            overflow-y: auto;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            box-shadow: 0 20px 60px -15px rgba(15, 23, 42, .3);
+        }
+
+        @media(min-width:640px) {
+            .detail-box {
+                border-radius: 20px;
+                max-height: 88vh;
+            }
+        }
+
+        /* Header with soft gradient */
+        .detail-hdr {
+            padding: 22px 26px 18px;
+            background: linear-gradient(135deg, var(--q-blue-l) 0%, #fff 60%);
+            border-bottom: 1px solid #f0f4f8;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .detail-hdr-l h3 {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+            margin: 0;
+            letter-spacing: -.3px;
+            line-height: 1.2;
+        }
+
+        .detail-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            font-family: 'Geist Mono', ui-monospace, Menlo, monospace;
+            font-size: 11px;
+            font-weight: 600;
+            background: #fff;
+            color: var(--q-blue-d);
+            border: 1px solid #dbeafe;
+            border-radius: 5px;
+            padding: 2px 7px;
+        }
+
+        .detail-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            transition: all .15s;
+            flex-shrink: 0;
+            padding: 0;
+            font-family: inherit;
+        }
+
+        .detail-close svg {
+            width: 15px;
+            height: 15px;
+            stroke-width: 2;
+        }
+
+        .detail-close:hover {
+            background: #f1f5f9;
+            color: var(--q-red);
+            border-color: #fecaca;
+        }
+
+        .detail-body {
+            padding: 20px 26px 22px;
+        }
+
+        @media(max-width:560px) {
+            .detail-hdr {
+                padding: 18px 18px 14px;
+            }
+
+            .detail-body {
+                padding: 16px 18px 18px;
+            }
+
+            .detail-hdr-l h3 {
+                font-size: 16px;
+            }
+
+            .drate-val {
+                font-size: 17px;
+            }
+
+            .drate-val.compact {
+                font-size: 14px;
+            }
+        }
+
+        /* Metric strip — single bordered grid, no heavy boxes */
+        .detail-rates {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            background: #fff;
+            border: 1px solid #eef2f7;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+
+        .drate-card {
+            padding: 14px 16px;
+            border-right: 1px solid #eef2f7;
+            border-bottom: none;
+            border-radius: 0;
+            background: none;
+            border-top: none;
+            border-left: none;
+            min-width: 0;
+        }
+
+        .drate-card:last-child {
+            border-right: none;
+        }
+
+        @media(max-width:560px) {
+            .detail-rates {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .drate-card {
+                padding: 12px 14px;
+            }
+
+            .drate-card:nth-child(1),
+            .drate-card:nth-child(2) {
+                border-bottom: 1px solid #eef2f7;
+            }
+
+            .drate-card:nth-child(2) {
+                border-right: none;
+            }
+
+            .drate-card:nth-child(3) {
+                border-right: 1px solid #eef2f7;
+            }
+
+            .drate-card:nth-child(4) {
+                border-right: none;
+            }
+        }
+
+        .drate-lbl {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 6px;
+        }
+
+        .drate-ic {
+            width: 15px;
+            height: 15px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 900;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .drate-ic svg {
+            width: 10px;
+            height: 10px;
+            stroke-width: 2.2;
+        }
+
+        .drate-ic.rx {
+            background: #cffafe;
+            color: #06b6d4;
+        }
+
+        .drate-ic.tx {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .drate-ic.dl {
+            background: #cffafe;
+            color: #0891b2;
+        }
+
+        .drate-ic.ul {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .drate-val {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -.5px;
+            line-height: 1.1;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+            display: flex;
+            align-items: baseline;
+            gap: 3px;
+        }
+
+        .drate-val.compact {
+            font-size: 15px;
+        }
+
+        .drate-unit {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .drate-sub {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        /* Info strip */
+        .detail-info {
+            display: grid;
+            grid-template-columns: auto auto 1fr;
+            gap: 18px;
+            align-items: center;
+            padding: 12px 16px;
+            background: #fafbfc;
+            border: 1px solid #eef2f7;
+            border-radius: 12px;
+            margin-bottom: 18px;
+        }
+
+        @media(max-width:560px) {
+            .detail-info {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px 14px;
+                padding: 11px 14px;
+            }
+
+            .detail-info>.dinfo-item:nth-child(3) {
+                grid-column: 1/-1;
+            }
+        }
+
+        .dinfo-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .dinfo-lbl {
+            font-size: 9px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .dinfo-val {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dinfo-sdot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+            flex-shrink: 0;
+        }
+
+        .dinfo-prio {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 5px;
+            padding: 2px 7px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .dinfo-prio.hi {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .dinfo-prio.mid {
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+        .dinfo-prio.low {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        /* Segmented tabs */
+        .detail-tabs {
+            display: inline-flex;
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 3px;
+            gap: 2px;
+            margin-bottom: 14px;
+            border: none;
+        }
+
+        .dtab {
+            padding: 6px 14px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex: 0 0 auto;
+        }
+
+        .dtab svg {
+            width: 12px;
+            height: 12px;
+            stroke-width: 2;
+        }
+
+        .dtab .live-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+
+        .dtab.active {
+            background: #fff;
+            color: var(--text);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, .08);
+        }
+
+        /* Chart container */
+        .mchart-wrap {
+            background: #fff;
+            border: 1px solid #eef2f7;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .mchart-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px 8px;
+            border-bottom: 1px solid #f5f7fa;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .mchart-legend {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .mchart-lg {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .mchart-lg .sw {
+            width: 12px;
+            height: 2px;
+            border-radius: 1px;
+        }
+
+        .mchart-lg.dashed .sw {
+            background: transparent;
+            border-top: 2px dashed currentColor;
+            height: 0;
+        }
+
+        @media(max-width:560px) {
+            .mchart-hdr {
+                padding: 10px 12px 6px;
+                gap: 6px;
+            }
+
+            .mchart-legend {
+                gap: 8px;
+            }
+
+            .mchart-lg {
+                font-size: 10px;
+            }
+        }
+
+        .hist-btns {
+            display: inline-flex;
+            gap: 2px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 2px;
+            margin-bottom: 0;
+            flex-wrap: nowrap;
+        }
+
+        .hist-btn {
+            padding: 4px 10px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--muted);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .15s;
+        }
+
+        .hist-btn:hover {
+            color: var(--q-blue);
+        }
+
+        .hist-btn.active {
+            background: var(--q-blue);
+            color: #fff;
+        }
+
+        #historyStatus {
+            font-size: 11px;
+            color: var(--faint);
+            text-align: center;
+            min-height: 16px;
+            padding: 8px 12px 0;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 200px;
+            padding: 10px 12px 8px;
+            background: #fff;
+            border: none;
+            border-radius: 0;
+        }
+
+        .chart-wrap-lg {
+            height: 260px;
+            padding: 4px 4px 0;
+        }
+
+        /* ── MODAL ── */
+        .q-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 1200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .q-modal-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            width: 500px;
+            max-width: 96vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .q-modal-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .q-modal-hdr h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .q-modal-close {
+            background: #f8fafc;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 5px 11px;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--muted);
+            font-family: inherit;
+        }
+
+        .q-modal-close:hover {
+            background: #f1f5f9;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--faint);
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: 5px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            background: #f8fafc;
+            color: var(--text);
+            outline: none;
+            font-family: inherit;
+            transition: border .15s;
+        }
+
+        .form-control:focus {
+            border-color: var(--q-blue);
+            background: #fff;
+            box-shadow: 0 0 0 3px #2563eb14;
+        }
+
+        .form-hint {
+            font-size: 11px;
+            color: var(--faint);
+            margin-top: 4px;
+        }
+
+        .q-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1.5px solid #f1f5f9;
+        }
+
+        @media(max-width:768px) {
+            .search-wrap input {
+                width: 160px;
+            }
+
+            .q-table th:nth-child(3),
+            .q-table td:nth-child(3),
+            .q-table th:nth-child(6),
+            .q-table td:nth-child(6) {
+                display: none;
+            }
+        }
+    </style>
+
+    <main class="page-content">
+
+        <!-- Header -->
+        <div class="q-hdr">
+            <div class="q-hdr-l">
+                <h1>
+                    Simple Queue
+                </h1>
+                <p>Monitor & kelola bandwidth queue Mikrotik secara real-time</p>
+            </div>
+            <div class="q-hdr-r">
+                <div class="live-chip"><span class="ldot"></span>LIVE</div>
+                <button class="btn btn-outline btn-sm" id="btnConfigMT">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14" />
+                    </svg>
+                    MikroTik Config
+                </button>
+                <button class="btn btn-blue btn-sm" id="btnAddQueue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Add Queue
+                </button>
+            </div>
+        </div>
+
+        <!-- Connection banner -->
+        <div id="connectionBanner"></div>
+
+        <!-- Stat cards -->
+        <div class="q-cards">
+
+            <!-- Total Queues -->
+            <div class="q-card qc-active" id="qc-total" data-filter="all" onclick="qcClick(this)">
+                <div class="card-lbl">Total Queues</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="statTotal">—</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-blue" id="qp-total">— queue</span>
+                            <span class="card-sub">Semua queue</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12" />
+                            <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb" />
+                            <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active -->
+            <div class="q-card" id="qc-active" data-filter="active" onclick="qcClick(this)">
+                <div class="card-lbl">Active</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="statActive">—</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-green" id="qp-active">— queue</span>
+                            <span class="card-sub">Queue aktif</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-active" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-active-fill" d="" fill="#16a34a" opacity=".12" />
+                            <path class="sp-line" id="sp-active-line" d="" stroke="#16a34a" />
+                            <circle class="sp-dot" id="sp-active-dot" r="2.5" fill="#16a34a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disabled -->
+            <div class="q-card" id="qc-disabled" data-filter="disabled" onclick="qcClick(this)">
+                <div class="card-lbl">Disabled</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="statDisabled">—</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-slate" id="qp-disabled">— queue</span>
+                            <span class="card-sub">Queue nonaktif</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-disabled" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-disabled-fill" d="" fill="#475569" opacity=".12" />
+                            <path class="sp-line" id="sp-disabled-line" d="" stroke="#475569" />
+                            <circle class="sp-dot" id="sp-disabled-dot" r="2.5" fill="#475569" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total RX -->
+            <div class="q-card" id="qc-rx" data-filter="rx" onclick="qcClick(this)">
+                <div class="card-lbl">Total RX</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="statTotalRx">—</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-teal" id="qp-rx">↓ Mbps</span>
+                            <span class="card-sub">Download agregat</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-rx" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-rx-fill" d="" fill="#0891b2" opacity=".12" />
+                            <path class="sp-line" id="sp-rx-line" d="" stroke="#0891b2" />
+                            <circle class="sp-dot" id="sp-rx-dot" r="2.5" fill="#0891b2" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total TX -->
+            <div class="q-card" id="qc-tx" data-filter="tx" onclick="qcClick(this)">
+                <div class="card-lbl">Total TX</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="statTotalTx">—</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-orange" id="qp-tx">↑ Mbps</span>
+                            <span class="card-sub">Upload agregat</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-tx" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-tx-fill" d="" fill="#ea580c" opacity=".12" />
+                            <path class="sp-line" id="sp-tx-line" d="" stroke="#ea580c" />
+                            <circle class="sp-dot" id="sp-tx-dot" r="2.5" fill="#ea580c" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Queue Table -->
+        <div class="q-tbl-wrap">
+            <div class="q-tbl-hdr">
+                <div class="q-tbl-title">
+
+                    Daftar Queue
+                    <span class="q-count" id="queueCount">0 queue</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <div class="search-wrap">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input type="text" id="queueSearch" placeholder="Cari nama, target IP...">
+                    </div>
+                    <select id="filterStatus">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="disabled">Disabled</option>
+                    </select>
+                    <button class="btn btn-outline btn-sm" id="btnRefresh">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23,4 23,10 17,10" />
+                            <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
+                        </svg>
+                        Refresh
+                    </button>
+                    <select id="intervalPicker"
+                        style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:#f8fafc;outline:none;cursor:pointer;font-family:inherit;color:#374151;">
+                        <option value="2">2 dtk</option>
+                        <option value="3" selected>3 dtk</option>
+                        <option value="5">5 dtk</option>
+                        <option value="10">10 dtk</option>
+                    </select>
+                </div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="q-table">
+                    <thead>
+                        <tr>
+                            <th style="width:36px;">#</th>
+                            <th>Nama Queue</th>
+                            <th>Target IP</th>
+                            <th style="width:100px;">Status</th>
+                            <th style="width:210px;">Bandwidth Live</th>
+                            <th style="width:64px;text-align:center;">Prio</th>
+                            <th style="width:116px;text-align:right;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queueTbody">
+                        <tr>
+                            <td colspan="7">
+                                <div class="tbl-empty">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <polyline points="16,3 21,3 21,8" />
+                                        <line x1="4" y1="20" x2="21" y2="3" />
+                                    </svg>
+                                    <p>Memuat queue...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MODAL CONFIG -->
+        <div class="q-modal-overlay" id="configModal">
+            <div class="q-modal-box">
+                <div class="q-modal-hdr">
+                    <h3>MikroTik Config</h3>
+                    <button class="q-modal-close" id="closeConfigModal">×</button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Host IP</label>
+                    <input class="form-control" id="cfgHost">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Port API</label>
+                    <input class="form-control" id="cfgPort" value="8728">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input class="form-control" id="cfgUser">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input class="form-control" type="password" id="cfgPass">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Use SSL</label>
+                    <select class="form-control" id="cfgSSL">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </div>
+                <div class="q-modal-footer" style="justify-content:space-between; align-items:center;">
+                    <div id="testResult" style="font-size:12px;"></div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-outline" id="btnTestConn">Test Connection</button>
+                        <button class="btn btn-blue" id="btnSaveConfig">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUEUE MODAL -->
+        <div class="q-modal-overlay" id="queueModal">
+            <div class="q-modal-box">
+                <div class="q-modal-hdr">
+                    <h3 id="modalTitle">Tambah Queue</h3>
+                    <button class="q-modal-close" id="closeModal">×</button>
+                </div>
+                <form id="queueForm">
+                    <input type="hidden" id="queueId">
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input class="form-control" id="qName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target</label>
+                        <input class="form-control" id="qTarget" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Max Limit Down</label>
+                            <input class="form-control" id="qMaxDown">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Max Limit Up</label>
+                            <input class="form-control" id="qMaxUp">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Priority</label>
+                            <input class="form-control" id="qPriority" type="number" min="1" max="8" value="8">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Disabled</label>
+                            <select class="form-control" id="qDisabled">
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Comment</label>
+                        <input class="form-control" id="qComment">
+                    </div>
+                    <div class="q-modal-footer">
+                        <button type="button" class="btn btn-outline" id="cancelModal">Batal</button>
+                        <button type="submit" class="btn btn-blue" id="saveQueue">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- DETAIL PANEL -->
+        <div class="q-modal-overlay" id="detailPanel">
+            <div class="q-modal-box" style="width:800px; max-width:96vw;">
+                <div class="q-modal-hdr">
+                    <h3 id="detailName">Queue Detail</h3>
+                    <button class="q-modal-close" id="btnCloseDetail">×</button>
+                </div>
+                <div style="display:flex;gap:20px;margin-bottom:15px;flex-wrap:wrap;">
+                    <div><span class="form-label">Target:</span> <span id="detailTarget" style="font-size:13px;"></span>
+                    </div>
+                    <div><span class="form-label">Limit ↓:</span> <span id="detailMaxDown"
+                            style="font-size:13px;"></span></div>
+                    <div><span class="form-label">Limit ↑:</span> <span id="detailMaxUp" style="font-size:13px;"></span>
+                    </div>
+                    <div><span class="form-label">Status:</span> <span id="detailStatus" style="font-size:13px;"></span>
+                    </div>
+                    <div id="detailPriorityWrap" style="font-size:13px;"></div>
+                </div>
+                <div><span class="form-label">Comment:</span> <span id="detailComment" style="font-size:13px;"></span>
+                </div>
+                <div style="display:flex;gap:20px;margin-bottom:15px;flex-wrap:wrap;margin-top:10px;">
+                    <div><span class="form-label">Bytes ↓:</span> <span id="detailBytesDown"
+                            style="font-size:13px;"></span></div>
+                    <div><span class="form-label">Bytes ↑:</span> <span id="detailBytesUp"
+                            style="font-size:13px;"></span></div>
+                </div>
+                <div style="border-bottom:2px solid #f1f5f9;margin-bottom:15px;display:flex;">
+                    <button class="btn btn-outline"
+                        style="border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none;"
+                        id="tabLive" onclick="QueuePage.switchDetailTab('live')">Live</button>
+                    <button class="btn btn-outline"
+                        style="border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:none; margin-left:-1px;"
+                        id="tabHistory" onclick="QueuePage.switchDetailTab('history')">History</button>
+                </div>
+                <div id="paneLive">
+                    <div style="display:flex;gap:20px;margin-bottom:10px;">
+                        <div style="color:#06b6d4;font-weight:bold;font-size:13px;">DL: <span id="detailRxRate">0</span>
+                            Mbps</div>
+                        <div style="color:#f59e0b;font-weight:bold;font-size:13px;">UL: <span id="detailTxRate">0</span>
+                            Mbps</div>
+                    </div>
+                    <div id="detailChart"></div>
+                </div>
+                <div id="paneHistory" style="display:none;">
+                    <div style="display:flex;gap:10px;margin-bottom:10px;">
+                        <button class="btn btn-outline btn-sm hist-btn"
+                            onclick="QueuePage.switchHistoryRange('1h')">1h</button>
+                        <button class="btn btn-outline btn-sm hist-btn"
+                            onclick="QueuePage.switchHistoryRange('24h')">24h</button>
+                    </div>
+                    <div id="historyStatus" style="color:#94a3b8;font-size:12px;margin-bottom:10px;"></div>
+                    <div id="historyChart"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <%- include('layouts/footer') %>

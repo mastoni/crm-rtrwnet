@@ -1,0 +1,14 @@
+    </div> <!-- End cp-container -->
+
+    <script>
+        async function logoutPortal() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            } catch(e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

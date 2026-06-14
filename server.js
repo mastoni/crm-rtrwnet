@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const db = require('./db');
+const rewardsRouter = require('./routes/rewards');
+const customerPortalRouter = require('./routes/customer-portal');
 require('dotenv').config();
 
 const app = express();
@@ -25,6 +27,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Subdomain Routing for Customer Portal
+app.use((req, res, next) => {
+    if (req.hostname.startsWith('portal.')) {
+        return customerPortalRouter(req, res, next);
+    }
+    next();
+});
 
 // Auto-initialize database on startup (Non-blocking fallback)
 let isDbConnected = false;
@@ -135,6 +145,8 @@ registerPage('/work-orders', 'work_orders', ['/js/work-orders.js']);
 registerPage('/message-logs', 'message_logs', ['https://cdn.jsdelivr.net/npm/chart.js', '/js/message-logs.js']);
 registerPage('/whatsapp', 'whatsapp', []);
 registerPage('/wa/templates', 'wa_templates', ['/js/wa-templates.js']);
+registerPage('/rewards', 'rewards', ['/js/rewards.js']);
+registerPage('/customer-portal', 'customer_portal', ['/js/customer-portal.js']);
 
 // Monitoring routes
 registerPage('/monitoring/traffic', 'monitoring_traffic', ['/js/traffic.js']);
@@ -208,6 +220,9 @@ app.post('/api/auth/logout', (req, res) => {
     res.clearCookie('token');
     res.json({ success: true, message: 'Logged out successfully' });
 });
+
+// Reward Routes API
+app.use('/api/rewards', authenticateAPI, rewardsRouter.router);
 
 
 // ============================================

@@ -1,0 +1,402 @@
+<%- include('layouts/header') %>
+
+    <main class="page-content">
+        <!-- Monitoring Overview Header -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <h1>Monitoring Overview</h1>
+            </div>
+            <div class="page-header-right">
+                <button class="btn-secondary" id="refreshDashboard">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card gradient-blue">
+                <div class="sc-label">Total Number<br>PPPoE Active</div>
+                <div class="sc-value" id="pppoeActiveCount">0</div>
+                <div class="sc-sub">Sessions online</div>
+            </div>
+            <div class="summary-card gradient-blue">
+                <div class="sc-label">Total Bandwidth<br>Download</div>
+                <div class="sc-value" id="totalBandwidth">0</div>
+                <div class="sc-sub">Mbps aggregate</div>
+            </div>
+            <div class="summary-card gradient-blue">
+                <div class="sc-label">ONT Online<br>To Date</div>
+                <div class="sc-value" id="ontOnlineCount">0</div>
+                <div class="sc-sub">Active ONTs</div>
+            </div>
+            <div class="summary-card gradient-blue">
+                <div class="sc-label">Total Number<br>ONT Offline</div>
+                <div class="sc-value" id="ontOfflineCount">0</div>
+                <div class="sc-sub">Need attention</div>
+            </div>
+            <div class="summary-card gradient-blue">
+                <div class="sc-label">CPU Load<br>Average</div>
+                <div class="sc-value" id="cpuLoadAvg">0%</div>
+                <div class="sc-sub" id="cpuDeviceName">Router</div>
+            </div>
+        </div>
+
+        <!-- Main Grid: Traffic Interface + Activity Chart -->
+        <div class="dashboard-grid">
+            <!-- Traffic Interface Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+                        </svg>
+                        <h3>Traffic Interface</h3>
+                    </div>
+                    <a href="/monitoring/traffic" class="card-link">View all →</a>
+                </div>
+                <div class="card-body" id="trafficInterfaceList">
+                    <div class="loading-state">Loading interfaces...</div>
+                </div>
+            </div>
+
+            <!-- Activity Chart Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <line x1="3" y1="9" x2="21" y2="9" />
+                            <line x1="9" y1="21" x2="9" y2="9" />
+                        </svg>
+                        <h3>Activity Chart</h3>
+                    </div>
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-line blue"></span> RX</span>
+                        <span class="legend-item"><span class="legend-line orange"></span> TX</span>
+                        <div class="chart-range-btns">
+                            <button class="range-btn active" data-range="2s">2s</button>
+                            <button class="range-btn" data-range="1m">1m</button>
+                            <button class="range-btn" data-range="5m">5m</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-stats">
+                        <div class="chart-stat">
+                            <span class="stat-label">MAX RX</span>
+                            <span class="stat-value blue" id="maxRx">0 Mbps</span>
+                        </div>
+                        <div class="chart-stat">
+                            <span class="stat-label">MAX TX</span>
+                            <span class="stat-value orange" id="maxTx">0 Mbps</span>
+                        </div>
+                        <div class="chart-stat">
+                            <span class="stat-label">AVG RX</span>
+                            <span class="stat-value blue" id="avgRx">0 Mbps</span>
+                        </div>
+                        <div class="chart-stat">
+                            <span class="stat-label">AVG TX</span>
+                            <span class="stat-value orange" id="avgTx">0 Mbps</span>
+                        </div>
+                    </div>
+                    <div class="chart-container" style="height:auto;min-height:240px;">
+                        <div id="activityChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Top Customers + Network Uptime -->
+        <div class="dashboard-grid">
+            <!-- Top Customers by Bandwidth -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <polyline points="17 11 19 13 23 9"></polyline>
+                        </svg>
+                        <h3>Top Customers by Bandwidth</h3>
+                    </div>
+                    <select id="topCustomersPeriod" class="period-select">
+                        <option value="24h">Last 24h</option>
+                        <option value="7d" selected>Last 7 days</option>
+                        <option value="30d">Last 30 days</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div id="topCustomersList" class="top-customers-list">
+                        <div class="loading-state">Loading data...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Uptime Statistics -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                        <h3>Network Uptime</h3>
+                    </div>
+                    <select id="uptimePeriod" class="period-select">
+                        <option value="7d" selected>Last 7 days</option>
+                        <option value="30d">Last 30 days</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div class="uptime-summary" id="uptimeSummary">
+                        <div class="uptime-stat">
+                            <div class="stat-value" id="avgUptime">0%</div>
+                            <div class="stat-label">Average Uptime</div>
+                        </div>
+                        <div class="uptime-stat">
+                            <div class="stat-value" id="criticalDevices">0</div>
+                            <div class="stat-label">Critical Devices</div>
+                        </div>
+                    </div>
+                    <div id="uptimeDevicesList" class="uptime-devices-list">
+                        <div class="loading-state">Loading data...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Ticket Stats + Bandwidth Trends -->
+        <div class="dashboard-grid">
+            <!-- Ticket/Support Statistics -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <h3>Ticket Statistics</h3>
+                    </div>
+                    <a href="/tickets" class="card-link">View all →</a>
+                </div>
+                <div class="card-body">
+                    <div class="ticket-stats-grid" id="ticketStatsGrid">
+                        <div class="ticket-stat">
+                            <div class="stat-icon blue">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="openTickets">0</div>
+                                <div class="stat-label">Open Tickets</div>
+                            </div>
+                        </div>
+                        <div class="ticket-stat">
+                            <div class="stat-icon green">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="resolvedTickets">0</div>
+                                <div class="stat-label">Resolved</div>
+                            </div>
+                        </div>
+                        <div class="ticket-stat">
+                            <div class="stat-icon orange">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="avgResolutionTime">0h</div>
+                                <div class="stat-label">Avg Resolution</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bandwidth Trends Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                            <polyline points="17 6 23 6 23 12"></polyline>
+                        </svg>
+                        <h3>Bandwidth Trends</h3>
+                    </div>
+                    <select id="bandwidthTrendsPeriod" class="period-select">
+                        <option value="realtime">Realtime (1h)</option>
+                        <option value="daily" selected>Daily (30d)</option>
+                        <option value="weekly">Weekly (7d)</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height:280px;">
+                        <div id="bandwidthTrendsChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Customer Growth + Revenue Forecast -->
+        <div class="dashboard-grid">
+            <!-- Customer Growth Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <h3>Customer Growth</h3>
+                    </div>
+                    <div class="customer-growth-stats" id="customerGrowthStats">
+                        <div class="growth-stat">
+                            <span class="growth-value" id="totalCustomersGrowth">0</span>
+                            <span class="growth-label">Total</span>
+                        </div>
+                        <div class="growth-stat">
+                            <span class="growth-value green" id="growthRate">+0%</span>
+                            <span class="growth-label">Growth Rate</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height:280px;">
+                        <div id="customerGrowthChart"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Revenue Forecast -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <h3>Revenue Forecast</h3>
+                    </div>
+                    <div class="revenue-current">
+                        <span class="revenue-label">This Month</span>
+                        <span class="revenue-value" id="currentMonthRevenue">Rp 0</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height:280px;">
+                        <div id="revenueForecastChart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing: Device Status + Billing Overview -->
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Device Status</h3>
+                    <a href="/devices" class="card-link">View all →</a>
+                </div>
+                <div class="card-body">
+                    <div class="device-status-grid" id="deviceStatusGrid">
+                        <div class="ds-item online">
+                            <div class="ds-count" id="devOnline">0</div>
+                            <div class="ds-label">Online</div>
+                        </div>
+                        <div class="ds-item offline">
+                            <div class="ds-count" id="devOffline">0</div>
+                            <div class="ds-label">Offline</div>
+                        </div>
+                        <div class="ds-item warning">
+                            <div class="ds-count" id="devWarning">0</div>
+                            <div class="ds-label">Warning</div>
+                        </div>
+                        <div class="ds-item total">
+                            <div class="ds-count" id="devTotal">0</div>
+                            <div class="ds-label">Total</div>
+                        </div>
+                    </div>
+                    <div id="deviceList" class="device-list"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Billing Overview</h3>
+                    <a href="/billing" class="card-link">View all →</a>
+                </div>
+                <div class="card-body">
+                    <div class="billing-stats">
+                        <div class="bs-item">
+                            <div class="bs-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="20,6 9,17 4,12" />
+                                </svg></div>
+                            <div>
+                                <div class="bs-value" id="billPaid">0</div>
+                                <div class="bs-label">Paid this month</div>
+                            </div>
+                        </div>
+                        <div class="bs-item">
+                            <div class="bs-icon yellow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg></div>
+                            <div>
+                                <div class="bs-value" id="billUnpaid">0</div>
+                                <div class="bs-label">Unpaid</div>
+                            </div>
+                        </div>
+                        <div class="bs-item">
+                            <div class="bs-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="15" y1="9" x2="9" y2="15" />
+                                    <line x1="9" y1="9" x2="15" y2="15" />
+                                </svg></div>
+                            <div>
+                                <div class="bs-value" id="billOverdue">0</div>
+                                <div class="bs-label">Overdue</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue This Month - New Style -->
+                    <div class="revenue-box-new">
+                        <span class="revenue-label-new">Revenue This Month</span>
+                        <span class="revenue-value-new" id="revenueMonthNew">Rp 0</span>
+                        <span class="revenue-detail-new" id="revenueDetail">0 pelanggan bayar</span>
+                    </div>
+
+                    <!-- Total Outstanding Amount -->
+                    <div class="outstanding-box">
+                        <span class="outstanding-label">Total Tagihan Belum Dibayar</span>
+                        <span class="outstanding-value" id="totalOutstanding">Rp 0</span>
+                        <span class="outstanding-detail" id="outstandingDetail">0 pelanggan</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <%- include('layouts/footer') %>

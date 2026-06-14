@@ -1,0 +1,1612 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --pm-blue: #2563eb;
+            --pm-blue-d: #1d4ed8;
+            --pm-blue-l: #eff6ff;
+            --pm-green: #16a34a;
+            --pm-green-d: #15803d;
+            --pm-green-l: #f0fdf4;
+            --pm-red: #dc2626;
+            --pm-red-d: #b91c1c;
+            --pm-red-l: #fef2f2;
+            --pm-amber: #d97706;
+            --pm-amber-d: #b45309;
+            --pm-amber-l: #fffbeb;
+            --pm-teal: #0891b2;
+            --pm-teal-l: #ecfeff;
+            --border: #e2e8f0;
+            --text: #0f172a;
+            --muted: #64748b;
+            --faint: #94a3b8;
+            --rc: 16px;
+        }
+
+        .pm {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* ── HEADER ── */
+        .pm-hdr {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .pm-hdr-l h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text);
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pm-hdr-l p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .pm-hdr-r {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid;
+            transition: all .15s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .btn svg {
+            flex-shrink: 0;
+        }
+
+        .btn-outline {
+            background: #fff;
+            border-color: var(--border);
+            color: #374151;
+        }
+
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .btn-blue {
+            background: var(--pm-blue);
+            border-color: var(--pm-blue);
+            color: #fff;
+        }
+
+        .btn-blue:hover {
+            background: var(--pm-blue-d);
+        }
+
+        .btn-green {
+            background: var(--pm-green);
+            border-color: var(--pm-green);
+            color: #fff;
+        }
+
+        .btn-green:hover {
+            background: var(--pm-green-d);
+        }
+
+        .btn-teal {
+            background: var(--pm-teal);
+            border-color: var(--pm-teal);
+            color: #fff;
+        }
+
+        .btn-teal:hover {
+            background: #0e7490;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        .btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Live chip */
+        .live-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .chip-idle {
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+
+        .chip-scanning {
+            background: var(--pm-blue-l);
+            border: 1px solid #bfdbfe;
+            color: var(--pm-blue);
+        }
+
+        .chip-live {
+            background: var(--pm-green-l);
+            border: 1px solid #bbf7d0;
+            color: var(--pm-green);
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .chip-idle .live-dot {
+            background: var(--faint);
+        }
+
+        .chip-scanning .live-dot {
+            background: var(--pm-blue);
+            animation: pulse .8s ease-in-out infinite;
+        }
+
+        .chip-live .live-dot {
+            background: var(--pm-green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .35;
+                transform: scale(.75)
+            }
+        }
+
+        /* ── STAT CARDS ── */
+        /* ── STAT CARDS — single strip with dividers ── */
+        .pm-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .pm-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+        }
+
+        .pm-card:last-child {
+            border-right: none;
+        }
+
+        .pm-card:hover {
+            background: #fafbff;
+        }
+
+        /* Active — biru solid */
+        .pm-card.pmc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .pm-card.pmc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .pm-card.pmc-active .card-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .pm-card.pmc-active .card-val {
+            color: #fff;
+        }
+
+        .pm-card.pmc-active .card-sub {
+            color: rgba(255, 255, 255, .60);
+        }
+
+        .pm-card.pmc-active .card-pill {
+            background: rgba(255, 255, 255, .20) !important;
+            color: rgba(255, 255, 255, .90) !important;
+        }
+
+        .pm-card.pmc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .pm-card.pmc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .pm-card.pmc-active .sp-dot {
+            fill: #fff !important;
+        }
+
+        /* label */
+        .card-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+            transition: color .15s;
+        }
+
+        /* body */
+        .card-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* angka */
+        .card-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        @media(max-width:1400px) {
+            .card-val {
+                font-size: 26px;
+            }
+        }
+
+        /* meta */
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .card-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all .15s;
+        }
+
+        .pill-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .pill-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .pill-red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .pill-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        /* sparkline */
+        .card-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .card-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sp-dot {}
+
+        /* responsive */
+        @media(max-width:700px) {
+            .pm-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .pm-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+            }
+
+            .pm-card:nth-child(even) {
+                border-right: none;
+            }
+
+            .pm-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:400px) {
+            .pm-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .pm-card {
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .pm-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .prog-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--pm-blue), #38bdf8);
+            border-radius: 4px;
+            transition: width .3s ease;
+        }
+
+        .prog-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+        }
+
+        .prog-pct {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--pm-blue);
+            min-width: 36px;
+            text-align: right;
+        }
+
+        /* ── CONTROLS ── */
+        .pm-ctrl {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--rc);
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        .search-wrap svg {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--faint);
+            pointer-events: none;
+            width: 15px;
+            height: 15px;
+        }
+
+        .search-wrap input {
+            width: 100%;
+            padding: 9px 12px 9px 34px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            box-sizing: border-box;
+            background: #f8fafc;
+            font-family: inherit;
+            transition: all .15s;
+        }
+
+        .search-wrap input:focus {
+            border-color: var(--pm-blue);
+            background: #fff;
+            box-shadow: 0 0 0 3px #2563eb15;
+        }
+
+        .pm-ctrl select {
+            padding: 9px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            background: #f8fafc;
+            color: #374151;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .pm-ctrl select:focus {
+            border-color: var(--pm-blue);
+        }
+
+        .ctrl-r {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .cnt-info {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .interval-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .interval-wrap select {
+            padding: 5px 9px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: inherit;
+            background: #f8fafc;
+            outline: none;
+        }
+
+        /* ── TABLE ── */
+        .pm-tbl-wrap {
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: var(--rc);
+            overflow: hidden;
+        }
+
+        .pm-tbl-hdr {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #f1f5f9;
+            flex-wrap: wrap;
+        }
+
+        .pm-tbl-hdr-t {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .pm-tbl-note {
+            font-size: 11px;
+            color: var(--faint);
+            margin-left: auto;
+        }
+
+        .pm-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .pm-table thead tr {
+            background: #f8fafc;
+        }
+
+        .pm-table th {
+            padding: 10px 16px;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        .pm-table tbody tr {
+            border-bottom: 1px solid #f8fafc;
+            transition: background .1s;
+        }
+
+        .pm-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .pm-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .pm-table td {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        /* Cells */
+        .cust-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .cust-meta {
+            font-size: 11px;
+            color: var(--faint);
+            margin-top: 2px;
+        }
+
+        .ip-badge {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #334155;
+            padding: 4px 9px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* Status pills */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sdot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .pill-up {
+            background: var(--pm-green-l);
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .pill-up .sdot {
+            background: #22c55e;
+            animation: pingRing 2s ease-in-out infinite;
+        }
+
+        .pill-down {
+            background: var(--pm-red-l);
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        .pill-down .sdot {
+            background: #ef4444;
+        }
+
+        .pill-unknown {
+            background: #f8fafc;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+
+        .pill-unknown .sdot {
+            background: var(--faint);
+        }
+
+        .pill-checking {
+            background: var(--pm-blue-l);
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
+        .pill-checking .sdot {
+            background: var(--pm-blue);
+            animation: pulse .8s ease-in-out infinite;
+        }
+
+        @keyframes pingRing {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, .4)
+            }
+
+            50% {
+                box-shadow: 0 0 0 4px rgba(34, 197, 94, 0)
+            }
+        }
+
+        /* Latency */
+        .lat {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+
+        .lat-good {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .lat-ok {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .lat-bad {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .lat-na {
+            background: #f1f5f9;
+            color: var(--faint);
+        }
+
+        /* Loss bar */
+        .loss-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loss-bar {
+            flex: 1;
+            min-width: 60px;
+            max-width: 80px;
+            height: 5px;
+            background: #f1f5f9;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .loss-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .5s;
+        }
+
+        .loss-0 .loss-fill {
+            background: #22c55e;
+        }
+
+        .loss-lo .loss-fill {
+            background: #f59e0b;
+        }
+
+        .loss-hi .loss-fill {
+            background: #ef4444;
+        }
+
+        .loss-pct {
+            font-size: 11.5px;
+            font-weight: 700;
+            min-width: 28px;
+        }
+
+        /* Action btn */
+        .act-btn {
+            padding: 5px 10px;
+            border-radius: 7px;
+            font-size: 11.5px;
+            font-weight: 600;
+            background: var(--pm-blue-l);
+            color: var(--pm-blue);
+            border: 1px solid #bfdbfe;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .act-btn:hover {
+            background: var(--pm-blue);
+            color: #fff;
+            border-color: var(--pm-blue);
+        }
+
+        .act-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .act-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* ── ASSIGN IP MODAL ── */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .5);
+            z-index: 400;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+        }
+
+        .modal-hdr {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-hdr h2 {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        .modal-close:hover {
+            background: #e2e8f0;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 24px;
+        }
+
+        .modal-note {
+            font-size: 12.5px;
+            color: var(--muted);
+            margin-bottom: 14px;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 10px 14px;
+            border-left: 3px solid #bfdbfe;
+        }
+
+        .assign-search {
+            margin-bottom: 12px;
+        }
+
+        .assign-search input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .assign-search input:focus {
+            border-color: var(--pm-blue);
+            box-shadow: 0 0 0 3px #2563eb15;
+        }
+
+        .assign-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .assign-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8fafc;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            transition: all .1s;
+        }
+
+        .assign-row:hover {
+            border-color: #bfdbfe;
+            background: var(--pm-blue-l);
+        }
+
+        .assign-row.has-ip {
+            border-color: #bbf7d0;
+            background: var(--pm-green-l);
+        }
+
+        .ar-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ar-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .ar-meta {
+            font-size: 11px;
+            color: var(--faint);
+        }
+
+        .ar-ip-input {
+            width: 145px;
+            padding: 7px 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-family: monospace;
+            outline: none;
+            background: #fff;
+        }
+
+        .ar-ip-input:focus {
+            border-color: var(--pm-blue);
+        }
+
+        .ar-save {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--pm-blue);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .ar-save:hover {
+            background: var(--pm-blue-d);
+        }
+
+        /* Empty & skeleton */
+        .pm-empty {
+            text-align: center;
+            padding: 56px 20px;
+            color: var(--faint);
+        }
+
+        .pm-empty svg {
+            width: 44px;
+            height: 44px;
+            margin-bottom: 12px;
+            stroke: #cbd5e1;
+        }
+
+        .pm-empty strong {
+            display: block;
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .pm-empty p {
+            font-size: 13px;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+            display: block;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0
+            }
+
+            100% {
+                background-position: -200% 0
+            }
+        }
+
+        /* Toast */
+        .toast-wrap {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast-item {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .13);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all .25s;
+            pointer-events: auto;
+            max-width: 320px;
+        }
+
+        .toast-item.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-success {
+            border-left: 4px solid #22c55e;
+            color: #15803d;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+            color: #b91c1c;
+        }
+
+        .toast-info {
+            border-left: 4px solid var(--pm-blue);
+            color: var(--pm-blue);
+        }
+
+        @media(max-width:768px) {
+
+            .pm-table th:nth-child(6),
+            .pm-table td:nth-child(6),
+            .pm-table th:nth-child(7),
+            .pm-table td:nth-child(7) {
+                display: none;
+            }
+        }
+
+        @media(max-width:560px) {
+
+            .pm-table th:nth-child(5),
+            .pm-table td:nth-child(5) {
+                display: none;
+            }
+        }
+
+        @keyframes _spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <main class="page-content pm">
+        <div class="pm-hdr">
+            <div class="pm-hdr-l">
+                <h1>
+                    Ping Monitor
+                    <div class="live-chip chip-live">
+                        <div class="live-dot"></div> Live
+                    </div>
+                </h1>
+                <p>Real-time host reachability & latency</p>
+            </div>
+            <div class="pm-hdr-r">
+                <button class="btn btn-outline" id="btnRefresh">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 2v6h-6" />
+                        <path d="M3 12a9 9 0 102.63-6.37L2 8" />
+                    </svg> Refresh
+                </button>
+                <button class="btn btn-blue" id="btnAddPing">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg> Add Target
+                </button>
+            </div>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="pm-cards">
+            <div class="pm-card pmc-active" data-filter="all" onclick="pmClick(this)">
+                <div class="card-lbl">Total Targets</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <div class="card-val" id="pmTotal">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-card" data-filter="up" onclick="pmClick(this)">
+                <div class="card-lbl">Status UP</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <div class="card-val" id="pmUp" style="color:#15803d;">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-card" data-filter="down" onclick="pmClick(this)">
+                <div class="card-lbl">Status DOWN</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <div class="card-val" id="pmDown" style="color:#b91c1c;">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="pm-card" data-filter="avg" onclick="pmClick(this)">
+                <div class="card-lbl">Avg Latency</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <div class="card-val" id="pmAvg">0ms</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div style="background:#fff; border-radius:16px; border:1px solid #e8eaed; overflow:hidden;">
+            <div
+                style="padding:16px 20px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-weight:700; color:var(--text); font-size:15px;">Ping Targets</div>
+                <input type="text" id="searchPing" placeholder="Search IP / Hostname..."
+                    style="padding:8px 14px; border-radius:8px; border:1px solid #e2e8f0; font-size:13px; outline:none; width:220px;" />
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="pm-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;text-align:center;">No</th>
+                            <th>Host IP / Name</th>
+                            <th>Target</th>
+                            <th style="text-align:center;">Status</th>
+                            <th style="text-align:center;">Latency</th>
+                            <th style="text-align:center;">Loss %</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pingTbody">
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding:30px; color:#94a3b8; font-size:13px;">
+                                Memuat data ping...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav" id="bottomNav">
+        <a href="/dashboard" class="bn-item" data-page="dashboard">
+            <div class="bn-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    <polyline points="9,22 9,12 15,12 15,22" />
+                </svg>
+            </div>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="/customers" class="bn-item" data-page="customers">
+            <div class="bn-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+            </div>
+            <span>Customers</span>
+        </a>
+
+        <!-- FAB center button: Tambah / Quick actions -->
+        <button class="bn-fab" id="bnFab" onclick="toggleBnMenu()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+        </button>
+
+        <a href="/billing" class="bn-item" data-page="billing">
+            <div class="bn-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
+            </div>
+            <span>Billing</span>
+        </a>
+
+        <button class="bn-item bn-more" onclick="toggleSidebar()">
+            <div class="bn-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+            </div>
+            <span>Menu</span>
+        </button>
+    </nav>
+
+    <!-- FAB Quick-action menu -->
+    <div class="bn-menu-overlay" id="bnMenuOverlay" onclick="toggleBnMenu()"></div>
+    <div class="bn-menu" id="bnMenu">
+        <div class="bn-menu-title">Quick Actions</div>
+        <div class="bn-menu-grid">
+            <a href="/genieacs" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#eff6ff;color:#1e78ff;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                        <path d="M6 10h.01M6 14h.01M10 10h8M10 14h5" />
+                    </svg>
+                </div>
+                <span>ONT Mgmt</span>
+            </a>
+            <a href="/monitoring/traffic" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#f0fdf4;color:#16a34a;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+                    </svg>
+                </div>
+                <span>Traffic</span>
+            </a>
+            <a href="/whatsapp" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#f0fdf4;color:#25d366;">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path
+                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                </div>
+                <span>WhatsApp</span>
+            </a>
+            <a href="/isolir" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#fff7ed;color:#ea580c;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path
+                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                    </svg>
+                </div>
+                <span>Isolir</span>
+            </a>
+            <a href="/assets" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#f5f3ff;color:#121dbd;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <rect x="2" y="7" width="20" height="14" rx="2" />
+                        <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+                        <line x1="12" y1="12" x2="12" y2="16" />
+                        <line x1="10" y1="14" x2="14" y2="14" />
+                    </svg>
+                </div>
+                <span>Assets</span>
+            </a>
+            <a href="/infrastructure" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#ecfeff;color:#0891b2;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2 1,6" />
+                        <line x1="8" y1="2" x2="8" y2="18" />
+                        <line x1="16" y1="6" x2="16" y2="22" />
+                    </svg>
+                </div>
+                <span>Infra</span>
+            </a>
+            <a href="/payments" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#f0fdf4;color:#16a34a;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path
+                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                </div>
+                <span>Pembayaran</span>
+            </a>
+            <a href="/monitoring/ping" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#fff1f2;color:#e11d48;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M2 12h3m14 0h3M12 2v3m0 14v3M5.64 5.64l2.12 2.12m8.48 8.48l2.12 2.12M5.64 18.36l2.12-2.12m8.48-8.48l2.12-2.12" />
+                    </svg>
+                </div>
+                <span>Host Monitor</span>
+            </a>
+            <a href="/keuangan" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#fefce8;color:#ca8a04;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <span>Keuangan</span>
+            </a>
+            <a href="/laporan" class="bn-menu-item">
+                <div class="bn-mi-icon" style="background:#fff7ed;color:#ea580c;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <path
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <span>Laporan</span>
+            </a>
+        </div>
+    </div>
+
+    <style>
+        /* ── Bottom Nav ─────────────────────────────────────────────── */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, .08);
+            z-index: 500;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 4px;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        @media (max-width: 768px) {
+            .bottom-nav {
+                display: flex;
+            }
+
+            .main-content {
+                padding-bottom: 72px;
+            }
+        }
+
+        .bn-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            flex: 1;
+            height: 100%;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 600;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color .15s;
+            font-family: inherit;
+            padding: 8px 0;
+            position: relative;
+        }
+
+        .bn-item.active,
+        .bn-item:hover {
+            color: #1e78ff;
+        }
+
+        .bn-item.active .bn-icon svg {
+            stroke: #1e78ff;
+        }
+
+        .bn-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 3px;
+            background: #1e78ff;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .bn-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bn-icon svg {
+            width: 22px;
+            height: 22px;
+            stroke: #94a3b8;
+            transition: stroke .15s;
+        }
+
+        .bn-item.active .bn-icon svg,
+        .bn-item:hover .bn-icon svg {
+            stroke: #1e78ff;
+        }
+
+        .bn-more .bn-icon svg {
+            stroke: #94a3b8;
+        }
+
+        .bn-more:hover .bn-icon svg,
+        .bn-more.active .bn-icon svg {
+            stroke: #1e78ff;
+        }
+
+        /* ── FAB ────────────────────────────────────────────────────── */
+        .bn-fab {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: #1e78ff;
+            border: none;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(30, 120, 255, .45);
+            transition: all .2s;
+            flex-shrink: 0;
+            margin-bottom: 8px;
+        }
+
+        .bn-fab:hover {
+            background: #0052cc;
+            transform: scale(1.05);
+        }
+
+        .bn-fab.open {
+            background: #ef4444;
+            border-radius: 50%;
+            transform: rotate(45deg);
+        }
+
+        /* ── FAB Quick Menu ─────────────────────────────────────────── */
+        .bn-menu-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .35);
+            z-index: 499;
+            backdrop-filter: blur(2px);
+        }
+
+        .bn-menu-overlay.show {
+            display: block;
+        }
+
+        .bn-menu {
+            display: none;
+            position: fixed;
+            bottom: 76px;
+            left: 12px;
+            right: 12px;
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px 16px 16px;
+            z-index: 600;
+            box-shadow: 0 -4px 40px rgba(0, 0, 0, .15);
+            animation: bnMenuUp .25s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        .bn-menu.show {
+            display: block;
+        }
+
+        @keyframes bnMenuUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .bn-menu-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            margin-bottom: 14px;
+        }
+
+        .bn-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .bn-menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 7px;
+            text-decoration: none;
+            color: #374151;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 12px 8px;
+            border-radius: 14px;
+            background: #f8fafc;
+            transition: all .15s;
+            border: 1.5px solid transparent;
+        }
+
+        .bn-menu-item:hover {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .bn-mi-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
+    <script>
+        // ── Bottom Nav active state ──────────────────────────────────
+        (function () {
+            const path = window.location.pathname;
+            document.querySelectorAll('.bn-item[data-page]').forEach(el => {
+                const page = el.dataset.page;
+                const match =
+                    (page === 'dashboard' && path === '/dashboard') ||
+                    (page === 'customers' && path.startsWith('/customers')) ||
+                    (page === 'billing' && path.startsWith('/billing'));
+                if (match) el.classList.add('active');
+            });
+
+            // Highlight active quick action
+            document.querySelectorAll('.bn-menu-item').forEach(el => {
+                const href = el.getAttribute('href');
+                if (href && path.startsWith(href)) {
+                    el.style.background = '#eff6ff';
+                    el.style.borderColor = '#bfdbfe';
+                    el.style.color = '#1e78ff';
+                }
+            });
+        })();
+
+        // ── FAB Menu toggle ──────────────────────────────────────────
+        function toggleBnMenu() {
+            const menu = document.getElementById('bnMenu');
+            const overlay = document.getElementById('bnMenuOverlay');
+            const fab = document.getElementById('bnFab');
+            const isOpen = menu.classList.contains('show');
+            menu.classList.toggle('show', !isOpen);
+            overlay.classList.toggle('show', !isOpen);
+            fab.classList.toggle('open', !isOpen);
+        }
+
+        // ── Toggle sidebar dari bottom nav ──────────────────────────
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.toggle('open');
+        }
+    </script>
+
+    <%- include('layouts/footer') %>
