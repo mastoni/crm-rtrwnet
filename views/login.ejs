@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKMNet ISP Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            box-shadow: 0 0 100px rgba(0, 0, 0, 0.1);
+            margin: auto;
+        }
+
+        /* Left Section - Login Form */
+        .login-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: #ffffff;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 48px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .login-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #64748b;
+            font-size: 15px;
+            margin-bottom: 32px;
+        }
+
+        .login-header p a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-header p a:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 13px 16px;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            color: #0f172a;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: #3b82f6;
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            margin-top: 16px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #3b82f6;
+            cursor: pointer;
+        }
+
+        .remember-me label {
+            font-size: 14px;
+            color: #475569;
+            cursor: pointer;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .forgot-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        /* Right Section - Info Panel with Background Image */
+        .info-section {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        /* Background Image Layer */
+        .info-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('/uploads/img/bg-net.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 0;
+        }
+
+        /* Blue Gradient Overlay */
+        .info-section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg,
+                    rgba(30, 64, 175, 0.65) 0%,
+                    rgba(59, 130, 246, 0.60) 50%,
+                    rgba(96, 165, 250, 0.55) 100%);
+            z-index: 1;
+        }
+
+        /* Blur Overlay for depth effect */
+        .blur-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 2;
+        }
+
+        /* Decorative Elements with Blur Shadow */
+        .bg-decoration {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.18;
+            z-index: 3;
+        }
+
+        .decoration-1 {
+            width: 500px;
+            height: 500px;
+            background: white;
+            top: -100px;
+            right: -100px;
+            filter: blur(80px);
+        }
+
+        .decoration-2 {
+            width: 300px;
+            height: 300px;
+            background: #3b82f6;
+            bottom: -50px;
+            left: -50px;
+            filter: blur(60px);
+        }
+
+        /* Info Panel Content */
+        .info-content {
+            position: relative;
+            z-index: 10;
+            color: white;
+            max-width: 540px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .info-card {
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        .info-card h2 {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .info-card p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 32px;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .info-footer {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive Design */
+        @media (min-width: 992px) {
+            .login-section {
+                flex: 0 0 520px;
+                padding: 40px 60px;
+            }
+
+            .info-section {
+                display: flex;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .login-section {
+                flex: 0 0 580px;
+                padding: 40px 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Left Section - Login Form -->
+        <div class="login-section">
+            <div class="login-box">
+                <div class="logo">
+                    <div class="logo-icon">SKM</div>
+                    <div class="logo-text">SKMNetwork Dashboard</div>
+                </div>
+
+                <div class="login-header">
+                    <h1>Sign in</h1>
+                    <p>Login to your ISP dashboard All-in-One Solution</p>
+                </div>
+
+                <div class="error-msg" id="errorMsg"></div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">E-mail</label>
+                        <input type="email" id="email" class="form-input" placeholder="name@company.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                            <button type="button" class="password-toggle" id="togglePassword">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <label class="remember-me">
+                            <input type="checkbox" id="remember">
+                            <label for="remember">Remember me</label>
+                        </label>
+                        <a href="#" class="forgot-link">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" class="login-btn" id="loginBtn">Sign in</button>
+
+
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Section: Info Panel with Background Image -->
+        <div class="info-section">
+            <div class="blur-overlay"></div>
+
+            <!-- Background Decorations -->
+            <div class="bg-decoration decoration-1"></div>
+            <div class="bg-decoration decoration-2"></div>
+
+            <!-- Info Content -->
+            <div class="info-content">
+                <div class="info-card">
+                    <h2>Manage your ISP efficiently with All-in-One Dashboard</h2>
+                    <p>Monitor network performance, track customer activities, and manage billing seamlessly with our
+                        comprehensive ISP management platform.</p>
+
+                    <ul class="feature-list">
+                        <li>Real-time network monitoring</li>
+                        <li>Automated billing system</li>
+                        <li>Customer relationship management</li>
+                        <li>Advanced analytics & reports</li>
+                    </ul>
+                </div>
+
+                <div class="info-footer">
+                    <p>Developed by skmnetwork.com</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password Toggle
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+        });
+
+        // Login Form Submit
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('loginBtn');
+            const errEl = document.getElementById('errorMsg');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>Signing in...';
+            errEl.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('refreshToken', data.data.refreshToken);
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+                    window.location.href = data.data.redirect || '/dashboard';
+                } else {
+                    errEl.textContent = data.message || 'Login failed. Please check your credentials.';
+                    errEl.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errEl.textContent = 'Connection error. Please try again later.';
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Sign in';
+            }
+        });
+    </script>
+</body>
+
+</html>

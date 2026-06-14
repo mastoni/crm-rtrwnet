@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "apexcharts": "^3.52.0",
+    "axios": "^1.17.0",
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.7",
     "cookie-parser": "^1.4.6",
@@ -22,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.13.0",
     "node-fetch": "^2.6.12",
+    "node-routeros": "^1.6.8",
     "socket.io": "^4.8.1",
     "sweetalert2": "^11.12.1"
   },

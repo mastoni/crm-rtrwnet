@@ -149,7 +149,7 @@ registerPage('/monitoring/device-monitor', 'monitoring_device-monitor', ['/js/de
 registerPage('/monitoring/hotspot', 'monitoring_hotspot', []);
 
 // ============================================
-// API ROUTES (AUTH & DEMO)
+// API ROUTES (AUTH)
 // ============================================
 
 app.post('/api/auth/login', async (req, res) => {
@@ -193,7 +193,7 @@ app.post('/api/auth/login', async (req, res) => {
                     is_active: user.is_active,
                     role: {
                         name: user.role_name,
-                        display_name: user.role_name === 'demo' ? 'Demo User (Read-Only)' : 'Administrator'
+                        display_name: 'Administrator'
                     }
                 }
             }
@@ -209,40 +209,6 @@ app.post('/api/auth/logout', (req, res) => {
     res.json({ success: true, message: 'Logged out successfully' });
 });
 
-// Auto-provision demo account (Mode B click)
-app.post('/api/demo/provision', async (req, res) => {
-    try {
-        const [users] = await db.query("SELECT * FROM users WHERE email = 'demo@flaynet.com'");
-        if (users.length === 0) {
-            return res.status(400).json({ success: false, message: 'Akun demo tidak ditemukan di database.' });
-        }
-        const user = users[0];
-        const payload = { id: user.id, name: user.name, email: user.email, role: user.role_name };
-        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '2h' });
-        const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
-
-        res.cookie('token', token, { httpOnly: true, secure: false, maxAge: 2 * 60 * 60 * 1000 });
-
-        res.json({
-            success: true,
-            data: {
-                token,
-                refreshToken,
-                redirect: '/dashboard',
-                user: {
-                    id: user.id,
-                    uuid: user.uuid,
-                    name: user.name,
-                    email: user.email,
-                    role_id: user.role_id,
-                    is_active: user.is_active
-                }
-            }
-        });
-    } catch (err) {
-        return res.status(500).json({ success: false, message: 'Database connection error.' });
-    }
-});
 
 // ============================================
 // DATA & STATISTICS APIs (PROTECTED)
@@ -660,7 +626,7 @@ io.on('connection', (socket) => {
 // Start Server
 server.listen(PORT, () => {
     console.log(`========================================================================`);
-    console.log(`   FLAYNET Clone Dashboard listening on http://localhost:${PORT}`);
+    console.log(`   SKMNetwork Dashboard listening on http://localhost:${PORT}`);
     console.log(`========================================================================`);
 });
 
