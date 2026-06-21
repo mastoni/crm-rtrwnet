@@ -13,6 +13,7 @@ const QueuePage = {
     detailChartData: { rx: [], tx: [], labels: [] },
     historyChart: null,
     currentHistoryRange: '1h',
+    currentSort: null,
 
     async init() {
         this.bindEvents();
@@ -84,6 +85,13 @@ const QueuePage = {
             const matchStatus = !status || (status === 'active' && !q.disabled) || (status === 'disabled' && q.disabled);
             return matchSearch && matchStatus;
         });
+        
+        if (this.currentSort === 'rx') {
+            this.filteredQueues.sort((a, b) => (b.rateIn || 0) - (a.rateIn || 0));
+        } else if (this.currentSort === 'tx') {
+            this.filteredQueues.sort((a, b) => (b.rateOut || 0) - (a.rateOut || 0));
+        }
+
         this.renderTable();
         document.getElementById('queueCount').textContent = `${this.filteredQueues.length} queue`;
     },
@@ -698,5 +706,26 @@ function renderTargetChips(target, limit = 6) {
     html += '</div>';
     return html;
 }
+
+window.qcClick = function (el) {
+    document.querySelectorAll('.q-card').forEach(c => c.classList.remove('qc-active'));
+    el.classList.add('qc-active');
+    
+    const filter = el.getAttribute('data-filter');
+    const statusSelect = document.getElementById('filterStatus');
+    
+    if (filter === 'all' || filter === 'active' || filter === 'disabled') {
+        if (statusSelect) statusSelect.value = filter === 'all' ? '' : filter;
+        QueuePage.currentSort = null;
+    } else if (filter === 'rx') {
+        if (statusSelect) statusSelect.value = 'active'; // usually peak rx/tx means active queues
+        QueuePage.currentSort = 'rx';
+    } else if (filter === 'tx') {
+        if (statusSelect) statusSelect.value = 'active';
+        QueuePage.currentSort = 'tx';
+    }
+    
+    QueuePage.applyFilter();
+};
 
 document.addEventListener('DOMContentLoaded', () => { if (typeof App !== 'undefined') { App.init(); QueuePage.init(); } });

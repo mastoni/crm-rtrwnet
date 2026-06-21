@@ -1,0 +1,653 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --d-bg: #eef2f9;
+            --d-card: #fff;
+            --d-border: #e0e7f3;
+            --d-text: #0d1b3e;
+            --d-muted: #6b7fa8;
+            --d-blue1: #1a6ef5;
+        }
+
+        .tpl-page {
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ── STAT CARDS — single strip ── */
+        .fin-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .fin-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+        }
+
+        .fin-card::before,
+        .fin-card::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        .fin-card:last-child {
+            border-right: none;
+        }
+
+        .fin-card:hover {
+            background: #fafbff;
+        }
+
+        .fin-card.fc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .fin-card.fc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .fin-card.fc-active .xc-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .fin-card.fc-active .xc-val {
+            color: #fff;
+        }
+
+        .fin-card.fc-active .xc-sub {
+            color: rgba(255, 255, 255, .60);
+        }
+
+        .fin-card.fc-active .xc-pill {
+            background: rgba(255, 255, 255, .20) !important;
+            color: rgba(255, 255, 255, .90) !important;
+        }
+
+        .fin-card.fc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .fin-card.fc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .fin-card.fc-active .sp-dot {
+            fill: #fff !important;
+        }
+
+        .xc-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+            transition: color .15s;
+        }
+
+        .xc-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .xc-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .xc-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        @media(max-width:1400px) {
+            .xc-val {
+                font-size: 26px;
+            }
+        }
+
+        .xc-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .xc-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all .15s;
+        }
+
+        .xc-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .xc-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .xc-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .xc-teal {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+        .xc-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        .xc-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .xc-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sp-dot {}
+
+        @media(max-width:700px) {
+            .fin-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .fin-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(even) {
+                border-right: none;
+            }
+
+            .fin-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:400px) {
+            .fin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .fin-card {
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .form-card {
+            background: #fff;
+            border: 1px solid var(--d-border);
+            border-radius: 22px;
+            padding: 22px;
+            position: sticky;
+            top: 78px;
+        }
+
+        .pf-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            color: var(--d-muted);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .pf-input,
+        .pf-select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1.5px solid var(--d-border);
+            font-size: 13px;
+            box-sizing: border-box;
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+            transition: all .15s;
+        }
+
+        .pf-input:focus,
+        .pf-select:focus {
+            border-color: var(--d-blue1);
+            box-shadow: 0 0 0 3px rgba(26, 110, 245, .1);
+        }
+
+        .pf-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1.5px solid var(--d-border);
+            font-size: 12.5px;
+            box-sizing: border-box;
+            font-family: 'DM Mono', monospace;
+            resize: vertical;
+            min-height: 160px;
+            line-height: 1.7;
+            outline: none;
+            transition: all .15s;
+        }
+
+        .pf-textarea:focus {
+            border-color: var(--d-blue1);
+            box-shadow: 0 0 0 3px rgba(26, 110, 245, .1);
+        }
+
+        .pf-field {
+            margin-bottom: 14px;
+        }
+
+        /* Template list */
+        .tpl-card {
+            background: #fff;
+            border: 1.5px solid var(--d-border);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all .2s;
+        }
+
+        .tpl-card:hover {
+            box-shadow: 0 4px 20px rgba(26, 110, 245, .08);
+            border-color: #c7d8ff;
+        }
+
+        .tpl-card.inactive {
+            opacity: .6;
+        }
+
+        .tpl-preview {
+            margin: 0 14px 14px;
+            padding: 12px 14px;
+            background: #f8faff;
+            border-radius: 10px;
+            border: 1px solid var(--d-border);
+            cursor: pointer;
+        }
+
+        .tpl-preview-text {
+            font-size: 12px;
+            color: var(--d-text);
+            font-family: 'DM Mono', monospace;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            max-height: 80px;
+            overflow: hidden;
+            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+        }
+
+        .tpl-preview-text.expanded {
+            max-height: 400px;
+            -webkit-mask-image: none;
+        }
+
+        .cat-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--d-border);
+        }
+
+        .var-chip {
+            display: inline-flex;
+            padding: 3px 8px;
+            background: #eef3ff;
+            border: 1px solid #c7d8ff;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--d-blue1);
+            cursor: pointer;
+            transition: background .1s;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .var-chip:hover {
+            background: #dde9ff;
+        }
+
+        .act-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 7px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid;
+            transition: all .12s;
+        }
+
+        .act-edit {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+
+        .act-edit:hover {
+            background: #dbeafe;
+        }
+
+        .act-tog {
+            background: #f8faff;
+            border-color: var(--d-border);
+            color: var(--d-muted);
+        }
+
+        .act-tog:hover {
+            background: #f0f4ff;
+        }
+
+        .act-del {
+            background: #fff0f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
+        .act-del:hover {
+            background: #fee2e2;
+        }
+
+        /* Preview bubble */
+        .wa-preview {
+            background: #e8f5e9;
+            border-radius: 12px;
+            padding: 6px;
+        }
+
+        .wa-bubble {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            line-height: 1.8;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+        }
+
+        .pay-btn {
+            width: 100%;
+            padding: 11px;
+            border-radius: 11px;
+            font-size: 13.5px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1a6ef5, #0047cc);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'DM Sans', sans-serif;
+            transition: opacity .15s;
+        }
+
+        .pay-btn:hover {
+            opacity: .9;
+        }
+
+        .pay-btn.ghost {
+            background: #f4f8ff;
+            color: var(--d-blue1);
+            border: 1.5px solid var(--d-border);
+        }
+
+        .empty-state {
+            padding: 50px 20px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .empty-state svg {
+            width: 44px;
+            height: 44px;
+            margin-bottom: 10px;
+            opacity: .35;
+        }
+    </style>
+
+    <main class="page-content">
+        <!-- Header -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;"
+            class="a1">
+            <div>
+                <h1 style="font-size:22px;font-weight:800;color:#0d1b3e;margin:0 0 4px;">Template Pesan</h1>
+                <p style="font-size:13px;color:var(--d-muted);margin:0;" id="tplHeaderSub">Kelola template pesan
+                    WhatsApp</p>
+            </div>
+        </div>
+        <!-- Stats -->
+        <div class="fin-grid">
+            <div class="fin-card fc-active" id="fcc-total" data-filter="total" onclick="wtCardClick(this)">
+                <div class="xc-lbl">Total</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="fcTotal">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-blue" id="fcp-total">—</span>
+                            <span class="xc-sub">Semua template</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12" />
+                            <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb" />
+                            <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fcc-reminder" data-filter="reminder" onclick="wtCardClick(this)">
+                <div class="xc-lbl">Reminder</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="fcReminder">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-teal" id="fcp-reminder">—</span>
+                            <span class="xc-sub">Template pengingat</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-reminder" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-reminder-fill" d="" fill="#0891b2" opacity=".12" />
+                            <path class="sp-line" id="sp-reminder-line" d="" stroke="#0891b2" />
+                            <circle class="sp-dot" id="sp-reminder-dot" r="2.5" fill="#0891b2" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fcc-broadcast" data-filter="broadcast" onclick="wtCardClick(this)">
+                <div class="xc-lbl">Broadcast</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="fcBroadcast">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-amber" id="fcp-broadcast">—</span>
+                            <span class="xc-sub">Template broadcast</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-broadcast" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-broadcast-fill" d="" fill="#d97706" opacity=".12" />
+                            <path class="sp-line" id="sp-broadcast-line" d="" stroke="#d97706" />
+                            <circle class="sp-dot" id="sp-broadcast-dot" r="2.5" fill="#d97706" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fcc-custom" data-filter="custom" onclick="wtCardClick(this)">
+                <div class="xc-lbl">Custom / Payment</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="fcPayment">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-green" id="fcp-custom">—</span>
+                            <span class="xc-sub">Custom & pembayaran</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-custom" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-custom-fill" d="" fill="#16a34a" opacity=".12" />
+                            <path class="sp-line" id="sp-custom-line" d="" stroke="#16a34a" />
+                            <circle class="sp-dot" id="sp-custom-dot" r="2.5" fill="#16a34a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Main layout -->
+        <div class="tpl-layout a5">
+            <!-- Left: template list -->
+            <div id="tplList">
+                <div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p>Memuat template...</p>
+                </div>
+            </div>
+            <!-- Right: form -->
+            <div class="form-card">
+                <div
+                    style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--d-border);">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <div
+                            style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1a6ef5,#0047cc);display:flex;align-items:center;justify-content:center;">
+                            <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <div style="font-size:14px;font-weight:700;color:var(--d-text);" id="formTitle">Buat Template
+                        </div>
+                    </div>
+                    <button onclick="resetForm()"
+                        style="background:#f4f8ff;border:1.5px solid var(--d-border);border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--d-muted);">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="pf-field">
+                    <label class="pf-label">Nama Template *</label>
+                    <input type="text" class="pf-input" id="fName" placeholder="Contoh: Reminder H-3">
+                </div>
+                <div class="pf-field">
+                    <label class="pf-label">Kategori</label>
+                    <select class="pf-select" id="fCat" onchange="onCatChange(this.value)">
+                        <option value="reminder_before">Reminder Sebelum Jatuh Tempo</option>
+                        <option value="reminder_due">Reminder Tepat Jatuh Tempo</option>
+                        <option value="reminder_overdue">Reminder Overdue</option>
+                        <option value="broadcast">Broadcast</option>
+                        <option value="payment_confirm">Konfirmasi Pembayaran</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="pf-field">
+                    <label class="pf-label">Isi Pesan *</label>
+                    <textarea class="pf-textarea" id="fContent"
+                        placeholder="Halo {nama},&#10;&#10;Tagihan Anda:&#10;CID: {cid}&#10;Paket: {paket}&#10;Jatuh Tempo: {duedate}"
+                        oninput="updatePreview()"></textarea>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <div class="pf-label" style="margin-bottom:6px;">Klik untuk sisipkan variabel</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:5px;" id="varChips">
+                        <span class="var-chip" onclick="insertVar('{nama}')">{nama}</span>
+                        <span class="var-chip" onclick="insertVar('{cid}')">{cid}</span>
+                        <span class="var-chip" onclick="insertVar('{paket}')">{paket}</span>
+                        <span class="var-chip" onclick="insertVar('{harga}')">{harga}</span>
+                        <span class="var-chip" onclick="insertVar('{duedate}')">{duedate}</span>
+                        <span class="var-chip" onclick="insertVar('{phone}')">{phone}</span>
+                    </div>
+                </div>
+                <!-- Preview -->
+                <div id="previewBox" style="display:none;margin-bottom:14px;">
+                    <div class="pf-label" style="margin-bottom:6px;">Preview</div>
+                    <div class="wa-preview">
+                        <div class="wa-bubble" id="previewText"></div>
+                    </div>
+                </div>
+                <button class="pay-btn" onclick="saveTemplate()" id="saveBtn">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span id="saveBtnLabel">Simpan Template</span>
+                </button>
+                <button class="pay-btn ghost" onclick="resetForm()" style="margin-top:8px;">Reset Form</button>
+            </div>
+        </div>
+    </main>
+
+    <%- include('layouts/footer') %>

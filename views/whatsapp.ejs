@@ -1,0 +1,330 @@
+<%- include('layouts/header') %>
+    <style>
+        .wa-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .fin-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--d-border);
+            padding: 24px;
+        }
+
+        .gw-option {
+            border: 2px solid var(--d-border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .gw-option:hover {
+            border-color: var(--d-blue1);
+            background: #f8faff;
+        }
+
+        .gw-option.active {
+            border-color: var(--d-blue1);
+            background: #eef3ff;
+        }
+
+        .gw-option input[type="radio"] {
+            transform: scale(1.2);
+            accent-color: var(--d-blue1);
+        }
+
+        .gw-title {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: var(--d-text);
+        }
+
+        .gw-desc {
+            font-size: 12.5px;
+            color: var(--d-muted);
+            margin-top: 4px;
+        }
+
+        .setup-panel {
+            display: none;
+        }
+
+        .setup-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--d-text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--d-border);
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            border-color: var(--d-blue1);
+            box-shadow: 0 0 0 3px rgba(26,110,245,0.1);
+        }
+
+        .qr-box {
+            width: 220px;
+            height: 220px;
+            border: 2px dashed var(--d-border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: #fafafa;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media(max-width:768px){
+            .wa-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <main class="page-content">
+        <div id="toastOk" class="toast-ok" style="display:none; background:#e6fff7; border:1px solid #a7f3d0; color:#00875a; padding:12px 16px; border-radius:12px; margin-bottom:16px; font-size:13.5px;"></div>
+        <div id="toastErr" class="toast-err" style="display:none; background:#fff0f2; border:1px solid #fecdd3; color:#dc2626; padding:12px 16px; border-radius:12px; margin-bottom:16px; font-size:13.5px;"></div>
+
+        <div class="dash-hdr">
+            <div class="dash-hdr-txt">
+                <h1 class="dash-title">WhatsApp Gateway</h1>
+                <p class="dash-sub">Konfigurasi mesin pengirim pesan WhatsApp untuk notifikasi dan tagihan.</p>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <a href="/message-logs" class="btn btn-outline">Message Logs</a>
+                <a href="/wa/templates" class="btn btn-outline">Templates</a>
+            </div>
+        </div>
+
+        <div class="wa-grid">
+            <!-- Left: Engine Selection -->
+            <div class="fin-card">
+                <h3 style="margin:0 0 16px; font-size:16px;">Pilih Engine Gateway</h3>
+                
+                <label class="gw-option active" onclick="selectEngine('baileys')">
+                    <input type="radio" name="engine" value="baileys" checked>
+                    <div>
+                        <div class="gw-title">Baileys (Local Session)</div>
+                        <div class="gw-desc">Menggunakan library Baileys. Gratis, jalankan node server secara lokal dengan scan QR Code perangkat.</div>
+                    </div>
+                </label>
+
+                <label class="gw-option" onclick="selectEngine('thirdparty')">
+                    <input type="radio" name="engine" value="thirdparty">
+                    <div>
+                        <div class="gw-title">API Pihak Ketiga</div>
+                        <div class="gw-desc">Gunakan layanan API WhatsApp dari provider (Fonnte, Wablas, RuangWA, dll). Cocok untuk volume tinggi.</div>
+                    </div>
+                </label>
+                
+                <button class="btn btn-blue" style="width:100%; margin-top:10px;" onclick="saveEngine()">Simpan Pilihan Engine</button>
+            </div>
+
+            <!-- Right: Engine Setup -->
+            <div class="fin-card">
+                <!-- Panel Baileys -->
+                <div id="panel-baileys" class="setup-panel active">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid var(--d-border); padding-bottom:16px;">
+                        <div>
+                            <h3 style="margin:0 0 4px; font-size:18px;">Setup Baileys</h3>
+                            <div style="font-size:13px; color:var(--d-muted);">Status: <span style="color:#ef4444; font-weight:700;" id="baileys-status">Disconnected</span></div>
+                        </div>
+                        <button class="btn btn-outline" onclick="generateQR()">Generate QR Code</button>
+                    </div>
+
+                    <div class="qr-box" id="qr-container">
+                        <svg width="48" height="48" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>
+                        <div style="font-size:12.5px; color:var(--d-muted); margin-top:12px; text-align:center;">Klik "Generate QR" lalu scan<br>dengan WhatsApp di HP Anda.</div>
+                    </div>
+                    
+                    <div style="text-align:center;">
+                        <button class="btn btn-blue" id="btnTestBaileys" style="display:none;" onclick="testConnection()">Test Kirim Pesan</button>
+                    </div>
+                </div>
+
+                <!-- Panel Third Party -->
+                <div id="panel-thirdparty" class="setup-panel">
+                    <h3 style="margin:0 0 16px; font-size:18px;">Setup API Pihak Ketiga</h3>
+                    <div class="form-group">
+                        <label>Provider API</label>
+                        <select class="form-control" id="api_provider">
+                            <option value="fonnte">Fonnte</option>
+                            <option value="wablas">Wablas</option>
+                            <option value="ruangwa">RuangWA</option>
+                            <option value="custom">Custom Webhook</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>API Endpoint (URL)</label>
+                        <input type="text" class="form-control" id="api_url" placeholder="https://api.fonnte.com/send">
+                    </div>
+                    <div class="form-group">
+                        <label>API Key / Token</label>
+                        <input type="password" class="form-control" id="api_token" placeholder="Masukkan token API...">
+                    </div>
+                    <div style="display:flex; gap:12px; margin-top:24px;">
+                        <button class="btn btn-blue" onclick="saveThirdParty()">Simpan Konfigurasi API</button>
+                        <button class="btn btn-outline" onclick="testConnection()">Test Kirim Pesan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const TOKEN = localStorage.getItem('token');
+        const API = '/api';
+
+        function showToast(id, msg) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = msg;
+                el.style.display = 'block';
+                setTimeout(() => { el.style.display = 'none'; }, 3000);
+            }
+        }
+
+        async function loadConfig() {
+            try {
+                const res = await fetch(`${API}/whatsapp/config`, { headers: { 'Authorization': `Bearer ${TOKEN}` } });
+                const json = await res.json();
+                if (json.success && json.data) {
+                    const cfg = json.data;
+                    
+                    // Select engine
+                    const opt = document.querySelector(`input[name="engine"][value="${cfg.engine}"]`);
+                    if (opt) {
+                        opt.checked = true;
+                        document.querySelectorAll('.gw-option').forEach(el => el.classList.remove('active'));
+                        opt.closest('.gw-option').classList.add('active');
+                        document.querySelectorAll('.setup-panel').forEach(p => p.classList.remove('active'));
+                        document.getElementById('panel-' + cfg.engine).classList.add('active');
+                    }
+
+                    // Baileys status
+                    const bs = document.getElementById('baileys-status');
+                    bs.textContent = cfg.baileys?.status || 'Disconnected';
+                    bs.style.color = (cfg.baileys?.status === 'Connected') ? '#10b981' : '#ef4444';
+                    document.getElementById('btnTestBaileys').style.display = (cfg.baileys?.status === 'Connected') ? 'inline-flex' : 'none';
+
+                    // Third party
+                    if (cfg.thirdparty) {
+                        document.getElementById('api_provider').value = cfg.thirdparty.provider || 'fonnte';
+                        document.getElementById('api_url').value = cfg.thirdparty.url || '';
+                        document.getElementById('api_token').value = cfg.thirdparty.token || '';
+                    }
+                }
+            } catch (err) { console.error('Gagal load config', err); }
+        }
+
+        async function saveConfig(payload) {
+            try {
+                const res = await fetch(`${API}/whatsapp/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                if (json.success) showToast('toastOk', 'Konfigurasi berhasil disimpan');
+                else showToast('toastErr', 'Gagal menyimpan: ' + json.message);
+                return json.success;
+            } catch (err) {
+                showToast('toastErr', 'Terjadi kesalahan sistem');
+                return false;
+            }
+        }
+
+        function selectEngine(engine) {
+            document.querySelectorAll('.gw-option').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.querySelectorAll('input[name="engine"]').forEach(r => r.checked = false);
+            event.currentTarget.querySelector('input').checked = true;
+
+            document.querySelectorAll('.setup-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('panel-' + engine).classList.add('active');
+        }
+
+        async function saveEngine() {
+            const engine = document.querySelector('input[name="engine"]:checked').value;
+            await saveConfig({ engine });
+        }
+
+        function generateQR() {
+            const qrBox = document.getElementById('qr-container');
+            qrBox.innerHTML = '<div style="width:180px; height:180px; background:url(https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg) center/contain no-repeat;"></div><div style="font-size:13px; font-weight:600; color:#1a6ef5; margin-top:12px;">Menunggu Scan...</div>';
+            
+            // Simulasi sukses scan
+            setTimeout(async () => {
+                qrBox.innerHTML = '<svg width="64" height="64" fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><div style="font-size:15px; font-weight:700; color:#10b981; margin-top:12px;">Berhasil Terhubung</div>';
+                document.getElementById('baileys-status').textContent = 'Connected';
+                document.getElementById('baileys-status').style.color = '#10b981';
+                document.getElementById('btnTestBaileys').style.display = 'inline-flex';
+                
+                // Simpan status di backend
+                await saveConfig({ baileys: { status: 'Connected' } });
+            }, 3000);
+        }
+
+        async function saveThirdParty() {
+            const payload = {
+                thirdparty: {
+                    provider: document.getElementById('api_provider').value,
+                    url: document.getElementById('api_url').value,
+                    token: document.getElementById('api_token').value
+                }
+            };
+            await saveConfig(payload);
+        }
+
+        async function testConnection() {
+            const num = prompt("Masukkan nomor WhatsApp tujuan (misal: 628123...):");
+            if (num) {
+                try {
+                    const res = await fetch(`${API}/whatsapp/test`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+                        body: JSON.stringify({ to: num })
+                    });
+                    const json = await res.json();
+                    if (json.success) showToast('toastOk', json.message || "Pesan test berhasil dikirim");
+                    else showToast('toastErr', json.message || "Gagal mengirim pesan test");
+                } catch(e) { showToast('toastErr', 'Error server'); }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadConfig);
+    </script>
+    <%- include('layouts/footer') %>

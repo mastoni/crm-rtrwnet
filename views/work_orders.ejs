@@ -1,0 +1,1554 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --d-bg: #eef2f9;
+            --d-card: #fff;
+            --d-border: #e0e7f3;
+            --d-text: #0d1b3e;
+            --d-muted: #6b7fa8;
+            --d-blue1: #1a6ef5;
+            --d-blue2: #0047cc;
+            --d-green: #00c896;
+            --d-red: #f5365c;
+            --d-orange: #fb8c00;
+        }
+
+        .wo-page {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--d-bg) !important;
+        }
+
+        /* ── Fin-cards ── */
+        /* ── STAT CARDS — single strip ── */
+        .wo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .wo-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+        }
+
+        .wo-card::before,
+        .wo-card::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        .wo-card:last-child {
+            border-right: none;
+        }
+
+        .wo-card:hover {
+            background: #fafbff;
+        }
+
+        .wo-card.xc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .wo-card.xc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .wo-card.xc-active .xc-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .wo-card.xc-active .xc-val {
+            color: #fff;
+        }
+
+        .wo-card.xc-active .xc-sub {
+            color: rgba(255, 255, 255, .60);
+        }
+
+        .wo-card.xc-active .xc-pill {
+            background: rgba(255, 255, 255, .20) !important;
+            color: rgba(255, 255, 255, .90) !important;
+        }
+
+        .wo-card.xc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .wo-card.xc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .wo-card.xc-active .sp-dot {
+            fill: #fff !important;
+        }
+
+        .xc-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+            transition: color .15s;
+        }
+
+        .xc-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .xc-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .xc-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        @media(max-width:1400px) {
+            .xc-val {
+                font-size: 26px;
+            }
+        }
+
+        .xc-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .xc-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all .15s;
+        }
+
+        .xc-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .xc-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .xc-red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .xc-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .xc-slate {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .xc-teal {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+        .xc-orange {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .xc-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        .xc-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .xc-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .sp-dot {}
+
+        @media(max-width:700px) {
+            .wo-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .wo-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .wo-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+            }
+
+            .wo-card:nth-child(even) {
+                border-right: none;
+            }
+
+            .wo-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:400px) {
+            .wo-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .wo-card {
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .wo-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .w-card {
+            background: var(--d-card);
+            border: 1px solid var(--d-border);
+            border-radius: 22px;
+            box-shadow: 0 2px 12px rgba(26, 110, 245, .05);
+        }
+
+        /* ── Buttons ── */
+        .btn-fin {
+            padding: 9px 18px;
+            border-radius: 11px;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary-fin {
+            background: var(--d-blue1);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(26, 110, 245, .3);
+        }
+
+        .btn-primary-fin:hover {
+            background: var(--d-blue2);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(26, 110, 245, .4);
+        }
+
+        .btn-ghost {
+            background: var(--d-card);
+            color: var(--d-text);
+            border: 1.5px solid var(--d-border);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--d-blue1);
+            color: var(--d-blue1);
+            background: #f0f5ff;
+        }
+
+        /* ── Search/filter ── */
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            box-sizing: border-box;
+            border: 1.5px solid var(--d-border);
+            border-radius: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            color: var(--d-text);
+            background: #fff;
+            transition: border-color .15s, box-shadow .15s;
+            outline: none;
+        }
+
+        .search-wrap input:focus {
+            border-color: var(--d-blue1);
+            box-shadow: 0 0 0 3px rgba(26, 110, 245, .1);
+        }
+
+        .search-wrap .si {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--d-muted);
+            pointer-events: none;
+        }
+
+        .filter-select {
+            padding: 9px 13px;
+            border: 1.5px solid var(--d-border);
+            border-radius: 11px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: var(--d-text);
+            background: #fff;
+            cursor: pointer;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        .filter-select:focus {
+            border-color: var(--d-blue1);
+        }
+
+        /* ── Table ── */
+        .wo-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .wo-table thead th {
+            text-align: left;
+            padding: 10px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .04em;
+            color: var(--d-muted);
+            border-bottom: 1px solid var(--d-border);
+            background: #f8faff;
+            white-space: nowrap;
+        }
+
+        .wo-table tbody tr {
+            border-bottom: 1px solid #f0f4fc;
+            transition: background .1s;
+        }
+
+        .wo-table tbody tr:hover {
+            background: #f4f8ff;
+        }
+
+        .wo-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .wo-table td {
+            padding: 13px 16px;
+            vertical-align: middle;
+            font-size: 13px;
+            color: var(--d-text);
+        }
+
+        /* WO Number badge */
+        .wo-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 11.5px;
+            color: var(--d-blue1);
+            background: #eef3ff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        /* Type badges */
+        .type-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 6px;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .type-installation {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .type-maintenance {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .type-dismantle {
+            background: #fff0f2;
+            color: #be123c;
+        }
+
+        .type-survey {
+            background: #f0fdf4;
+            color: #15803d;
+        }
+
+        .type-repair {
+            background: #fefce8;
+            color: #a16207;
+        }
+
+        .type-other {
+            background: #f8fafc;
+            color: #64748b;
+        }
+
+        /* Status badges */
+        .sb {
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 11px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .sb-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .sb-pending {
+            background: #fff7ed;
+            color: #c2410c;
+            border-color: #fed7aa;
+        }
+
+        .sb-assigned {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #bfdbfe;
+        }
+
+        .sb-in_progress {
+            background: #fefce8;
+            color: #a16207;
+            border-color: #fde68a;
+        }
+
+        .sb-done {
+            background: #f0fdf4;
+            color: #15803d;
+            border-color: #bbf7d0;
+        }
+
+        .sb-cancelled {
+            background: #f8fafc;
+            color: #64748b;
+            border-color: #e2e8f0;
+        }
+
+        /* Priority */
+        .prio {
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 5px;
+            text-transform: uppercase;
+        }
+
+        .prio-low {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .prio-medium {
+            background: #fffbeb;
+            color: #d97706;
+        }
+
+        .prio-high {
+            background: #fff7ed;
+            color: #ea580c;
+        }
+
+        .prio-critical {
+            background: #fff0f2;
+            color: var(--d-red);
+        }
+
+        /* Technician */
+        .tech-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a6ef5, #0047cc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .tech-avatar.manual {
+            background: linear-gradient(135deg, #64748b, #475569);
+        }
+
+        /* Due date */
+        .due-ok {
+            color: var(--d-muted);
+        }
+
+        .due-soon {
+            color: var(--d-orange);
+            font-weight: 600;
+        }
+
+        .due-overdue {
+            color: var(--d-red);
+            font-weight: 600;
+        }
+
+        /* Row actions */
+        .rb {
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1.5px solid;
+        }
+
+        .rb-view {
+            background: #fff;
+            color: var(--d-blue1);
+            border-color: #bfdbfe;
+        }
+
+        .rb-view:hover {
+            background: #eef3ff;
+        }
+
+        .rb-edit {
+            background: #fff;
+            color: #059669;
+            border-color: #a7f3d0;
+        }
+
+        .rb-edit:hover {
+            background: #f0fdf9;
+        }
+
+        .rb-del {
+            background: #fff;
+            color: #cbd5e0;
+            border-color: #e2e8f0;
+            padding: 5px 8px;
+        }
+
+        .rb-del:hover {
+            color: var(--d-red);
+            border-color: #fecdd3;
+            background: #fff4f5;
+        }
+
+        /* ── Detail Drawer (side panel) ── */
+        .wo-drawer-overlay {
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 27, 62, .4);
+            z-index: 800;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s;
+            backdrop-filter: blur(2px);
+        }
+
+        .wo-drawer-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .wo-drawer {
+            position: fixed;
+            top: 64px;
+            right: -620px;
+            width: 600px;
+            max-width: 95vw;
+            height: calc(100vh - 64px);
+            background: #fff;
+            box-shadow: -8px 0 40px rgba(0, 0, 0, .14);
+            z-index: 801;
+            transition: right .3s cubic-bezier(.4, 0, .2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wo-drawer.open {
+            right: 0;
+        }
+
+        .wo-drawer-header {
+            padding: 14px 16px 14px 20px;
+            border-bottom: 1px solid var(--d-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            gap: 10px;
+        }
+
+        .wo-drawer-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--d-text);
+            margin: 0;
+        }
+
+        /* Tombol close di header — hanya tampil di desktop */
+        .wo-drawer-close {
+            min-width: 80px;
+            height: 34px;
+            border-radius: 9px;
+            background: #f4f7ff;
+            border: 1.5px solid var(--d-border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: var(--d-muted);
+            font-size: 12.5px;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            transition: all .15s;
+            flex-shrink: 0;
+        }
+
+        .wo-drawer-close:hover {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fecdd3;
+        }
+
+        .wo-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+        }
+
+        .wo-drawer-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--d-border);
+            display: flex;
+            gap: 8px;
+            background: #f8faff;
+            flex-shrink: 0;
+        }
+
+        /* Tombol close di footer — hanya tampil di mobile */
+        .wo-footer-close {
+            display: none;
+        }
+
+        @media(max-width:768px) {
+            .wo-drawer {
+                width: 100%;
+                max-width: 100%;
+                right: -100%;
+                top: 0;
+                height: 100vh;
+            }
+
+            .wo-drawer-overlay {
+                top: 0;
+            }
+
+            /* Sembunyikan tombol close dari header di mobile */
+            .wo-drawer-close {
+                display: none;
+            }
+
+            /* Tampilkan tombol close di footer mobile */
+            .wo-footer-close {
+                display: flex !important;
+            }
+        }
+
+        /* Detail sections */
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--d-muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .detail-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--d-border);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .detail-item label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--d-muted);
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .detail-item span {
+            font-size: 13.5px;
+            color: var(--d-text);
+            font-weight: 500;
+        }
+
+        /* Photo grid */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .photo-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            background: #f0f4ff;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform .2s;
+        }
+
+        .photo-item img:hover {
+            transform: scale(1.05);
+        }
+
+        .photo-del-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 38, 38, .85);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity .15s;
+        }
+
+        .photo-item:hover .photo-del-btn {
+            opacity: 1;
+        }
+
+        .photo-upload-box {
+            border: 2px dashed var(--d-border);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .15s;
+            background: #f8faff;
+        }
+
+        .photo-upload-box:hover {
+            border-color: var(--d-blue1);
+            background: #f0f5ff;
+        }
+
+        .photo-upload-box p {
+            font-size: 12px;
+            color: var(--d-muted);
+            margin: 4px 0 0;
+        }
+
+        /* Status stepper */
+        .status-steps {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 14px;
+            left: calc(50% + 14px);
+            right: -50%;
+            height: 2px;
+            background: var(--d-border);
+            z-index: 0;
+        }
+
+        .step.done-step::after {
+            background: var(--d-blue1);
+        }
+
+        .step-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--d-border);
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--d-muted);
+            z-index: 1;
+            flex-shrink: 0;
+            margin: 0 auto;
+        }
+
+        .step.active-step .step-circle {
+            border-color: var(--d-blue1);
+            background: var(--d-blue1);
+            color: #fff;
+        }
+
+        .step.done-step .step-circle {
+            border-color: #00a07a;
+            background: #00a07a;
+            color: #fff;
+        }
+
+        .step-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--d-muted);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .step.active-step .step-label {
+            color: var(--d-blue1);
+        }
+
+        .step.done-step .step-label {
+            color: #00a07a;
+        }
+
+        .step-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        /* ── Modal Form ── */
+        .modal-ov {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(13, 27, 62, .55);
+            z-index: 900;
+            align-items: flex-start;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 28px 16px;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-ov.active {
+            display: flex;
+        }
+
+        .modal-bx {
+            background: #fff;
+            border-radius: 22px;
+            width: 680px;
+            max-width: 100%;
+            padding: 30px;
+            position: relative;
+            margin: auto;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, .18);
+        }
+
+        .modal-ttl {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--d-text);
+            margin: 0 0 20px;
+        }
+
+        .modal-cls {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: var(--d-bg);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--d-muted);
+            font-size: 16px;
+            transition: background .15s;
+        }
+
+        .modal-cls:hover {
+            background: var(--d-border);
+        }
+
+        .flbl {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--d-muted);
+            margin-bottom: 5px;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .flbl .req {
+            color: var(--d-red);
+        }
+
+        .finput {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 1.5px solid var(--d-border);
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            color: var(--d-text);
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+            background: #fff;
+        }
+
+        .finput:focus {
+            border-color: var(--d-blue1);
+            box-shadow: 0 0 0 3px rgba(26, 110, 245, .1);
+        }
+
+        .finput::placeholder {
+            color: #b0bcdc;
+        }
+
+        textarea.finput {
+            resize: vertical;
+        }
+
+        /* Technician toggle */
+        .tech-toggle {
+            display: flex;
+            border: 1.5px solid var(--d-border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .tech-toggle-btn {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #fff;
+            color: var(--d-muted);
+            border: none;
+            transition: all .15s;
+        }
+
+        .tech-toggle-btn.active {
+            background: var(--d-blue1);
+            color: #fff;
+        }
+
+        /* Form section divider */
+        .form-section {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--d-muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin: 18px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--d-border);
+        }
+
+        /* Toast */
+        .toast-ok {
+            background: #e6fff7;
+            border: 1px solid #a7f3d0;
+            color: #00875a;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 13.5px;
+        }
+
+        .toast-err {
+            background: #fff0f2;
+            border: 1px solid #fecdd3;
+            color: var(--d-red);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 13.5px;
+        }
+
+        /* Delete confirm */
+        .del-icon-ring {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: #fff0f2;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .9);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox.open {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, .15);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, .25);
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .a1 {
+            animation: fadeUp .45s ease both
+        }
+
+        .a2 {
+            animation: fadeUp .45s .07s ease both
+        }
+
+        .a3 {
+            animation: fadeUp .45s .14s ease both
+        }
+
+        .a4 {
+            animation: fadeUp .45s .21s ease both
+        }
+
+        .a5 {
+            animation: fadeUp .45s .28s ease both
+        }
+
+        @media(max-width:1100px) {
+            .fin-grid-4 {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: translateY(-50%) rotate(360deg)
+            }
+        }
+    </style>
+
+    <main class="page-content">
+
+        <!-- Toast -->
+        <div id="toastOk" class="toast-ok  a1" style="display:none"></div>
+        <div id="toastErr" class="toast-err a1" style="display:none"></div>
+
+        <!-- PAGE HEADER -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px"
+            class="a1">
+            <div>
+                <div style="font-size:22px;font-weight:800;color:var(--d-text)">Work Order</div>
+                <div style="font-size:13px;color:var(--d-muted);margin-top:2px" id="woHeaderSub">Manajemen pekerjaan
+                    lapangan teknisi</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button onclick="openAdd()" class="btn-fin btn-primary-fin">
+                    <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Buat Work Order</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 4 FIN-CARDS -->
+        <div class="wo-grid">
+            <div class="wo-card xc-active" id="woc-all" data-filter="all" onclick="woCardClick(this)">
+                <div class="xc-lbl">Total WO</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="scTotal">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-blue" id="wo-pill-all">—</span>
+                            <span class="xc-sub">Semua status</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-all" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-all-fill" d="" fill="#2563eb" opacity=".12" />
+                            <path class="sp-line" id="sp-all-line" d="" stroke="#2563eb" />
+                            <circle class="sp-dot" id="sp-all-dot" r="2.5" fill="#2563eb" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="wo-card" id="woc-pending" data-filter="pending" onclick="woCardClick(this)">
+                <div class="xc-lbl">Pending</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="scPending">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-amber" id="wo-pill-pending">—</span>
+                            <span class="xc-sub">Menunggu penugasan</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-pending" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-pending-fill" d="" fill="#d97706" opacity=".12" />
+                            <path class="sp-line" id="sp-pending-line" d="" stroke="#d97706" />
+                            <circle class="sp-dot" id="sp-pending-dot" r="2.5" fill="#d97706" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="wo-card" id="woc-progress" data-filter="progress" onclick="woCardClick(this)">
+                <div class="xc-lbl">In Progress</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="scInProgress">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-teal" id="wo-pill-progress">—</span>
+                            <span class="xc-sub">Sedang dikerjakan</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-progress" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-progress-fill" d="" fill="#0891b2" opacity=".12" />
+                            <path class="sp-line" id="sp-progress-line" d="" stroke="#0891b2" />
+                            <circle class="sp-dot" id="sp-progress-dot" r="2.5" fill="#0891b2" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="wo-card" id="woc-done" data-filter="done" onclick="woCardClick(this)">
+                <div class="xc-lbl">Done</div>
+                <div class="xc-body">
+                    <div class="xc-left">
+                        <span class="xc-val" id="scDone">0</span>
+                        <div class="xc-meta">
+                            <span class="xc-pill xc-green" id="wo-pill-done">—</span>
+                            <span class="xc-sub">Selesai</span>
+                        </div>
+                    </div>
+                    <div class="xc-spark">
+                        <svg id="sp-done" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-done-fill" d="" fill="#16a34a" opacity=".12" />
+                            <path class="sp-line" id="sp-done-line" d="" stroke="#16a34a" />
+                            <circle class="sp-dot" id="sp-done-dot" r="2.5" fill="#16a34a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLE CARD -->
+        <div class="w-card a5">
+            <div
+                style="display:flex;align-items:center;gap:10px;padding:18px 20px 16px;flex-wrap:wrap;border-bottom:1px solid var(--d-border)">
+                <div class="search-wrap" style="flex:1;max-width:280px">
+                    <svg class="si" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                    <input type="text" id="woSearch" placeholder="Cari nomor, judul, teknisi…">
+                </div>
+                <select id="filterStatus" class="filter-select">
+                    <option value="">Semua Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="done">Done</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <select id="filterType" class="filter-select">
+                    <option value="">Semua Tipe</option>
+                    <option value="installation">Installation</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="dismantle">Dismantle</option>
+                    <option value="survey">Survey</option>
+                    <option value="repair">Repair</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="filterPriority" class="filter-select">
+                    <option value="">Semua Prioritas</option>
+                    <option value="critical">Critical</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+                <div style="font-size:12.5px;color:var(--d-muted);margin-left:auto;font-weight:600" id="woCountLbl">—
+                </div>
+            </div>
+            <div style="overflow-x:auto">
+                <table class="wo-table">
+                    <thead>
+                        <tr>
+                            <th>No WO</th>
+                            <th>Tipe</th>
+                            <th>Judul / Customer</th>
+                            <th>Teknisi</th>
+                            <th>Jadwal</th>
+                            <th>Prioritas</th>
+                            <th>Status</th>
+                            <th style="text-align:right;padding-right:20px">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="woTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align:center;padding:52px;color:var(--d-muted)">
+                                <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"
+                                    viewBox="0 0 24 24"
+                                    style="margin:0 auto 12px;display:block;color:var(--d-muted);opacity:.4">
+                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                                    <rect x="9" y="3" width="6" height="4" rx="1" />
+                                    <path d="M9 12h6M9 16h4" />
+                                </svg>
+                                <div style="font-size:14px;font-weight:600;color:var(--d-text)">Memuat data…</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add/Edit Modal -->
+        <div class="modal-ov" id="woModal">
+            <div class="modal-bx">
+                <button class="modal-cls" onclick="closeModal()">×</button>
+                <div class="modal-ttl" id="modalTitle">Buat Work Order Baru</div>
+                <div style="display:flex;gap:15px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:300px;">
+                        <div style="margin-bottom:12px;">
+                            <label
+                                style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Judul
+                                WO *</label>
+                            <input type="text" class="finput" id="f_title"
+                                placeholder="Contoh: Instalasi Baru Pelanggan A">
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label
+                                style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Deskripsi</label>
+                            <textarea class="finput" id="f_description" rows="2"
+                                placeholder="Detail singkat..."></textarea>
+                        </div>
+                        <div style="display:flex;gap:12px;margin-bottom:12px;">
+                            <div style="flex:1;">
+                                <label
+                                    style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Tipe</label>
+                                <select class="finput" id="f_type">
+                                    <option value="installation">Instalasi</option>
+                                    <option value="repair">Perbaikan (Repair)</option>
+                                    <option value="maintenance">Maintenance</option>
+                                    <option value="dismantle">Dismantle</option>
+                                    <option value="other">Lainnya</option>
+                                </select>
+                            </div>
+                            <div style="flex:1;">
+                                <label
+                                    style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Prioritas</label>
+                                <select class="finput" id="f_priority">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;margin-bottom:12px;">
+                            <div style="flex:1;">
+                                <label
+                                    style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Status</label>
+                                <select class="finput" id="f_status">
+                                    <option value="pending">Pending</option>
+                                    <option value="scheduled">Scheduled</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div style="flex:1;">
+                                <label
+                                    style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Tanggal
+                                    Dijadwalkan</label>
+                                <input type="date" class="finput" id="f_scheduled_date">
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label
+                                style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Pelanggan</label>
+                            <select class="finput" id="f_customer_id">
+                                <option value="">-- Pilih --</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label
+                                style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Terkait
+                                Ticket</label>
+                            <select class="finput" id="f_ticket_id">
+                                <option value="">-- Tidak ada --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="flex:1;min-width:300px;">
+                        <div style="margin-bottom:12px;">
+                            <label
+                                style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Alamat
+                                Lokasi</label>
+                            <textarea class="finput" id="f_location_address" rows="2"
+                                placeholder="Alamat pengerjaan..."></textarea>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label
+                                style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Internal
+                                Notes</label>
+                            <textarea class="finput" id="f_notes" rows="2" placeholder="Catatan internal..."></textarea>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label
+                                style="display:block;font-size:12.5px;font-weight:700;margin-bottom:4px;color:var(--d-text);">Penugasan
+                                Teknisi</label>
+                            <div class="tech-toggle">
+                                <button type="button" class="tech-toggle-btn active" id="techTypeUser"
+                                    onclick="setTechType('user')">User Internal</button>
+                                <button type="button" class="tech-toggle-btn" id="techTypeManual"
+                                    onclick="setTechType('manual')">Input Manual</button>
+                            </div>
+
+                            <div id="techUserPanel">
+                                <select class="finput" id="f_assigned_user_id">
+                                    <option value="">-- Bebas --</option>
+                                </select>
+                            </div>
+
+                            <div id="techManualPanel" style="display:none; gap:10px; grid-template-columns: 1fr 1fr;">
+                                <div style="flex:1;">
+                                    <label
+                                        style="display:block;font-size:11.5px;font-weight:600;margin-bottom:4px;color:var(--d-text);">Nama
+                                        Lengkap</label>
+                                    <input type="text" class="finput" id="f_technician_name" placeholder="Contoh: Budi">
+                                </div>
+                                <div style="flex:1;">
+                                    <label
+                                        style="display:block;font-size:11.5px;font-weight:600;margin-bottom:4px;color:var(--d-text);">No.
+                                        WhatsApp</label>
+                                    <input type="text" class="finput" id="f_technician_phone" placeholder="628...">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:20px;">
+                            <label
+                                style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--d-text);cursor:pointer;">
+                                <input type="checkbox" id="f_send_wa" checked> Kirim Notifikasi WhatsApp ke Teknisi
+                            </label>
+                        </div>
+                        <div style="text-align:right;">
+                            <button class="btn btn-blue" id="btnSaveTask" onclick="saveTask()">
+                                <span id="btnSaveTxt">Buat Work Order</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Modal -->
+        <div class="modal-ov" id="delModal">
+            <div class="modal-bx" style="width:400px;text-align:center;">
+                <div style="color:#ef4444;margin-bottom:14px;">
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                </div>
+                <div class="modal-ttl" style="margin-bottom:10px;">Hapus Work Order?</div>
+                <div id="delMsg" style="color:var(--d-muted);font-size:13.5px;margin-bottom:24px;"></div>
+                <div style="display:flex;gap:10px;justify-content:center;">
+                    <button class="btn btn-outline" onclick="closeDelModal()">Batal</button>
+                    <button class="btn btn-red" onclick="confirmDelete()">Ya, Hapus</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drawer Overlay -->
+        <div class="wo-drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+        <!-- Drawer -->
+        <div class="wo-drawer" id="woDrawer">
+            <div class="wo-drawer-header">
+                <div>
+                    <div class="wo-drawer-title" id="drawerTitle"></div>
+                    <div style="font-size:12.5px;color:var(--d-muted);font-weight:600;margin-top:2px" id="drawerWoNum">
+                    </div>
+                </div>
+                <button class="wo-drawer-close" onclick="closeDrawer()">×</button>
+            </div>
+            <div class="wo-drawer-body" id="drawerBody">
+            </div>
+            <div class="wo-drawer-footer" id="drawerFooter">
+            </div>
+        </div>
+
+    </main>
+
+    <%- include('layouts/footer') %>

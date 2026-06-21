@@ -1,0 +1,1229 @@
+<%- include('layouts/header') %>
+
+    <style>
+        :root {
+            --d-bg: #eef2f9;
+            --d-card: #fff;
+            --d-border: #e0e7f3;
+            --d-text: #0d1b3e;
+            --d-muted: #6b7fa8;
+            --d-blue1: #1a6ef5;
+            --d-blue2: #0047cc;
+            --d-green: #00c896;
+            --d-red: #f5365c;
+            --d-orange: #fb8c00;
+        }
+
+        .lap-page {
+            background: var(--d-bg) !important;
+        }
+
+        /* ── Fintech cards ── */
+        /* ── STAT CARDS — single strip ── */
+        .fin-grid,
+        .fin-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e8eaed;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .fin-card {
+            padding: 20px 22px 18px;
+            border-right: 1px solid #e8eaed;
+            min-height: 130px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: background .15s;
+        }
+
+        .fin-card::before,
+        .fin-card::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        .fin-card:last-child {
+            border-right: none;
+        }
+
+        .fin-card:hover {
+            background: #fafbff;
+        }
+
+        .fin-card.fc-active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .fin-card.fc-active:hover {
+            background: #1d4ed8;
+        }
+
+        .fin-card.fc-active .card-lbl {
+            color: rgba(255, 255, 255, .70);
+        }
+
+        .fin-card.fc-active .card-val {
+            color: #fff;
+        }
+
+        .fin-card.fc-active .card-sub {
+            color: rgba(255, 255, 255, .60);
+        }
+
+        .fin-card.fc-active .card-pill {
+            background: rgba(255, 255, 255, .20) !important;
+            color: rgba(255, 255, 255, .90) !important;
+        }
+
+        .fin-card.fc-active .sp-line {
+            stroke: rgba(255, 255, 255, .70) !important;
+        }
+
+        .fin-card.fc-active .sp-fill {
+            fill: rgba(255, 255, 255, .12) !important;
+        }
+
+        .fin-card.fc-active .sp-dot {
+            fill: #fff !important;
+        }
+
+        .card-lbl {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: .1px;
+            transition: color .15s;
+        }
+
+        .card-body {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-left {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .card-val {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -1.2px;
+            line-height: 1;
+            transition: color .15s;
+        }
+
+        @media(max-width:1400px) {
+            .card-val {
+                font-size: 26px;
+            }
+        }
+
+        .card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-top: 6px;
+        }
+
+        .card-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 6px;
+            border-radius: 100px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            align-self: flex-start;
+        }
+
+        .pill-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .pill-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .pill-red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .pill-amber {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .pill-teal {
+            background: #cffafe;
+            color: #0e7490;
+        }
+
+        .card-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color .15s;
+        }
+
+        .card-spark {
+            flex-shrink: 0;
+            width: 72px;
+            height: 36px;
+        }
+
+        .card-spark svg {
+            width: 72px;
+            height: 36px;
+        }
+
+        .sp-fill {
+            transition: fill .3s;
+        }
+
+        .sp-line {
+            stroke-width: 1.8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @media(max-width:700px) {
+
+            .fin-grid,
+            .fin-grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .fin-card {
+                border-right: none;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(odd) {
+                border-right: 1px solid #e8eaed;
+            }
+
+            .fin-card:nth-child(even) {
+                border-right: none;
+            }
+
+            .fin-card:nth-last-child(-n+2) {
+                border-bottom: none;
+            }
+        }
+
+        @media(max-width:400px) {
+
+            .fin-grid,
+            .fin-grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .fin-card {
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:last-child {
+                border-bottom: none;
+            }
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .a1 {
+            animation: fadeUp .4s ease both
+        }
+
+        .a2 {
+            animation: fadeUp .4s .07s ease both
+        }
+
+        .a3 {
+            animation: fadeUp .4s .14s ease both
+        }
+
+        .a4 {
+            animation: fadeUp .4s .21s ease both
+        }
+
+        .a5 {
+            animation: fadeUp .4s .28s ease both
+        }
+
+        .a6 {
+            animation: fadeUp .4s .35s ease both
+        }
+
+        .a7 {
+            animation: fadeUp .4s .42s ease both
+        }
+
+        /* ── Period bar ── */
+        .period-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .view-tabs {
+            display: flex;
+            background: #fff;
+            border: 1.5px solid var(--d-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .view-tab {
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--d-muted);
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: 'DM Sans', sans-serif;
+            transition: all .15s;
+        }
+
+        .view-tab.active {
+            background: linear-gradient(135deg, #1a6ef5, #0047cc);
+            color: #fff;
+        }
+
+        .view-tab:hover:not(.active) {
+            background: #f4f8ff;
+            color: var(--d-text);
+        }
+
+        .pf-select {
+            padding: 8px 13px;
+            border-radius: 10px;
+            border: 1.5px solid var(--d-border);
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            background: #fff;
+            color: var(--d-text);
+            cursor: pointer;
+        }
+
+        .pf-select:focus {
+            outline: none;
+            border-color: var(--d-blue1);
+        }
+
+        /* ── White card ── */
+        .w-card {
+            background: var(--d-card);
+            border: 1px solid var(--d-border);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 2px 12px rgba(26, 110, 245, .05);
+        }
+
+        .wc-lbl {
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            color: var(--d-muted);
+        }
+
+        .wc-ttl {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--d-text);
+            margin-top: 2px;
+        }
+
+        /* ── Method list ── */
+        .met-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px solid #f0f4ff;
+        }
+
+        .met-item:last-child {
+            border-bottom: none;
+        }
+
+        .met-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .met-bar-bg {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #eef2f9;
+            overflow: hidden;
+        }
+
+        .met-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width .6s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        /* ── Table ── */
+        .ov-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .ov-tbl th {
+            padding: 9px 14px;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--d-muted);
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            background: #f4f8ff;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .ov-tbl th:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+
+        .ov-tbl th:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+
+        .ov-tbl td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f0f4ff;
+            vertical-align: middle;
+        }
+
+        .ov-tbl tbody tr:hover td {
+            background: #f8faff;
+        }
+
+        .ov-tbl tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ── Badges ── */
+        .mbadge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+        }
+
+        .mbadge.red {
+            background: #fff0f2;
+            color: var(--d-red);
+        }
+
+        .mbadge.green {
+            background: #e6fff7;
+            color: #007a5e;
+        }
+
+        .mbadge.amber {
+            background: #fff8e6;
+            color: #b45309;
+        }
+
+        .mbadge.blue {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .mbadge.gray {
+            background: #f4f8ff;
+            color: var(--d-muted);
+        }
+
+        /* ── Growth badge ── */
+        .growth {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .growth.up {
+            background: #e6fff7;
+            color: #007a5e;
+        }
+
+        .growth.down {
+            background: #fff0f2;
+            color: var(--d-red);
+        }
+
+        .growth.flat {
+            background: #f4f8ff;
+            color: var(--d-muted);
+        }
+
+        /* ── Package rank ── */
+        .pkg-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f4ff;
+        }
+
+        .pkg-item:last-child {
+            border-bottom: none;
+        }
+
+        .pkg-rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: #f4f8ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--d-muted);
+            flex-shrink: 0;
+        }
+
+        .pkg-rank.gold {
+            background: #fff8e6;
+            color: #b45309;
+        }
+
+        .pkg-rank.silver {
+            background: #f4f8ff;
+            color: #475569;
+        }
+
+        .pkg-rank.bronze {
+            background: #fff5f0;
+            color: #c2410c;
+        }
+
+        /* ── Responsive ── */
+        @media(max-width:1100px) {
+            .fin-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+
+        /* ── Laba Rugi Table ── */
+        .lr-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .lr-table tr {
+            border-bottom: 1px solid #f0f4ff;
+        }
+
+        .lr-table td {
+            padding: 8px 0;
+            font-size: 12.5px;
+            color: var(--d-text);
+            font-weight: 400;
+        }
+
+        .lr-table .lr-lbl {
+            color: #4b5563;
+        }
+
+        .lr-table .lr-sub {
+            padding-left: 14px;
+            color: #4b5563;
+        }
+
+        .lr-table .lr-val {
+            text-align: right;
+            font-weight: 500;
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* Section header — PENDAPATAN, PENGELUARAN, etc */
+        .lr-table .lr-section td {
+            font-size: 9.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--d-muted);
+            padding-top: 14px;
+            padding-bottom: 3px;
+            border-bottom: none;
+            background: none;
+        }
+
+        /* Subtotal row */
+        .lr-table .lr-subtotal td {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--d-text);
+            background: #f8faff;
+            padding: 9px 0;
+            border-top: 1px solid var(--d-border);
+            border-bottom: none;
+        }
+
+        .lr-table .lr-subtotal .lr-val {
+            text-align: right;
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* Grand total row */
+        .lr-table .lr-total td {
+            font-size: 14px;
+            font-weight: 800;
+            padding-top: 12px;
+            color: var(--d-text);
+            border-top: 2px solid var(--d-text) !important;
+            border-bottom: none !important;
+        }
+
+        .lr-table .lr-total .lr-val {
+            color: var(--d-blue1);
+            font-size: 15px;
+        }
+
+        /* Color helpers */
+        .lr-neg .lr-val {
+            color: var(--d-red) !important;
+        }
+
+        .lr-pos .lr-val {
+            color: #007a5e !important;
+        }
+
+        /* ── Category bars ── */
+        .cat-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 0;
+            border-bottom: 1px solid #f0f4ff;
+        }
+
+        .cat-item:last-child {
+            border-bottom: none;
+        }
+
+        .cat-bar-bg {
+            flex: 1;
+            height: 5px;
+            border-radius: 3px;
+            background: #eef2f9;
+            overflow: hidden;
+        }
+
+        .cat-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #f5365c, #ff8fa3);
+        }
+
+        /* ── Keu table ── */
+        .keu-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .kb-pengeluaran {
+            background: #fff0f2;
+            color: #c0183a;
+        }
+
+        .kb-hutang {
+            background: #fff8e6;
+            color: #b45309;
+        }
+
+        .kb-piutang {
+            background: #e0f4ff;
+            color: #0077b6;
+        }
+
+        .kb-modal {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        @media(max-width:960px) {
+
+            .chart-row,
+            .detail-row,
+            .overdue-row,
+            .labarugi-row {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        @media(max-width:640px) {
+            .fin-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0 !important;
+            }
+
+            .fin-card {
+                padding: 18px 20px !important;
+                min-height: auto !important;
+                border-right: none !important;
+                border-bottom: 1px solid #e8eaed;
+            }
+
+            .fin-card:last-child {
+                border-bottom: none;
+            }
+
+            .period-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .col-hide-sm {
+                display: none !important;
+            }
+        }
+    </style>
+
+    <main class="page-content">
+
+        <!-- Page header -->
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;"
+            class="a1">
+            <div>
+                <h1 style="font-size:22px;font-weight:800;color:var(--d-text);margin:0 0 4px">Laporan Keuangan</h1>
+                <p style="font-size:13px;color:var(--d-muted);margin:0">Ringkasan penerimaan, tunggakan, dan tren
+                    keuangan</p>
+            </div>
+        </div>
+
+        <!-- ── PERIOD BAR ── -->
+        <div class="period-bar a2">
+            <div class="view-tabs">
+                <button class="view-tab" id="tab-monthly" onclick="setView('monthly')">Bulanan</button>
+                <button class="view-tab" id="tab-yearly" onclick="setView('yearly')">Tahunan</button>
+            </div>
+
+            <div id="sel-monthly" style="display:flex;gap:8px;align-items:center">
+                <select id="sel-month" class="pf-select" onchange="loadData()">
+                    <option value="1">Januari</option>
+                    <option value="2">Februari</option>
+                    <option value="3">Maret</option>
+                    <option value="4">April</option>
+                    <option value="5">Mei</option>
+                    <option value="6">Juni</option>
+                    <option value="7">Juli</option>
+                    <option value="8">Agustus</option>
+                    <option value="9">September</option>
+                    <option value="10">Oktober</option>
+                    <option value="11">November</option>
+                    <option value="12">Desember</option>
+                </select>
+                <select id="sel-year-m" class="pf-select" onchange="if(_view==='monthly')loadData()"></select>
+            </div>
+
+
+            <div id="sel-yearly" style="display:none;gap:8px;align-items:center">
+                <select id="sel-year-y" class="pf-select" onchange="if(_view==='yearly')loadData()"></select>
+            </div>
+
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                <span id="period-label" style="font-size:13px;font-weight:700;color:var(--d-text)"></span>
+                <button onclick="openPrint()"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;background:linear-gradient(135deg,#0d1b3e,#1a3a7a);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;box-shadow:0 2px 8px rgba(13,27,62,.3);">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Print / PDF
+                </button>
+                <button onclick="exportCSV()"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#fff;border:1.5px solid var(--d-border);font-size:12.5px;font-weight:600;color:var(--d-muted);cursor:pointer;font-family:'DM Sans',sans-serif;">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- ── STAT CARDS ROW 1 ── -->
+
+        <div class="fin-grid">
+            <div class="fin-card fc-active" id="fc-recv" onclick="lapCardClick(this)">
+                <div class="card-lbl">Penerimaan</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="card-recv">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-green" id="cp-recv">—</span>
+                            <span class="card-sub" id="card-recv-sub">–</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-recv" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-recv-fill" d="" fill="#16a34a" opacity=".12" />
+                            <path class="sp-line" id="sp-recv-line" d="" stroke="#16a34a" />
+                            <circle class="sp-dot" id="sp-recv-dot" r="2.5" fill="#16a34a" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fc-overdue" onclick="lapCardClick(this)">
+                <div class="card-lbl">Belum Bayar</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="card-overdue">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-red" id="cp-overdue">—</span>
+                            <span class="card-sub" id="card-overdue-sub">–</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-overdue" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-overdue-fill" d="" fill="#dc2626" opacity=".12" />
+                            <path class="sp-line" id="sp-overdue-line" d="" stroke="#dc2626" />
+                            <circle class="sp-dot" id="sp-overdue-dot" r="2.5" fill="#dc2626" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fc-upcoming" onclick="lapCardClick(this)">
+                <div class="card-lbl">Jatuh Tempo 7hr</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="card-upcoming">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-amber" id="cp-upcoming">—</span>
+                            <span class="card-sub" id="card-upcoming-sub">–</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-upcoming" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-upcoming-fill" d="" fill="#d97706" opacity=".12" />
+                            <path class="sp-line" id="sp-upcoming-line" d="" stroke="#d97706" />
+                            <circle class="sp-dot" id="sp-upcoming-dot" r="2.5" fill="#d97706" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fc-rate" onclick="lapCardClick(this)">
+                <div class="card-lbl">Collection Rate</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="card-rate">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-teal" id="cp-rate">—</span>
+                            <span class="card-sub" id="card-rate-sub">–</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp-rate" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp-rate-fill" d="" fill="#0891b2" opacity=".12" />
+                            <path class="sp-line" id="sp-rate-line" d="" stroke="#0891b2" />
+                            <circle class="sp-dot" id="sp-rate-dot" r="2.5" fill="#0891b2" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── STAT CARDS ROW 2 ── -->
+        <div class="fin-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
+            <div class="fin-card" id="fc2-keluar">
+                <div class="card-lbl">Pengeluaran</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="card-keluar">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-red" id="cp2-keluar">—</span>
+                            <span class="card-sub" id="card-keluar-sub">Bulan ini</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp2-keluar" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp2-keluar-fill" d="" fill="#dc2626" opacity=".12" />
+                            <path class="sp-line" id="sp2-keluar-line" d="" stroke="#dc2626" />
+                            <circle class="sp-dot" id="sp2-keluar-dot" r="2.5" fill="#dc2626" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fc2-cashflow">
+                <div class="card-lbl">Net Cashflow</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="card-cashflow">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-blue" id="cp2-cashflow">—</span>
+                            <span class="card-sub">Pemasukan – Pengeluaran</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp2-cashflow" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp2-cashflow-fill" d="" fill="#2563eb" opacity=".12" />
+                            <path class="sp-line" id="sp2-cashflow-line" d="" stroke="#2563eb" />
+                            <circle class="sp-dot" id="sp2-cashflow-dot" r="2.5" fill="#2563eb" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="fin-card" id="fc2-hutang">
+                <div class="card-lbl">Hutang Outstanding</div>
+                <div class="card-body">
+                    <div class="card-left">
+                        <span class="card-val" id="card-hutang">–</span>
+                        <div class="card-meta">
+                            <span class="card-pill pill-orange" id="cp2-hutang">—</span>
+                            <span class="card-sub" id="card-hutang-sub">Belum lunas</span>
+                        </div>
+                    </div>
+                    <div class="card-spark">
+                        <svg id="sp2-hutang" viewBox="0 0 72 36" preserveAspectRatio="none">
+                            <path class="sp-fill" id="sp2-hutang-fill" d="" fill="#c2410c" opacity=".12" />
+                            <path class="sp-line" id="sp2-hutang-line" d="" stroke="#c2410c" />
+                            <circle class="sp-dot" id="sp2-hutang-dot" r="2.5" fill="#c2410c" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── CHART ROW ── -->
+        <div class="chart-row a4"
+            style="display:grid;grid-template-columns:minmax(0,2.2fr) minmax(220px,1fr);gap:16px;margin-bottom:20px">
+            <div class="w-card">
+                <div
+                    style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+                    <div>
+                        <div class="wc-lbl">Grafik Penerimaan</div>
+                        <div class="wc-ttl" id="chart-title">—</div>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:center">
+                        <span class="growth" id="growth-badge" style="display:none"></span>
+                        <span style="font-size:12px;color:var(--d-muted)" id="chart-total"></span>
+                    </div>
+                </div>
+                <div style="position:relative;height:220px">
+                    <div id="mainChart"></div>
+                </div>
+            </div>
+
+            <div class="w-card">
+                <div style="margin-bottom:16px">
+                    <div class="wc-lbl">Metode Pembayaran</div>
+                    <div class="wc-ttl" id="method-title">—</div>
+                </div>
+                <div style="position:relative;height:120px;margin-bottom:16px"><canvas id="methodChart"></canvas></div>
+                <div id="method-list"></div>
+            </div>
+        </div>
+
+        <!-- ── LABA RUGI + KATEGORI PENGELUARAN ── -->
+        <div class="labarugi-row"
+            style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:20px">
+            <div class="w-card">
+                <div style="margin-bottom:16px">
+                    <div class="wc-lbl">Laporan Laba Rugi</div>
+                    <div class="wc-ttl" id="lr-title">—</div>
+                </div>
+                <table class="lr-table">
+                    <tr class="lr-section">
+                        <td colspan="2">PENDAPATAN</td>
+                    </tr>
+                    <tr>
+                        <td class="lr-lbl lr-sub">Pembayaran Pelanggan</td>
+                        <td class="lr-val lr-pos" id="lr-recv">—</td>
+                    </tr>
+                    <tbody id="lr-manual-rows"></tbody>
+                    <tr class="lr-subtotal">
+                        <td class="lr-lbl">Total Pendapatan</td>
+                        <td class="lr-val lr-pos" id="lr-total-pend" style="font-size:13.5px">—</td>
+                    </tr>
+
+                    <tr class="lr-section">
+                        <td colspan="2">PENGELUARAN</td>
+                    </tr>
+                    <tr>
+                        <td class="lr-lbl lr-sub" id="lr-kel-lbl">Operasional</td>
+                        <td class="lr-val lr-neg" id="lr-keluar">—</td>
+                    </tr>
+                    <tr class="lr-subtotal">
+                        <td class="lr-lbl">Total Pengeluaran</td>
+                        <td class="lr-val lr-neg" id="lr-total-kel" style="font-size:13.5px">—</td>
+                    </tr>
+
+                    <tr style="height:8px;border:none">
+                        <td colspan="2"></td>
+                    </tr>
+                    <tr class="lr-total">
+                        <td class="lr-lbl">LABA / RUGI BERSIH</td>
+                        <td class="lr-val" id="lr-laba">—</td>
+                    </tr>
+                </table>
+
+                <!-- Margin indicator -->
+                <div style="margin-top:16px;padding-top:14px;border-top:1px solid #eef2f9">
+                    <div
+                        style="display:flex;justify-content:space-between;font-size:12px;color:var(--d-muted);margin-bottom:6px">
+                        <span>Profit Margin</span>
+                        <span id="lr-margin" style="font-weight:700">—</span>
+                    </div>
+                    <div style="height:6px;background:#eef2f9;border-radius:3px;overflow:hidden">
+                        <div id="lr-margin-bar"
+                            style="height:100%;border-radius:3px;background:linear-gradient(90deg,#00c896,#1a6ef5);width:0%;transition:width .6s">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="w-card">
+                <div style="margin-bottom:14px">
+                    <div class="wc-lbl">Pengeluaran per Kategori</div>
+                    <div class="wc-ttl" id="cat-title">—</div>
+                </div>
+                <div id="cat-list">
+                    <div style="text-align:center;padding:24px;color:var(--d-muted);font-size:13px">Tidak ada
+                        pengeluaran</div>
+                </div>
+            </div>
+            <!-- Kategori Pemasukan -->
+            <div class="w-card" style="padding:20px 22px;">
+                <div style="margin-bottom:14px">
+                    <div class="wc-lbl">Pemasukan per Kategori</div>
+                    <div class="wc-ttl" id="masuk-cat-title">—</div>
+                </div>
+                <div id="masuk-cat-list">
+                    <div style="text-align:center;padding:24px;color:var(--d-muted);font-size:12.5px">Memuat...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── DETAIL ROW ── -->
+        <div class="detail-row a5"
+            style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;margin-bottom:20px">
+            <div class="w-card">
+                <div style="margin-bottom:20px">
+                    <div class="wc-lbl" id="trend-lbl">Tren 6 Bulan Terakhir</div>
+                    <div class="wc-ttl">Perbandingan Periode</div>
+                </div>
+                <div style="position:relative;height:240px"><canvas id="trendChart"></canvas></div>
+            </div>
+
+            <div class="w-card">
+                <div style="margin-bottom:16px">
+                    <div class="wc-lbl">Top Paket</div>
+                    <div class="wc-ttl">Berdasarkan Penerimaan</div>
+                </div>
+                <div id="pkg-list">
+                    <div style="text-align:center;padding:30px;color:var(--d-muted);font-size:13px">Memuat...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── OVERDUE + UPCOMING ── -->
+        <div class="overdue-row a6" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+            <div class="w-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                    <div>
+                        <div class="wc-lbl">Tunggakan</div>
+                        <div class="wc-ttl">Belum Bayar (Overdue)</div>
+                    </div>
+                    <span class="mbadge red" id="overdue-badge">0</span>
+                </div>
+                <div style="overflow-x:auto;max-height:300px;overflow-y:auto">
+                    <table class="ov-tbl">
+                        <thead style="position:sticky;top:0">
+                            <tr>
+                                <th>Pelanggan</th>
+                                <th>Tagihan</th>
+                                <th>Jatuh Tempo</th>
+                                <th>Hari</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overdue-tbody">
+                            <tr>
+                                <td colspan="4" style="text-align:center;padding:20px;color:var(--d-muted)">Memuat...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div
+                    style="padding-top:10px;border-top:1px solid var(--d-border);display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+                    <span style="font-size:12px;color:var(--d-muted)" id="overdue-count">0 pelanggan</span>
+                    <span style="font-size:13px;font-weight:700;color:var(--d-red)" id="overdue-total-amt"></span>
+                </div>
+            </div>
+
+            <div class="w-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                    <div>
+                        <div class="wc-lbl">Akan Jatuh Tempo</div>
+                        <div class="wc-ttl">7 Hari ke Depan</div>
+                    </div>
+                    <span class="mbadge amber" id="upcoming-badge">0</span>
+                </div>
+                <div style="overflow-x:auto;max-height:300px;overflow-y:auto">
+                    <table class="ov-tbl">
+                        <thead style="position:sticky;top:0">
+                            <tr>
+                                <th>Pelanggan</th>
+                                <th>Tagihan</th>
+                                <th>Jatuh Tempo</th>
+                                <th>Sisa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="upcoming-tbody">
+                            <tr>
+                                <td colspan="4" style="text-align:center;padding:20px;color:var(--d-muted)">Memuat...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div
+                    style="padding-top:10px;border-top:1px solid var(--d-border);display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+                    <span style="font-size:12px;color:var(--d-muted)" id="upcoming-count">0 pelanggan</span>
+                    <span style="font-size:13px;font-weight:700;color:var(--d-orange)" id="upcoming-total-amt"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TRANSAKSI KEUANGAN (Pengeluaran dll) ── -->
+        <div class="a7" style="margin-bottom:20px" id="keu-tx-section" style="display:none">
+            <div class="w-card">
+                <div
+                    style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+                    <div>
+                        <div class="wc-lbl">Transaksi Keuangan</div>
+                        <div class="wc-ttl" id="keu-tx-title">Pengeluaran, Hutang & Piutang</div>
+                    </div>
+                    <span class="mbadge red" id="keu-tx-count">0</span>
+                </div>
+                <div style="overflow-x:auto">
+                    <table class="ov-tbl" id="keu-tx-table">
+                        <thead>
+                            <tr>
+                                <th>Tgl</th>
+                                <th>Tipe</th>
+                                <th>Kategori / Deskripsi</th>
+                                <th>Pihak / Ref</th>
+                                <th>Status</th>
+                                <th style="text-align:right">Jumlah</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keu-tx-tbody">
+                            <tr>
+                                <td colspan="6" style="text-align:center;padding:24px;color:var(--d-muted)">Memuat...
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot id="keu-tx-tfoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── DAFTAR PEMBAYARAN ── -->
+        <div class="a7" style="margin-bottom:24px">
+            <div class="w-card">
+                <div
+                    style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+                    <div>
+                        <div class="wc-lbl">Daftar Pembayaran</div>
+                        <div class="wc-ttl" id="tx-title">—</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                        <span class="mbadge green" id="tx-count">0 transaksi</span>
+                        <span
+                            style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--d-blue1)"
+                            id="tx-total"></span>
+                        <input type="text" id="tx-search" placeholder="Cari nama / CID..."
+                            oninput="filterTx(this.value)"
+                            style="padding:7px 12px;border:1.5px solid var(--d-border);border-radius:9px;font-size:12.5px;font-family:'DM Sans',sans-serif;width:180px;outline:none"
+                            onfocus="this.style.borderColor='#1a6ef5'" onblur="this.style.borderColor='#e0e7f3'">
+                    </div>
+                </div>
+                <div style="overflow-x:auto">
+                    <table class="ov-tbl">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Pelanggan</th>
+                                <th class="col-hide-sm">Paket</th>
+                                <th>Jumlah</th>
+                                <th>Metode</th>
+                                <th class="col-hide-sm">Tgl Bayar</th>
+                                <th class="col-hide-sm">Aktif s/d</th>
+                                <th>Invoice</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tx-tbody">
+                            <tr>
+                                <td colspan="8" style="text-align:center;padding:40px;color:var(--d-muted)">Memuat
+                                    data...</td>
+                            </tr>
+                        </tbody>
+                        <tfoot id="tx-tfoot"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <%- include('layouts/footer') %>
