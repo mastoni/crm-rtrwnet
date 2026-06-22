@@ -1,0 +1,498 @@
+<%- include('layouts/header') %>
+
+<style>
+    /* ── Header & Layout ── */
+    .settings-hdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        background: var(--bg-card);
+        padding: 20px 24px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+    .settings-title h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .settings-title p {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    /* ── Tabs Layout ── */
+    .settings-container {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+    }
+    .settings-sidebar {
+        width: 240px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        flex-shrink: 0;
+    }
+    .settings-tab {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all .2s;
+        margin-bottom: 4px;
+    }
+    .settings-tab:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+    .settings-tab.active {
+        background: #eff6ff;
+        color: var(--primary);
+    }
+    .settings-tab svg {
+        width: 18px;
+        height: 18px;
+        stroke-width: 2.2;
+    }
+
+    /* ── Panels ── */
+    .settings-content {
+        flex: 1;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+    }
+    .settings-panel {
+        display: none;
+        padding: 24px;
+    }
+    .settings-panel.active {
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .panel-header {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+    }
+    .panel-header h3 {
+        margin: 0 0 4px;
+        font-size: 16px;
+        font-weight: 700;
+    }
+    .panel-header p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    /* ── Form Styles ── */
+    .setting-row {
+        margin-bottom: 20px;
+    }
+    .setting-row label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--text-primary);
+    }
+    .setting-desc {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+        display: block;
+    }
+    .form-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-input);
+        color: var(--text-primary);
+        font-size: 14px;
+        font-family: inherit;
+        transition: border-color .2s;
+    }
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    .form-select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-input);
+        color: var(--text-primary);
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    /* Toggle Switch */
+    .toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+    }
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .3s;
+        border-radius: 24px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* ── Action Bar ── */
+    .settings-actions {
+        padding: 16px 24px;
+        background: #f8fafc;
+        border-top: 1px solid var(--border);
+        border-radius: 0 0 12px 12px;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: auto;
+    }
+    .btn-save {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        transition: transform .15s;
+    }
+    .btn-save:hover {
+        transform: translateY(-1px);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media(max-width: 768px) {
+        .settings-container { flex-direction: column; }
+        .settings-sidebar { width: 100%; display: flex; overflow-x: auto; padding: 8px; }
+        .settings-tab { white-space: nowrap; margin-bottom: 0; margin-right: 4px; padding: 10px 12px; }
+    }
+</style>
+
+<div class="page-content" style="padding: 24px;">
+    
+    <div class="settings-hdr">
+        <div class="settings-title">
+            <h2>Pengaturan Sistem</h2>
+            <p>Kelola konfigurasi global aplikasi, billing, jaringan, dan integrasi.</p>
+        </div>
+    </div>
+
+    <form id="settingsForm" class="settings-container">
+        
+        <!-- Sidebar Tabs -->
+        <div class="settings-sidebar">
+            <button type="button" class="settings-tab active" data-target="panel-general" onclick="switchTab('panel-general', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                Umum & Perusahaan
+            </button>
+            <button type="button" class="settings-tab" data-target="panel-billing" onclick="switchTab('panel-billing', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                Keuangan & Billing
+            </button>
+            <button type="button" class="settings-tab" data-target="panel-rewards" onclick="switchTab('panel-rewards', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                Reward Points
+            </button>
+            <button type="button" class="settings-tab" data-target="panel-network" onclick="switchTab('panel-network', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                Jaringan & Mikrotik
+            </button>
+            <button type="button" class="settings-tab" data-target="panel-integration" onclick="switchTab('panel-integration', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                Integrasi & API
+            </button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="settings-content">
+            
+            <!-- PANEL: UMUM -->
+            <div id="panel-general" class="settings-panel active">
+                <div class="panel-header">
+                    <h3>Umum & Perusahaan</h3>
+                    <p>Informasi dasar yang akan ditampilkan pada Invoice dan Laporan.</p>
+                </div>
+                
+                <div class="setting-row">
+                    <label>Nama Perusahaan</label>
+                    <input type="text" class="form-input" name="company_name" id="inp_company_name" placeholder="Misal: SKMNetwork">
+                </div>
+
+                <div class="setting-row">
+                    <label>Alamat Perusahaan</label>
+                    <textarea class="form-input" name="company_address" id="inp_company_address" rows="3" placeholder="Alamat lengkap..."></textarea>
+                </div>
+
+                <div class="setting-row">
+                    <label>Pajak PPN (%)</label>
+                    <input type="number" class="form-input" name="tax_rate" id="inp_tax_rate" placeholder="11" style="max-width: 150px;">
+                    <span class="setting-desc">Persentase pajak yang dibebankan pada tagihan bulanan pelanggan.</span>
+                </div>
+            </div>
+
+            <!-- PANEL: BILLING -->
+            <div id="panel-billing" class="settings-panel">
+                <div class="panel-header">
+                    <h3>Keuangan & Billing</h3>
+                    <p>Pengaturan siklus penagihan dan denda keterlambatan.</p>
+                </div>
+
+                <div class="setting-row">
+                    <label>Tanggal Jatuh Tempo Bulanan</label>
+                    <input type="number" class="form-input" name="billing_due_date" id="inp_billing_due_date" min="1" max="28" style="max-width: 150px;">
+                    <span class="setting-desc">Tanggal default batas pembayaran invoice (1-28).</span>
+                </div>
+
+                <div class="setting-row">
+                    <label>Denda Keterlambatan (Rp)</label>
+                    <input type="number" class="form-input" name="late_fee_amount" id="inp_late_fee_amount" placeholder="0">
+                    <span class="setting-desc">Biaya denda yang ditambahkan otomatis jika pelanggan melewati batas tempo.</span>
+                </div>
+            </div>
+
+            <!-- PANEL: REWARDS -->
+            <div id="panel-rewards" class="settings-panel">
+                <div class="panel-header">
+                    <h3>Reward Points</h3>
+                    <p>Konfigurasi program loyalitas poin pelanggan.</p>
+                </div>
+
+                <div class="setting-row">
+                    <label>Status Fitur Reward</label>
+                    <div class="toggle-wrap">
+                        <label class="switch">
+                            <input type="checkbox" id="inp_reward_points_active_check">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="reward_status_text">Aktif</span>
+                    </div>
+                    <input type="hidden" name="reward_points_active" id="inp_reward_points_active">
+                </div>
+
+                <div class="setting-row">
+                    <label>Poin per Pembayaran Tagihan</label>
+                    <input type="number" class="form-input" name="reward_point_value" id="inp_reward_point_value" style="max-width: 150px;">
+                    <span class="setting-desc">Jumlah poin yang didapat pelanggan setiap kali melunasi invoice.</span>
+                </div>
+
+                <div class="setting-row">
+                    <label>Minimal Poin Penukaran</label>
+                    <input type="number" class="form-input" name="reward_redemption_threshold" id="inp_reward_redemption_threshold" style="max-width: 150px;">
+                    <span class="setting-desc">Syarat saldo poin minimum sebelum pelanggan bisa melakukan penukaran (Redeem).</span>
+                </div>
+
+                <div class="setting-row">
+                    <label>Nilai Konversi 1 Poin (Rp)</label>
+                    <input type="number" class="form-input" name="reward_point_rp_value" id="inp_reward_point_rp_value" style="max-width: 150px;">
+                    <span class="setting-desc">Berapa rupiah nilai setiap 1 poin saat ditukar (misal: 1000).</span>
+                </div>
+            </div>
+
+            <!-- PANEL: NETWORK -->
+            <div id="panel-network" class="settings-panel">
+                <div class="panel-header">
+                    <h3>Jaringan & Mikrotik</h3>
+                    <p>Profil default untuk pelanggan dan status blokir.</p>
+                </div>
+
+                <div class="setting-row">
+                    <label>PPPoE Profile Default</label>
+                    <input type="text" class="form-input" name="default_pppoe_profile" id="inp_default_pppoe_profile" placeholder="default">
+                </div>
+
+                <div class="setting-row">
+                    <label>Isolir Profile (Block)</label>
+                    <input type="text" class="form-input" name="isolir_profile" id="inp_isolir_profile" placeholder="ISOLIR">
+                    <span class="setting-desc">Profil Mikrotik yang diterapkan secara otomatis kepada pelanggan menunggak.</span>
+                </div>
+            </div>
+
+            <!-- PANEL: INTEGRATION -->
+            <div id="panel-integration" class="settings-panel">
+                <div class="panel-header">
+                    <h3>Integrasi & API</h3>
+                    <p>Hubungkan sistem dengan pihak ketiga.</p>
+                </div>
+
+                <div class="setting-row">
+                    <label>WhatsApp API Gateway URL</label>
+                    <input type="text" class="form-input" name="wa_api_url" id="inp_wa_api_url" placeholder="http://localhost:8000/send">
+                </div>
+
+                <div class="setting-row">
+                    <label>GenieACS API URL</label>
+                    <input type="text" class="form-input" name="genieacs_api_url" id="inp_genieacs_api_url" placeholder="http://genieacs:7557">
+                </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="settings-actions">
+                <button type="submit" class="btn-save">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Simpan Pengaturan
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    // Tab Switcher
+    function switchTab(panelId, btn) {
+        document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById(panelId).classList.add('active');
+    }
+
+    // Toggle logic for reward points
+    const rewardCheck = document.getElementById('inp_reward_points_active_check');
+    const rewardHidden = document.getElementById('inp_reward_points_active');
+    const rewardText = document.getElementById('reward_status_text');
+
+    rewardCheck.addEventListener('change', function() {
+        if (this.checked) {
+            rewardHidden.value = '1';
+            rewardText.textContent = 'Aktif';
+            rewardText.style.color = 'var(--primary)';
+        } else {
+            rewardHidden.value = '0';
+            rewardText.textContent = 'Tidak Aktif';
+            rewardText.style.color = 'var(--text-secondary)';
+        }
+    });
+
+    // Load Data
+    async function loadSettings() {
+        try {
+            const res = await App.api('/settings');
+            if (res.data) {
+                // Determine structure: array of objects from DB, or dict from mock
+                let config = {};
+                if (Array.isArray(res.data)) {
+                    res.data.forEach(item => { config[item.setting_key] = item.setting_value; });
+                } else {
+                    config = res.data;
+                }
+
+                // Populate form
+                for (const key in config) {
+                    const inp = document.getElementById('inp_' + key);
+                    if (inp) {
+                        inp.value = config[key];
+                    }
+                }
+
+                // Sync toggle
+                if (config['reward_points_active'] === '1') {
+                    rewardCheck.checked = true;
+                    rewardText.textContent = 'Aktif';
+                    rewardText.style.color = 'var(--primary)';
+                } else {
+                    rewardCheck.checked = false;
+                    rewardText.textContent = 'Tidak Aktif';
+                    rewardText.style.color = 'var(--text-secondary)';
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load settings:', err);
+            App.showToast('Gagal memuat pengaturan', 'error');
+        }
+    }
+
+    // Save Data
+    document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const payload = Object.fromEntries(formData.entries());
+
+        const btn = this.querySelector('.btn-save');
+        const origText = btn.innerHTML;
+        btn.innerHTML = 'Menyimpan...';
+        btn.disabled = true;
+
+        try {
+            const res = await App.api('/settings', {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            if (res.success) {
+                App.showToast('Pengaturan berhasil disimpan!', 'success');
+            } else {
+                throw new Error(res.message);
+            }
+        } catch (err) {
+            App.showToast('Gagal menyimpan: ' + err.message, 'error');
+        } finally {
+            btn.innerHTML = origText;
+            btn.disabled = false;
+        }
+    });
+
+    // Init
+    document.addEventListener('DOMContentLoaded', loadSettings);
+
+</script>
+
+<%- include('layouts/footer') %>

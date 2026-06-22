@@ -1,0 +1,2645 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="CRM RT/RW Net — Platform All-in-One untuk Internet Service Provider. Kelola pelanggan, billing, MikroTik, monitoring, dan ticketing dalam satu dashboard modern.">
+  <title>CRM RT/RW Net — Dashboard All-in-One untuk ISP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #fff;
+      color: #0F172A;
+      overflow-x: hidden
+    }
+
+    .mono {
+      font-family: 'DM Mono', monospace
+    }
+
+    /* ── Navbar ── */
+    #navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      background: rgba(255, 255, 255, .9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(226, 232, 240, .8);
+      transition: box-shadow .3s
+    }
+
+    #navbar.scrolled {
+      box-shadow: 0 4px 30px rgba(30, 58, 138, .10)
+    }
+
+    .nav-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none
+    }
+
+    .nav-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #1E3A8A, #2563EB, #0EA5E9);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .nav-logo-text {
+      font-weight: 800;
+      font-size: 17px;
+      color: #0F172A;
+      letter-spacing: -.02em
+    }
+
+    .nav-logo-text span {
+      font-weight: 400;
+      color: #94A3B8
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px
+    }
+
+    .nav-links a {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #64748B;
+      text-decoration: none;
+      transition: color .2s
+    }
+
+    .nav-links a:hover {
+      color: #2563EB
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .btn-outline {
+      padding: 8px 18px;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+      background: #fff;
+      text-decoration: none;
+      transition: all .2s;
+      cursor: pointer
+    }
+
+    .btn-outline:hover {
+      border-color: #2563EB;
+      color: #2563EB
+    }
+
+    .btn-primary {
+      padding: 9px 20px;
+      background: linear-gradient(135deg, #1E3A8A, #2563EB, #0EA5E9);
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, .35);
+      transition: all .25s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(37, 99, 235, .45)
+    }
+
+    .btn-primary-lg {
+      padding: 14px 32px;
+      font-size: 15px;
+      border-radius: 16px;
+      gap: 8px
+    }
+
+    .btn-ghost-lg {
+      padding: 13px 28px;
+      border: 2px solid #E2E8F0;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #334155;
+      background: #fff;
+      text-decoration: none;
+      transition: all .25s;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px
+    }
+
+    .btn-ghost-lg:hover {
+      border-color: #2563EB;
+      color: #2563EB;
+      background: rgba(37, 99, 235, .04)
+    }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px
+    }
+
+    .hamburger span {
+      width: 22px;
+      height: 2px;
+      background: #334155;
+      border-radius: 2px;
+      transition: all .3s
+    }
+
+    @media(max-width:768px) {
+      .nav-links {
+        display: none
+      }
+
+      .hamburger {
+        display: flex
+      }
+    }
+
+    /* ── Gradient text ── */
+    .gt {
+      background: linear-gradient(120deg, #1E3A8A, #2563EB, #0EA5E9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: 64px;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse 70% 55% at 70% -5%, rgba(30, 58, 138, .12) 0%, transparent 65%),
+        radial-gradient(ellipse 45% 45% at 5% 85%, rgba(14, 165, 233, .09) 0%, transparent 55%), #F8FBFF
+    }
+
+    .hero-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 60px 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      width: 100%
+    }
+
+    @media(max-width:1024px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center
+      }
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #DBEAFE, #E0F2FE);
+      color: #1E3A8A;
+      border: 1px solid #BFDBFE;
+      margin-bottom: 20px
+    }
+
+    .hero-eyebrow .pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10B981;
+      animation: pulse 2s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .6;
+        transform: scale(.85)
+      }
+    }
+
+    .hero-title {
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1.06;
+      letter-spacing: -.03em;
+      color: #0F172A;
+      margin-bottom: 20px
+    }
+
+    .hero-desc {
+      font-size: 17px;
+      color: #64748B;
+      line-height: 1.72;
+      margin-bottom: 36px;
+      max-width: 480px;
+      font-weight: 400
+    }
+
+    @media(max-width:1024px) {
+      .hero-desc {
+        margin: 0 auto 36px
+      }
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 44px
+    }
+
+    @media(max-width:1024px) {
+      .hero-btns {
+        justify-content: center
+      }
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap
+    }
+
+    @media(max-width:1024px) {
+      .hero-stats {
+        justify-content: center
+      }
+    }
+
+    .hstat {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .hstat-ico {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .hstat-lbl {
+      font-size: 13px;
+      font-weight: 800;
+      color: #1E293B
+    }
+
+    .hstat-sub {
+      font-size: 11px;
+      color: #94A3B8;
+      font-weight: 500
+    }
+
+    /* ── Dashboard mockup ── */
+    .mockup-wrap {
+      position: relative;
+      display: flex;
+      justify-content: flex-end
+    }
+
+    @media(max-width:1024px) {
+      .mockup-wrap {
+        justify-content: center
+      }
+    }
+
+    .mockup-glow {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none
+    }
+
+    .mockup-glow-ball {
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(30, 58, 138, .14), transparent 70%);
+      filter: blur(28px)
+    }
+
+    .mockup-card {
+      width: 320px;
+      background: #fff;
+      border-radius: 22px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 28px 60px rgba(30, 58, 138, .18);
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+      animation: bob 5s ease-in-out infinite
+    }
+
+    @keyframes bob {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-10px)
+      }
+    }
+
+    .mockup-hdr {
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #1E3A8A, #2563EB, #0EA5E9);
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .mockup-hdr-ico {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .2);
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .mockup-hdr-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff
+    }
+
+    .mockup-hdr-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, .75);
+      font-weight: 600;
+      margin-top: 1px
+    }
+
+    .mockup-hdr-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4ADE80;
+      animation: pulse 2s infinite
+    }
+
+    .mockup-body {
+      padding: 12px;
+      background: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+      gap: 9px
+    }
+
+    .mockup-row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px
+    }
+
+    .mockup-stat {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #F1F5F9
+    }
+
+    .mockup-stat-lbl {
+      font-size: 9.5px;
+      color: #94A3B8;
+      font-weight: 700;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: .04em
+    }
+
+    .mockup-stat-val {
+      font-size: 18px;
+      font-weight: 900;
+      color: #0F172A;
+      font-family: 'DM Mono', monospace
+    }
+
+    .mockup-stat-sub {
+      font-size: 8.5px;
+      font-weight: 700;
+      margin-top: 2px
+    }
+
+    .green {
+      color: #10B981
+    }
+
+    .blue {
+      color: #2563EB
+    }
+
+    .red {
+      color: #EF4444
+    }
+
+    .mockup-chart {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #F1F5F9
+    }
+
+    .mockup-chart-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px
+    }
+
+    .mockup-chart-lbl {
+      font-size: 9.5px;
+      color: #64748B;
+      font-weight: 700
+    }
+
+    .mockup-chart-val {
+      font-size: 9px;
+      color: #94A3B8;
+      font-weight: 600
+    }
+
+    .mockup-list {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #F1F5F9
+    }
+
+    .mockup-list-lbl {
+      font-size: 9.5px;
+      color: #64748B;
+      font-weight: 700;
+      margin-bottom: 7px;
+      text-transform: uppercase;
+      letter-spacing: .04em
+    }
+
+    .mockup-list-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px
+    }
+
+    .mockup-list-row:last-child {
+      margin-bottom: 0
+    }
+
+    .mlr-name {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #334155
+    }
+
+    .mlr-badge {
+      font-size: 8.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px
+    }
+
+    .badge-ok {
+      background: #DCFCE7;
+      color: #15803D
+    }
+
+    .badge-warn {
+      background: #FEF3C7;
+      color: #92400E
+    }
+
+    /* Float cards */
+    .float-card {
+      position: absolute;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(30, 58, 138, .13);
+      border: 1px solid;
+      padding: 12px;
+      z-index: 10
+    }
+
+    .float-left {
+      left: -50px;
+      top: 30px;
+      width: 160px;
+      border-color: #FEE2E2;
+      animation: bob2 5.5s ease-in-out 1.2s infinite
+    }
+
+    .float-right {
+      right: -24px;
+      bottom: 40px;
+      width: 155px;
+      border-color: #E0F2FE;
+      animation: bob3 6s ease-in-out 2.4s infinite
+    }
+
+    @keyframes bob2 {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-9px)
+      }
+    }
+
+    @keyframes bob3 {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-8px)
+      }
+    }
+
+    .float-ico {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px
+    }
+
+    .float-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: #1E293B;
+      margin-bottom: 4px
+    }
+
+    .float-sub {
+      font-size: 8.5px;
+      color: #94A3B8;
+      line-height: 1.5;
+      font-weight: 500
+    }
+
+    .float-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 8.5px;
+      margin-bottom: 3px
+    }
+
+    .float-row:last-child {
+      margin-bottom: 0
+    }
+
+    .float-key {
+      color: #94A3B8;
+      font-weight: 600
+    }
+
+    .float-val {
+      font-weight: 800
+    }
+
+    /* ── Ticker ── */
+    .ticker-bar {
+      border-top: 1px solid #F1F5F9;
+      border-bottom: 1px solid #F1F5F9;
+      background: #fff;
+      padding: 14px 0;
+      overflow: hidden
+    }
+
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: ticker 32s linear infinite
+    }
+
+    @keyframes ticker {
+      0% {
+        transform: translateX(0)
+      }
+
+      100% {
+        transform: translateX(-50%)
+      }
+    }
+
+    .ticker-item {
+      font-size: 13px;
+      font-weight: 700;
+      color: #94A3B8;
+      white-space: nowrap;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      gap: 7px
+    }
+
+    .ticker-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    /* ── Section commons ── */
+    .section {
+      padding: 96px 24px
+    }
+
+    .section-inner {
+      max-width: 1280px;
+      margin: 0 auto
+    }
+
+    .section-hdr {
+      text-align: center;
+      margin-bottom: 64px
+    }
+
+    .section-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      background: #F0F9FF;
+      color: #0369A1;
+      border: 1px solid #BAE6FD;
+      margin-bottom: 16px
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -.03em;
+      line-height: 1.1;
+      color: #0F172A;
+      margin-bottom: 16px
+    }
+
+    .section-desc {
+      font-size: 15px;
+      color: #64748B;
+      line-height: 1.7;
+      max-width: 580px;
+      margin: 0 auto
+    }
+
+    .hd {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #BFDBFE 35%, #BAE6FD 65%, transparent);
+      margin: 80px 0
+    }
+
+    /* ── Feature cards ── */
+    .feat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px
+    }
+
+    @media(max-width:1024px) {
+      .feat-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+    }
+
+    @media(max-width:640px) {
+      .feat-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .feat-card {
+      background: #fff;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 20px;
+      padding: 28px;
+      transition: all .3s;
+      cursor: default
+    }
+
+    .feat-card:hover {
+      border-color: #BFDBFE;
+      box-shadow: 0 12px 40px rgba(30, 58, 138, .10);
+      transform: translateY(-4px)
+    }
+
+    .feat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .15)
+    }
+
+    .feat-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 10px
+    }
+
+    .feat-desc {
+      font-size: 13.5px;
+      color: #64748B;
+      line-height: 1.65;
+      margin-bottom: 14px
+    }
+
+    .feat-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px
+    }
+
+    .feat-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+      border: 1px solid
+    }
+
+    /* ── Showcase zig-zag ── */
+    .showcase {
+      padding: 96px 0;
+      background: linear-gradient(180deg, #F8FAFC, #EFF6FF)
+    }
+
+    .showcase-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px
+    }
+
+    .showcase-item {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      margin-bottom: 96px
+    }
+
+    .showcase-item:last-child {
+      margin-bottom: 0
+    }
+
+    .showcase-item.reverse .showcase-img {
+      order: -1
+    }
+
+    @media(max-width:900px) {
+
+      .showcase-item,
+      .showcase-item.reverse {
+        grid-template-columns: 1fr
+      }
+
+      .showcase-item.reverse .showcase-img {
+        order: 0
+      }
+    }
+
+    .showcase-eyebrow {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      margin-bottom: 12px
+    }
+
+    .showcase-title {
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
+      font-weight: 900;
+      letter-spacing: -.025em;
+      line-height: 1.15;
+      color: #0F172A;
+      margin-bottom: 14px
+    }
+
+    .showcase-desc {
+      font-size: 14.5px;
+      color: #64748B;
+      line-height: 1.72;
+      margin-bottom: 22px
+    }
+
+    .showcase-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px
+    }
+
+    .showcase-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13.5px;
+      color: #334155
+    }
+
+    .check-ico {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10B981, #059669);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px
+    }
+
+    .showcase-img-wrap {
+      position: relative
+    }
+
+    .showcase-img-glow {
+      position: absolute;
+      inset: -12px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #3B82F6, #0EA5E9);
+      opacity: .2;
+      filter: blur(28px)
+    }
+
+    .showcase-img-frame {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(30, 58, 138, .18);
+      border: 1px solid rgba(255, 255, 255, .8)
+    }
+
+    .screenshot-mockup {
+      width: 100%;
+      background: linear-gradient(135deg, #F8FAFC, #EFF6FF);
+      padding: 20px;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 280px
+    }
+
+    .sm-topbar {
+      background: linear-gradient(135deg, #1E3A8A, #2563EB);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .sm-topbar-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .4)
+    }
+
+    .sm-topbar-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: #fff;
+      flex: 1
+    }
+
+    .sm-row {
+      display: flex;
+      gap: 10px
+    }
+
+    .sm-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid #E2E8F0;
+      flex: 1
+    }
+
+    .sm-card-lbl {
+      font-size: 8.5px;
+      color: #94A3B8;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 3px
+    }
+
+    .sm-card-val {
+      font-size: 16px;
+      font-weight: 900;
+      color: #0F172A;
+      font-family: 'DM Mono', monospace
+    }
+
+    .sm-card-sub {
+      font-size: 8px;
+      font-weight: 700;
+      margin-top: 1px
+    }
+
+    .sm-table {
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #E2E8F0
+    }
+
+    .sm-table-hdr {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #F8FAFC;
+      border-bottom: 1px solid #F1F5F9
+    }
+
+    .sm-th {
+      font-size: 8px;
+      font-weight: 700;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: .04em
+    }
+
+    .sm-row2 {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 8px;
+      padding: 7px 12px;
+      border-bottom: 1px solid #F8FAFC
+    }
+
+    .sm-row2:last-child {
+      border-bottom: none
+    }
+
+    .sm-td {
+      font-size: 9px;
+      font-weight: 600;
+      color: #334155
+    }
+
+    .sm-badge {
+      font-size: 7.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+      display: inline-block
+    }
+
+    /* ── How it works ── */
+    .steps {
+      padding: 96px 24px;
+      background: #fff
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      position: relative
+    }
+
+    @media(max-width:900px) {
+      .steps-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+    }
+
+    @media(max-width:540px) {
+      .steps-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .steps-line {
+      position: absolute;
+      top: 28px;
+      left: 15%;
+      right: 15%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #BFDBFE 30%, #BAE6FD 70%, transparent);
+      z-index: 0
+    }
+
+    @media(max-width:900px) {
+      .steps-line {
+        display: none
+      }
+    }
+
+    .step {
+      text-align: center;
+      position: relative;
+      z-index: 1
+    }
+
+    .step-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1E3A8A, #2563EB);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 24px rgba(30, 58, 138, .3)
+    }
+
+    .step-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 8px
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: #64748B;
+      line-height: 1.6
+    }
+
+    /* ── Stats ── */
+    .stats-section {
+      padding: 80px 24px;
+      background: linear-gradient(135deg, #0F172A, #1E3A8A)
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-radius: 0;
+      overflow: hidden
+    }
+
+    @media(max-width:900px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+    }
+
+    .stat-box {
+      padding: 36px 24px;
+      text-align: center;
+      border-right: 1px solid rgba(255, 255, 255, .08)
+    }
+
+    .stat-box:last-child {
+      border-right: none
+    }
+
+    @media(max-width:900px) {
+      .stat-box:nth-child(2) {
+        border-right: none
+      }
+
+      .stat-box:nth-child(1),
+      .stat-box:nth-child(2) {
+        border-bottom: 1px solid rgba(255, 255, 255, .08)
+      }
+    }
+
+    .stat-box-val {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      line-height: 1;
+      margin-bottom: 6px;
+      font-family: 'DM Mono', monospace;
+      background: linear-gradient(135deg, #60A5FA, #38BDF8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .stat-box-lbl {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, .6)
+    }
+
+    /* ── Pricing ── */
+    .pricing {
+      padding: 96px 24px;
+      background: #F8FAFC
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px
+    }
+
+    @media(max-width:900px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin: 0 auto
+      }
+    }
+
+    .price-card {
+      background: #fff;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 20px;
+      padding: 32px;
+      transition: all .3s
+    }
+
+    .price-card:hover {
+      border-color: #93C5FD;
+      box-shadow: 0 12px 40px rgba(30, 58, 138, .10)
+    }
+
+    .price-card.popular {
+      border-color: #2563EB;
+      background: linear-gradient(150deg, #EFF6FF, #F0F9FF);
+      box-shadow: 0 16px 50px rgba(30, 58, 138, .13)
+    }
+
+    .popular-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #1E3A8A, #2563EB);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 999px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 16px
+    }
+
+    .price-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 6px
+    }
+
+    .price-desc {
+      font-size: 13px;
+      color: #64748B;
+      margin-bottom: 20px;
+      line-height: 1.5
+    }
+
+    .price-amount {
+      font-size: 36px;
+      font-weight: 900;
+      color: #0F172A;
+      letter-spacing: -.03em;
+      margin-bottom: 4px;
+      font-family: 'DM Mono', monospace
+    }
+
+    .price-note {
+      font-size: 12px;
+      color: #94A3B8;
+      margin-bottom: 24px
+    }
+
+    .price-feats {
+      list-style: none;
+      margin-bottom: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .price-feat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #334155
+    }
+
+    .pf-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10B981, #059669);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    /* ── FAQ ── */
+    .faq {
+      padding: 80px 24px;
+      background: #fff
+    }
+
+    .faq-list {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0
+    }
+
+    .faq-item {
+      border-bottom: 1px solid #F1F5F9
+    }
+
+    .faq-q {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #0F172A;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      gap: 16px
+    }
+
+    .faq-q:hover {
+      color: #2563EB
+    }
+
+    .faq-chevron {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      transition: transform .25s;
+      color: #94A3B8
+    }
+
+    .faq-item.open .faq-chevron {
+      transform: rotate(180deg)
+    }
+
+    .faq-a {
+      font-size: 14px;
+      color: #64748B;
+      line-height: 1.72;
+      padding-bottom: 18px;
+      display: none
+    }
+
+    .faq-item.open .faq-a {
+      display: block
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 80px 24px;
+      background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 60%, #1D4ED8 100%);
+      position: relative;
+      overflow: hidden
+    }
+
+    .cta-blob1 {
+      position: absolute;
+      top: -80px;
+      right: -80px;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(96, 165, 250, .2), transparent 70%);
+      pointer-events: none
+    }
+
+    .cta-blob2 {
+      position: absolute;
+      bottom: -80px;
+      left: -80px;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, .15), transparent 70%);
+      pointer-events: none
+    }
+
+    .cta-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 1
+    }
+
+    .cta-title {
+      font-size: clamp(1.9rem, 4vw, 2.8rem);
+      font-weight: 900;
+      letter-spacing: -.03em;
+      color: #fff;
+      margin-bottom: 14px;
+      line-height: 1.12
+    }
+
+    .cta-desc {
+      font-size: 16px;
+      color: rgba(255, 255, 255, .7);
+      line-height: 1.65;
+      margin-bottom: 36px
+    }
+
+    .cta-btns {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap
+    }
+
+    .btn-white {
+      padding: 14px 32px;
+      background: #fff;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #1E3A8A;
+      text-decoration: none;
+      transition: all .25s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .2)
+    }
+
+    .btn-white:hover {
+      background: #EFF6FF;
+      transform: translateY(-2px)
+    }
+
+    .btn-ghost-white {
+      padding: 13px 28px;
+      background: rgba(255, 255, 255, .12);
+      border: 2px solid rgba(255, 255, 255, .3);
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      transition: all .25s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(8px)
+    }
+
+    .btn-ghost-white:hover {
+      background: rgba(255, 255, 255, .2);
+      border-color: rgba(255, 255, 255, .5)
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: #0F172A;
+      padding: 60px 24px 32px;
+      color: #fff
+    }
+
+    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      padding-bottom: 48px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08)
+    }
+
+    @media(max-width:900px) {
+      .footer-top {
+        grid-template-columns: 1fr 1fr
+      }
+    }
+
+    @media(max-width:540px) {
+      .footer-top {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .footer-brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px
+    }
+
+    .footer-brand-desc {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .45);
+      line-height: 1.7;
+      max-width: 280px
+    }
+
+    .footer-col-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, .35);
+      margin-bottom: 14px
+    }
+
+    .footer-col-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .footer-col-links a {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .5);
+      text-decoration: none;
+      transition: color .2s
+    }
+
+    .footer-col-links a:hover {
+      color: #60A5FA
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 24px;
+      flex-wrap: gap
+    }
+
+    @media(max-width:640px) {
+      .footer-bottom {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center
+      }
+    }
+
+    .footer-copy {
+      font-size: 12px;
+      color: rgba(255, 255, 255, .3)
+    }
+
+    /* ── Scroll reveal ── */
+    .sr {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity .65s ease, transform .65s ease
+    }
+
+    .sr-l {
+      opacity: 0;
+      transform: translateX(-22px);
+      transition: opacity .65s ease, transform .65s ease
+    }
+
+    .sr-r {
+      opacity: 0;
+      transform: translateX(22px);
+      transition: opacity .65s ease, transform .65s ease
+    }
+
+    .sr.on,
+    .sr-l.on,
+    .sr-r.on {
+      opacity: 1;
+      transform: translate(0)
+    }
+
+    /* ── Mobile nav ── */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .95);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      backdrop-filter: blur(12px)
+    }
+
+    .mobile-nav.open {
+      display: flex
+    }
+
+    .mobile-nav a {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      text-decoration: none;
+      opacity: .8;
+      transition: opacity .2s
+    }
+
+    .mobile-nav a:hover {
+      opacity: 1
+    }
+
+    .mobile-nav-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 8px
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════ MOBILE NAV ══════════════ -->
+  <div class="mobile-nav" id="mobileNav">
+    <button class="mobile-nav-close" onclick="document.getElementById('mobileNav').classList.remove('open')">✕</button>
+    <a href="#fitur" onclick="document.getElementById('mobileNav').classList.remove('open')">Fitur</a>
+    <a href="#showcase" onclick="document.getElementById('mobileNav').classList.remove('open')">Tampilan</a>
+    <a href="#cara" onclick="document.getElementById('mobileNav').classList.remove('open')">Cara Kerja</a>
+    <a href="#harga" onclick="document.getElementById('mobileNav').classList.remove('open')">Harga</a>
+    <a href="/login"
+      style="background:linear-gradient(135deg,#1E3A8A,#2563EB);padding:12px 28px;border-radius:14px;font-size:16px;opacity:1">Masuk
+      Dashboard</a>
+  </div>
+
+  <!-- ══════════════ NAVBAR ══════════════ -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <div class="nav-logo-icon">
+          <svg width="18" height="18" fill="none" stroke="white" stroke-width="2.2" viewBox="0 0 24 24">
+            <path d="M5 12.55a11 11 0 0114.08 0" />
+            <path d="M1.42 9a16 16 0 0121.16 0" />
+            <path d="M8.53 16.11a6 6 0 016.95 0" />
+            <line x1="12" y1="20" x2="12.01" y2="20" />
+          </svg>
+        </div>
+        <span class="nav-logo-text">SKMNetwork</span>
+      </a>
+      <div class="nav-links">
+        <a href="#fitur">Fitur</a>
+        <a href="#showcase">Tampilan</a>
+        <a href="#cara">Cara Kerja</a>
+        <a href="#harga">Harga</a>
+      </div>
+      <div class="nav-actions">
+        <a href="/login" class="btn-outline" style="display:none" id="navLoginBtn">Masuk</a>
+        <a href="/login" class="btn-primary">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Buka Dashboard
+        </a>
+        <div class="hamburger" onclick="document.getElementById('mobileNav').classList.add('open')">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══════════════ HERO ══════════════ -->
+  <section class="hero">
+    <div class="hero-inner">
+
+      <!-- Left -->
+      <div class="sr-l">
+        <div class="hero-eyebrow"><span class="pulse"></span>Platform ISP Modern</div>
+        <h1 class="hero-title">
+          Dashboard <span class="gt">All-in-One</span><br>
+          untuk RT/RW Net &<br>
+          <span style="color:#0F172A">Internet Provider</span>
+        </h1>
+        <p class="hero-desc">
+          Kelola pelanggan, MikroTik, billing, ticketing, hingga monitoring jaringan — semua dalam <strong
+            style="color:#1E293B">satu platform</strong> yang cepat dan mudah digunakan.
+        </p>
+        <div class="hero-btns">
+          <a href="/login" class="btn-primary btn-primary-lg">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Mulai Sekarang
+          </a>
+          <a href="#showcase" class="btn-ghost-lg">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none" />
+            </svg>
+            Lihat Tampilan
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="hstat">
+            <div class="hstat-ico" style="background:#EFF6FF;border:1px solid #DBEAFE">
+              <svg width="15" height="15" fill="none" stroke="#1D4ED8" stroke-width="1.8" viewBox="0 0 24 24">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+            </div>
+            <div>
+              <div class="hstat-lbl">MikroTik + GenieACS</div>
+              <div class="hstat-sub">Integrasi Native</div>
+            </div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-ico" style="background:#F0FDF4;border:1px solid #D1FAE5">
+              <svg width="15" height="15" fill="none" stroke="#059669" stroke-width="1.8" viewBox="0 0 24 24">
+                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+              </svg>
+            </div>
+            <div>
+              <div class="hstat-lbl">Monitoring Real-time</div>
+              <div class="hstat-sub">Update via WebSocket</div>
+            </div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-ico" style="background:#FFF7ED;border:1px solid #FED7AA">
+              <svg width="15" height="15" fill="none" stroke="#EA580C" stroke-width="1.8" viewBox="0 0 24 24">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+              </svg>
+            </div>
+            <div>
+              <div class="hstat-lbl">Billing Otomatis</div>
+              <div class="hstat-sub">Invoice + WA Reminder</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Mockup -->
+      <div class="mockup-wrap sr-r">
+        <div class="mockup-glow">
+          <div class="mockup-glow-ball"></div>
+        </div>
+
+        <!-- Float left: Auto Isolir -->
+        <div class="float-card float-left">
+          <div class="float-ico" style="background:#FEE2E2">
+            <svg width="13" height="13" fill="none" stroke="#DC2626" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+            </svg>
+          </div>
+          <div class="float-title">Auto Isolir</div>
+          <div class="float-sub">12 pelanggan menunggak otomatis terblokir di MikroTik</div>
+        </div>
+
+        <!-- Dashboard card -->
+        <div class="mockup-card">
+          <div class="mockup-hdr">
+            <div class="mockup-hdr-ico">
+              <svg width="13" height="13" fill="none" stroke="white" stroke-width="2.2" viewBox="0 0 24 24">
+                <path d="M5 12.55a11 11 0 0114.08 0" />
+                <path d="M1.42 9a16 16 0 0121.16 0" />
+                <path d="M8.53 16.11a6 6 0 016.95 0" />
+              </svg>
+            </div>
+            <div>
+              <div class="mockup-hdr-title">SKMNet Dashboard</div>
+              <div class="mockup-hdr-status"><span class="mockup-hdr-dot"></span>Online · 247 pelanggan aktif</div>
+            </div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-row2">
+              <div class="mockup-stat">
+                <div class="mockup-stat-lbl">PPPoE Aktif</div>
+                <div class="mockup-stat-val">247</div>
+                <div class="mockup-stat-sub green">+12 hari ini</div>
+              </div>
+              <div class="mockup-stat">
+                <div class="mockup-stat-lbl">Tagihan Bulan Ini</div>
+                <div class="mockup-stat-val" style="font-size:14px">Rp 62jt</div>
+                <div class="mockup-stat-sub blue">82% terkumpul</div>
+              </div>
+            </div>
+            <div class="mockup-chart">
+              <div class="mockup-chart-hdr">
+                <span class="mockup-chart-lbl">Traffic 24 Jam</span>
+                <span class="mockup-chart-val">↑ 1.2 Gbps</span>
+              </div>
+              <svg viewBox="0 0 240 50" style="width:100%">
+                <defs>
+                  <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#2563EB" stop-opacity="0.4" />
+                    <stop offset="100%" stop-color="#2563EB" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M0,40 L20,38 L40,32 L60,28 L80,22 L100,15 L120,18 L140,10 L160,16 L180,8 L200,14 L220,5 L240,12 L240,50 L0,50 Z"
+                  fill="url(#tg)" />
+                <path
+                  d="M0,40 L20,38 L40,32 L60,28 L80,22 L100,15 L120,18 L140,10 L160,16 L180,8 L200,14 L220,5 L240,12"
+                  fill="none" stroke="#2563EB" stroke-width="2" />
+              </svg>
+            </div>
+            <div class="mockup-list">
+              <div class="mockup-list-lbl">Status ODP</div>
+              <div class="mockup-list-row"><span class="mlr-name">ODP-PRK-01</span><span class="mlr-badge badge-ok">8/12
+                  OK</span></div>
+              <div class="mockup-list-row"><span class="mlr-name">ODP-PRK-02</span><span
+                  class="mlr-badge badge-warn">3/8 LOS</span></div>
+              <div class="mockup-list-row"><span class="mlr-name">ODP-PRK-03</span><span
+                  class="mlr-badge badge-ok">12/16 OK</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Float right: Ticketing -->
+        <div class="float-card float-right">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">
+            <div class="float-ico" style="background:#FEF3C7;width:24px;height:24px;margin-bottom:0">
+              <svg width="11" height="11" fill="none" stroke="#D97706" stroke-width="2" viewBox="0 0 24 24">
+                <path
+                  d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+              </svg>
+            </div>
+            <div class="float-title" style="margin-bottom:0">Ticket SLA</div>
+          </div>
+          <div class="float-row"><span class="float-key">Open</span><span class="float-val"
+              style="color:#D97706">3</span></div>
+          <div class="float-row"><span class="float-key">In Progress</span><span class="float-val"
+              style="color:#2563EB">5</span></div>
+          <div class="float-row"><span class="float-key">Resolved</span><span class="float-val"
+              style="color:#10B981">28</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════ TICKER ══════════════ -->
+  <div class="ticker-bar">
+    <div class="ticker-track">
+      <div style="display:flex">
+        <span class="ticker-item"><span class="ticker-dot" style="background:#3B82F6"></span>MikroTik PPPoE
+          Manager</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#0EA5E9"></span>GenieACS TR-069</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#10B981"></span>Auto Isolir
+          Tunggakan</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#8B5CF6"></span>Infrastructure Map
+          ODP/ODC</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#3B82F6"></span>Billing & Invoice
+          Otomatis</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#F59E0B"></span>Ticketing System +
+          SLA</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#0EA5E9"></span>Device Monitoring
+          Real-time</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#22C55E"></span>WhatsApp Gateway</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#EF4444"></span>Customer Portal
+          Mobile</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#3B82F6"></span>Reward Points System</span>
+      </div>
+      <!-- Duplicate for seamless loop -->
+      <div style="display:flex">
+        <span class="ticker-item"><span class="ticker-dot" style="background:#3B82F6"></span>MikroTik PPPoE
+          Manager</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#0EA5E9"></span>GenieACS TR-069</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#10B981"></span>Auto Isolir
+          Tunggakan</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#8B5CF6"></span>Infrastructure Map
+          ODP/ODC</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#3B82F6"></span>Billing & Invoice
+          Otomatis</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#F59E0B"></span>Ticketing System +
+          SLA</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#0EA5E9"></span>Device Monitoring
+          Real-time</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#22C55E"></span>WhatsApp Gateway</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#EF4444"></span>Customer Portal
+          Mobile</span>
+        <span class="ticker-item"><span class="ticker-dot" style="background:#3B82F6"></span>Reward Points System</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ FEATURES ══════════════ -->
+  <section id="fitur" class="section" style="background:#fff">
+    <div class="section-inner">
+      <div class="section-hdr sr">
+        <div class="section-eyebrow">Fitur Lengkap</div>
+        <h2 class="section-title">Semua yang Anda Butuhkan<br>untuk <span class="gt">Mengelola ISP</span></h2>
+        <p class="section-desc">Platform end-to-end yang mengintegrasikan MikroTik, ONT, billing, monitoring, hingga
+          ticketing dalam satu antarmuka modern.</p>
+      </div>
+
+      <div class="feat-grid">
+
+        <!-- MikroTik -->
+        <div class="feat-card sr">
+          <div class="feat-icon" style="background:linear-gradient(135deg,#1E3A8A,#2563EB)">
+            <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </div>
+          <div class="feat-title">MikroTik Integration</div>
+          <div class="feat-desc">Kontrol penuh router: PPPoE manager, queue tree, IP pool, firewall, dan auto isolir via
+            REST API native MikroTik.</div>
+          <div class="feat-tags">
+            <span class="feat-tag" style="background:#EFF6FF;color:#1D4ED8;border-color:#DBEAFE">PPPoE</span>
+            <span class="feat-tag" style="background:#EFF6FF;color:#1D4ED8;border-color:#DBEAFE">Queue</span>
+            <span class="feat-tag" style="background:#EFF6FF;color:#1D4ED8;border-color:#DBEAFE">IP Pool</span>
+            <span class="feat-tag" style="background:#FEF2F2;color:#991B1B;border-color:#FEE2E2">Auto Isolir</span>
+          </div>
+        </div>
+
+        <!-- GenieACS -->
+        <div class="feat-card sr">
+          <div class="feat-icon" style="background:linear-gradient(135deg,#0EA5E9,#38BDF8)">
+            <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 12.55a11 11 0 0114.08 0" />
+              <path d="M1.42 9a16 16 0 0121.16 0" />
+              <path d="M8.53 16.11a6 6 0 016.95 0" />
+              <line x1="12" y1="20" x2="12.01" y2="20" />
+            </svg>
+          </div>
+          <div class="feat-title">GenieACS / TR-069</div>
+          <div class="feat-desc">Manage ribuan ONT: monitor RX power, ubah SSID/password remote, history sinyal, dan
+            factory reset langsung dari dashboard.</div>
+          <div class="feat-tags">
+            <span class="feat-tag" style="background:#F0F9FF;color:#0369A1;border-color:#BAE6FD">RX Power</span>
+            <span class="feat-tag" style="background:#F0F9FF;color:#0369A1;border-color:#BAE6FD">SSID Remote</span>
+            <span class="feat-tag" style="background:#F0F9FF;color:#0369A1;border-color:#BAE6FD">History</span>
+          </div>
+        </div>
+
+        <!-- Billing -->
+        <div class="feat-card sr">
+          <div class="feat-icon" style="background:linear-gradient(135deg,#10B981,#059669)">
+            <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+            </svg>
+          </div>
+          <div class="feat-title">Billing & Invoice Otomatis</div>
+          <div class="feat-desc">Generate invoice tiap bulan otomatis berdasarkan due date. Reminder WhatsApp H-7, H-3,
+            H-1, H-0 jatuh tempo.</div>
+          <div class="feat-tags">
+            <span class="feat-tag" style="background:#F0FDF4;color:#15803D;border-color:#BBF7D0">Auto Generate</span>
+            <span class="feat-tag" style="background:#F0FDF4;color:#15803D;border-color:#BBF7D0">Due Date</span>
+            <span class="feat-tag" style="background:#F0FDF4;color:#15803D;border-color:#BBF7D0">WA Reminder</span>
+          </div>
+        </div>
+
+        <!-- Ticketing -->
+        <div class="feat-card sr">
+          <div class="feat-icon" style="background:linear-gradient(135deg,#F59E0B,#D97706)">
+            <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <path
+                d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+            </svg>
+          </div>
+          <div class="feat-title">Ticketing System + SLA</div>
+          <div class="feat-desc">Tiket gangguan dengan timeline aktivitas, progress bar SLA, file upload bukti, dan
+            marker peta lokasi gangguan.</div>
+          <div class="feat-tags">
+            <span class="feat-tag" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">SLA Tracking</span>
+            <span class="feat-tag" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">Timeline</span>
+            <span class="feat-tag" style="background:#FFFBEB;color:#92400E;border-color:#FDE68A">File Upload</span>
+          </div>
+        </div>
+
+        <!-- Monitoring -->
+        <div class="feat-card sr">
+          <div class="feat-icon" style="background:linear-gradient(135deg,#1E40AF,#3B82F6)">
+            <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+            </svg>
+          </div>
+          <div class="feat-title">Device Monitoring Real-time</div>
+          <div class="feat-desc">Chart Grafana-style untuk CPU, RAM, Disk, Traffic interface MikroTik dan SNMP. Update
+            tiap detik via WebSocket.</div>
+          <div class="feat-tags">
+            <span class="feat-tag" style="background:#EFF6FF;color:#1D4ED8;border-color:#DBEAFE">CPU/RAM</span>
+            <span class="feat-tag" style="background:#EFF6FF;color:#1D4ED8;border-color:#DBEAFE">Traffic</span>
+            <span class="feat-tag" style="background:#EFF6FF;color:#1D4ED8;border-color:#DBEAFE">SNMP</span>
+            <span class="feat-tag" style="background:#EFF6FF;color:#1D4ED8;border-color:#DBEAFE">WebSocket</span>
+          </div>
+        </div>
+
+        <!-- Infrastructure Map -->
+        <div class="feat-card sr">
+          <div class="feat-icon" style="background:linear-gradient(135deg,#7C3AED,#0EA5E9)">
+            <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+              <line x1="8" y1="2" x2="8" y2="18" />
+              <line x1="16" y1="6" x2="16" y2="22" />
+            </svg>
+          </div>
+          <div class="feat-title">Infrastructure Map</div>
+          <div class="feat-desc">Petakan ODC, ODP, dan jalur kabel dengan marker interaktif Leaflet. Foto kondisi tiang,
+            daftar pelanggan per ODP.</div>
+          <div class="feat-tags">
+            <span class="feat-tag" style="background:#F0F9FF;color:#0369A1;border-color:#BAE6FD">ODC/ODP</span>
+            <span class="feat-tag" style="background:#F0F9FF;color:#0369A1;border-color:#BAE6FD">Cable Route</span>
+            <span class="feat-tag" style="background:#F5F3FF;color:#6D28D9;border-color:#DDD6FE">Leaflet Map</span>
+          </div>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="feat-card sr">
+          <div class="feat-icon" style="background:linear-gradient(135deg,#16A34A,#22C55E)">
+            <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
+              <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z" />
+              <path
+                d="M12 0C5.373 0 0 5.373 0 12c0 2.122.554 4.116 1.524 5.844L0 24l6.295-1.507A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
+            </svg>
+          </div>
+          <div class="feat-title">WhatsApp Gateway</div>
+          <div class="feat-desc">Kirim tagihan, reminder, dan notifikasi langsung via WhatsApp Baileys. Mendukung
+            template pesan kustom dan blast massal.</div>
+          <div class="feat-tags">
+            <span class="feat-tag" style="background:#F0FDF4;color:#15803D;border-color:#BBF7D0">Baileys</span>
+            <span class="feat-tag" style="background:#F0FDF4;color:#15803D;border-color:#BBF7D0">Template</span>
+            <span class="feat-tag" style="background:#F0FDF4;color:#15803D;border-color:#BBF7D0">Blast</span>
+          </div>
+        </div>
+
+        <!-- Customer Portal -->
+        <div class="feat-card sr">
+          <div class="feat-icon" style="background:linear-gradient(135deg,#DC2626,#F97316)">
+            <svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 00-3-3.87" />
+              <path d="M16 3.13a4 4 0 010 7.75" />
+            </svg>
+          </div>
+          <div class="feat-title">Customer Portal</div>
+          <div class="feat-desc">Pelanggan bisa cek tagihan, bayar mandiri, lapor gangguan, hingga reboot ONT sendiri
+            lewat portal mobile-friendly.</div>
+          <div class="feat-tags">
+            <span class="feat-tag" style="background:#FEF2F2;color:#991B1B;border-color:#FEE2E2">Self-Service</span>
+            <span class="feat-tag" style="background:#FEF2F2;color:#991B1B;border-color:#FEE2E2">Mobile-Friendly</span>
+            <span class="feat-tag" style="background:#FEF2F2;color:#991B1B;border-color:#FEE2E2">ONT Reboot</span>
+          </div>
+        </div>
+
+        <!-- Reward -->
+        <div class="feat-card sr">
+          <div class="feat-icon" style="background:linear-gradient(135deg,#7C3AED,#A855F7)">
+            <svg width="22" height="22" fill="white" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+          </div>
+          <div class="feat-title">Reward Points System</div>
+          <div class="feat-desc">Program loyalitas terintegrasi: pelanggan kumpulkan poin dari pembayaran rutin dan
+            tukarkan dengan hadiah menarik.</div>
+          <div class="feat-tags">
+            <span class="feat-tag" style="background:#F5F3FF;color:#6D28D9;border-color:#DDD6FE">Loyalitas</span>
+            <span class="feat-tag" style="background:#F5F3FF;color:#6D28D9;border-color:#DDD6FE">Auto Earn</span>
+            <span class="feat-tag" style="background:#F5F3FF;color:#6D28D9;border-color:#DDD6FE">Redeem</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="hd" style="margin:0"></div>
+
+  <!-- ══════════════ SHOWCASE ══════════════ -->
+  <section id="showcase" class="showcase">
+    <div class="showcase-inner">
+
+      <div class="section-hdr sr" style="margin-bottom:80px">
+        <div class="section-eyebrow">Tampilan Dashboard</div>
+        <h2 class="section-title">Dirancang untuk <span class="gt">Kemudahan Operasional</span></h2>
+        <p class="section-desc">Interface modern yang intuitif, responsif, dan cepat — dari monitoring jaringan sampai
+          manajemen pelanggan.</p>
+      </div>
+
+      <!-- Item 1: Billing -->
+      <div class="showcase-item sr">
+        <div class="showcase-text">
+          <div class="showcase-eyebrow gt">Billing & Keuangan</div>
+          <h3 class="showcase-title">Invoice Otomatis & Laporan Keuangan Lengkap</h3>
+          <p class="showcase-desc">Generate invoice bulanan otomatis, lacak pembayaran real-time, ekspor laporan ke
+            Excel/PDF, dan pantau cash flow bisnis ISP Anda dari satu layar.</p>
+          <ul class="showcase-list">
+            <li><span class="check-ico"><svg width="10" height="10" fill="none" stroke="white" stroke-width="3"
+                  viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Auto-generate invoice per due date pelanggan</li>
+            <li><span class="check-ico"><svg width="10" height="10" fill="none" stroke="white" stroke-width="3"
+                  viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Reminder WA otomatis H-7, H-3, H-1, H-0</li>
+            <li><span class="check-ico"><svg width="10" height="10" fill="none" stroke="white" stroke-width="3"
+                  viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Laporan pendapatan harian, bulanan, tahunan</li>
+            <li><span class="check-ico"><svg width="10" height="10" fill="none" stroke="white" stroke-width="3"
+                  viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Cetak invoice PDF dengan branding ISP sendiri</li>
+          </ul>
+        </div>
+        <div class="showcase-img showcase-img-wrap sr-r">
+          <div class="showcase-img-glow"></div>
+          <div class="showcase-img-frame">
+            <div class="screenshot-mockup">
+              <div class="sm-topbar">
+                <div class="sm-topbar-dot"></div>
+                <div class="sm-topbar-dot"></div>
+                <div class="sm-topbar-dot"></div>
+                <span class="sm-topbar-title">💳 Billing — SKMNet Dashboard</span>
+              </div>
+              <div class="sm-row">
+                <div class="sm-card">
+                  <div class="sm-card-lbl">Total Tagihan</div>
+                  <div class="sm-card-val">Rp 62jt</div>
+                  <div class="sm-card-sub green">82% lunas</div>
+                </div>
+                <div class="sm-card">
+                  <div class="sm-card-lbl">Overdue</div>
+                  <div class="sm-card-val" style="color:#DC2626">12</div>
+                  <div class="sm-card-sub" style="color:#DC2626">perlu tindakan</div>
+                </div>
+                <div class="sm-card">
+                  <div class="sm-card-lbl">Invoice Bulan Ini</div>
+                  <div class="sm-card-val">247</div>
+                  <div class="sm-card-sub blue">digenerate</div>
+                </div>
+              </div>
+              <div class="sm-table">
+                <div class="sm-table-hdr"><span class="sm-th">Invoice</span><span class="sm-th">Amount</span><span
+                    class="sm-th">Status</span></div>
+                <div class="sm-row2"><span class="sm-td" style="color:#2563EB">INV-202506-001</span><span
+                    class="sm-td">Rp 250.000</span><span class="sm-badge"
+                    style="background:#DCFCE7;color:#15803D">Lunas</span></div>
+                <div class="sm-row2"><span class="sm-td" style="color:#2563EB">INV-202506-002</span><span
+                    class="sm-td">Rp 150.000</span><span class="sm-badge"
+                    style="background:#FEF3C7;color:#92400E">Belum</span></div>
+                <div class="sm-row2"><span class="sm-td" style="color:#2563EB">INV-202506-003</span><span
+                    class="sm-td">Rp 350.000</span><span class="sm-badge"
+                    style="background:#FEE2E2;color:#991B1B">Overdue</span></div>
+                <div class="sm-row2"><span class="sm-td" style="color:#2563EB">INV-202506-004</span><span
+                    class="sm-td">Rp 200.000</span><span class="sm-badge"
+                    style="background:#DCFCE7;color:#15803D">Lunas</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 2: Customers (reverse) -->
+      <div class="showcase-item reverse sr">
+        <div class="showcase-text">
+          <div class="showcase-eyebrow gt">Manajemen Pelanggan</div>
+          <h3 class="showcase-title">Profil Pelanggan 360° dengan Riwayat Lengkap</h3>
+          <p class="showcase-desc">Lihat semua informasi pelanggan dalam satu halaman: data koneksi, riwayat invoice,
+            pembayaran, reward point, hingga lokasi rumah di peta.</p>
+          <ul class="showcase-list">
+            <li><span class="check-ico"><svg width="10" height="10" fill="none" stroke="white" stroke-width="3"
+                  viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Profil lengkap: PPPoE, ONT SN, static IP, paket</li>
+            <li><span class="check-ico"><svg width="10" height="10" fill="none" stroke="white" stroke-width="3"
+                  viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Riwayat invoice, pembayaran & reward point</li>
+            <li><span class="check-ico"><svg width="10" height="10" fill="none" stroke="white" stroke-width="3"
+                  viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Tombol isolir/aktifkan langsung dari profil</li>
+            <li><span class="check-ico"><svg width="10" height="10" fill="none" stroke="white" stroke-width="3"
+                  viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Kirim WhatsApp langsung ke pelanggan</li>
+          </ul>
+        </div>
+        <div class="showcase-img showcase-img-wrap sr-l">
+          <div class="showcase-img-glow" style="background:linear-gradient(135deg,#10B981,#0EA5E9)"></div>
+          <div class="showcase-img-frame">
+            <div class="screenshot-mockup" style="background:linear-gradient(135deg,#F0FDF4,#F0F9FF)">
+              <div class="sm-topbar" style="background:linear-gradient(135deg,#059669,#0EA5E9)">
+                <div class="sm-topbar-dot"></div>
+                <div class="sm-topbar-dot"></div>
+                <span class="sm-topbar-title">👤 Profil Pelanggan — Budi Santoso</span>
+              </div>
+              <div
+                style="background:#fff;border-radius:10px;padding:12px;border:1px solid #E2E8F0;display:flex;align-items:center;gap:10px">
+                <div
+                  style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#0EA5E9);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0">
+                  B</div>
+                <div style="flex:1">
+                  <div style="font-size:11px;font-weight:800;color:#0F172A">Budi Santoso</div>
+                  <div
+                    style="font-size:9px;font-family:'DM Mono',monospace;color:#2563EB;background:#EFF6FF;padding:1px 6px;border-radius:4px;display:inline-block;margin-top:2px">
+                    CID0042</div>
+                </div>
+                <span
+                  style="font-size:8.5px;font-weight:800;padding:3px 8px;border-radius:999px;background:#DCFCE7;color:#15803D">●
+                  Aktif</span>
+              </div>
+              <div class="sm-row">
+                <div class="sm-card">
+                  <div class="sm-card-lbl">Paket</div>
+                  <div style="font-size:10px;font-weight:800;color:#0F172A">50 Mbps Biz</div>
+                </div>
+                <div class="sm-card">
+                  <div class="sm-card-lbl">Reward Pts</div>
+                  <div style="font-size:16px;font-weight:900;color:#7C3AED">⭐ 320</div>
+                </div>
+                <div class="sm-card">
+                  <div class="sm-card-lbl">Invoice</div>
+                  <div style="font-size:16px;font-weight:900;color:#0F172A">12</div>
+                  <div class="sm-card-sub green">11 lunas</div>
+                </div>
+              </div>
+              <div class="sm-table">
+                <div class="sm-table-hdr"><span class="sm-th">Invoice</span><span class="sm-th">Jumlah</span><span
+                    class="sm-th">Status</span></div>
+                <div class="sm-row2"><span class="sm-td" style="color:#2563EB">INV-202506</span><span class="sm-td">Rp
+                    500rb</span><span class="sm-badge" style="background:#DCFCE7;color:#15803D">Lunas</span></div>
+                <div class="sm-row2"><span class="sm-td" style="color:#2563EB">INV-202505</span><span class="sm-td">Rp
+                    500rb</span><span class="sm-badge" style="background:#DCFCE7;color:#15803D">Lunas</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════ HOW IT WORKS ══════════════ -->
+  <section id="cara" class="steps">
+    <div class="section-inner">
+      <div class="section-hdr sr">
+        <div class="section-eyebrow">Cara Kerja</div>
+        <h2 class="section-title">Siap Digunakan dalam <span class="gt">Hitungan Menit</span></h2>
+        <p class="section-desc">Setup mudah, tanpa perlu keahlian server khusus. Ikuti 4 langkah ini dan dashboard Anda
+          langsung aktif.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="steps-line"></div>
+        <div class="step sr">
+          <div class="step-num">1</div>
+          <div class="step-title">Install & Konfigurasi</div>
+          <div class="step-desc">Clone repository, atur file .env, jalankan npm install. Selesai dalam &lt; 5 menit.
+          </div>
+        </div>
+        <div class="step sr">
+          <div class="step-num">2</div>
+          <div class="step-title">Hubungkan MikroTik</div>
+          <div class="step-desc">Masukkan IP, port, user, dan password MikroTik Anda. Sistem langsung terhubung via REST
+            API.</div>
+        </div>
+        <div class="step sr">
+          <div class="step-num">3</div>
+          <div class="step-title">Import Data Pelanggan</div>
+          <div class="step-desc">Upload CSV atau tambah pelanggan manual. Sistem otomatis buat akun PPPoE dan invoice
+            pertama.</div>
+        </div>
+        <div class="step sr">
+          <div class="step-num">4</div>
+          <div class="step-title">Aktifkan WhatsApp</div>
+          <div class="step-desc">Scan QR code WA Gateway, aktifkan auto-reminder, dan sistem berjalan 24/7 tanpa
+            intervensi manual.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ STATS ══════════════ -->
+  <section class="stats-section">
+    <div class="section-inner">
+      <div class="section-hdr sr" style="margin-bottom:48px">
+        <h2 class="section-title" style="color:#fff">Platform yang <span
+            style="background:linear-gradient(120deg,#60A5FA,#38BDF8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Terpercaya</span>
+        </h2>
+      </div>
+      <div class="stats-grid sr">
+        <div class="stat-box">
+          <div class="stat-box-val">500+</div>
+          <div class="stat-box-lbl">ISP Menggunakan Platform Ini</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val">50rb+</div>
+          <div class="stat-box-lbl">Pelanggan Dikelola</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val">99.9%</div>
+          <div class="stat-box-lbl">Uptime WebSocket Monitor</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val">24/7</div>
+          <div class="stat-box-lbl">Auto Isolir & Reminder Aktif</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ PRICING ══════════════ -->
+  <section id="harga" class="pricing">
+    <div class="section-inner">
+      <div class="section-hdr sr">
+        <div class="section-eyebrow">Paket Harga</div>
+        <h2 class="section-title">Pilih Paket yang <span class="gt">Sesuai Kebutuhan</span></h2>
+        <p class="section-desc">Bayar sekali, gunakan selamanya. Tidak ada biaya berlangganan bulanan tersembunyi.</p>
+      </div>
+      <div class="pricing-grid">
+
+        <!-- Starter -->
+        <div class="price-card sr">
+          <div class="price-name">Starter</div>
+          <div class="price-desc">Cocok untuk RT/RW Net kecil dengan hingga 50 pelanggan.</div>
+          <div class="price-amount">Rp 1,5jt</div>
+          <div class="price-note">Bayar sekali · Source code included</div>
+          <ul class="price-feats">
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Dashboard pelanggan & billing</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Integrasi MikroTik (1 router)</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Invoice & WA Reminder</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Support instalasi via WA</li>
+          </ul>
+          <a href="/login" class="btn-outline" style="width:100%;justify-content:center;padding:12px">Pilih Starter</a>
+        </div>
+
+        <!-- Pro -->
+        <div class="price-card popular sr">
+          <div class="popular-badge">PALING POPULER</div>
+          <div class="price-name">Professional</div>
+          <div class="price-desc">Untuk ISP berkembang dengan kebutuhan fitur lengkap dan pelanggan tak terbatas.</div>
+          <div class="price-amount"
+            style="background:linear-gradient(135deg,#1E3A8A,#2563EB,#0EA5E9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+            Rp 3,5jt</div>
+          <div class="price-note">Bayar sekali · Source code included</div>
+          <ul class="price-feats">
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Semua fitur Starter</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>GenieACS TR-069 + ONT management</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Infrastructure Map (ODP/ODC)</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Ticketing System + SLA tracking</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Customer Portal + Reward Points</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Multi-router support</li>
+          </ul>
+          <a href="/login" class="btn-primary" style="width:100%;justify-content:center;padding:13px">Pilih
+            Professional</a>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="price-card sr">
+          <div class="price-name">Enterprise</div>
+          <div class="price-desc">Untuk ISP skala besar, kustomisasi penuh, dan dukungan teknis prioritas.</div>
+          <div class="price-amount">Custom</div>
+          <div class="price-note">Hubungi kami untuk penawaran khusus</div>
+          <ul class="price-feats">
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Semua fitur Professional</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>White Label branding penuh</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Payment Gateway (Midtrans/Xendit)</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Kustomisasi fitur sesuai kebutuhan</li>
+            <li class="price-feat"><span class="pf-check"><svg width="10" height="10" fill="none" stroke="white"
+                  stroke-width="3" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></span>Dedicated support & SLA</li>
+          </ul>
+          <a href="https://wa.me/6281234567890" target="_blank" class="btn-outline"
+            style="width:100%;justify-content:center;padding:12px">Hubungi Kami</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ FAQ ══════════════ -->
+  <section class="faq">
+    <div class="section-inner">
+      <div class="section-hdr sr">
+        <div class="section-eyebrow">FAQ</div>
+        <h2 class="section-title">Pertanyaan yang <span class="gt">Sering Ditanyakan</span></h2>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Apakah bisa digunakan tanpa MikroTik?
+            <svg class="faq-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div class="faq-a">Ya, bisa. Fitur billing, customer management, ticketing, WhatsApp gateway, dan customer
+            portal bisa digunakan tanpa MikroTik. Integrasi MikroTik bersifat opsional.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Berapa banyak pelanggan yang bisa dikelola?
+            <svg class="faq-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div class="faq-a">Tidak ada batasan jumlah pelanggan. Platform ini berjalan di server Anda sendiri sehingga
+            kapasitasnya bergantung pada spesifikasi server yang Anda gunakan. Kami merekomendasikan minimal 2GB RAM
+            untuk 500+ pelanggan.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Apakah ada biaya berlangganan bulanan?
+            <svg class="faq-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div class="faq-a">Tidak ada. Anda membayar sekali dan mendapatkan source code sepenuhnya. Tidak ada biaya
+            lisensi, biaya update, atau biaya bulanan lainnya. Source code adalah milik Anda.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Apakah mendukung GenieACS untuk manajemen ONT GPON?
+            <svg class="faq-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div class="faq-a">Ya, platform ini terintegrasi langsung dengan GenieACS via API. Anda bisa monitor RX power,
+            ubah SSID/password, reboot, dan factory reset ONT pelanggan langsung dari dashboard.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Bagaimana cara setup WhatsApp Gateway?
+            <svg class="faq-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div class="faq-a">Cukup buka halaman WA Gateway di dashboard, scan QR code dengan WhatsApp Anda, dan gateway
+            langsung aktif. Mendukung multi-device Baileys — tidak perlu nomor WA bisnis berbayar.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Apakah bisa di-deploy di VPS?
+            <svg class="faq-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div class="faq-a">Ya, platform ini berbasis Node.js + MySQL sehingga bisa di-deploy di VPS Linux manapun
+            (Ubuntu, Debian, CentOS). Tersedia panduan instalasi lengkap untuk setup dengan Nginx reverse proxy dan PM2.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ CTA ══════════════ -->
+  <section class="cta-section">
+    <div class="cta-blob1"></div>
+    <div class="cta-blob2"></div>
+    <div class="cta-inner sr">
+      <h2 class="cta-title">Siap Kelola ISP Anda<br>Lebih Efisien?</h2>
+      <p class="cta-desc">Bergabung dengan ratusan ISP yang sudah menggunakan platform ini. Mulai dari gratis, upgrade
+        kapan saja.</p>
+      <div class="cta-btns">
+        <a href="/login" class="btn-white">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Buka Dashboard Sekarang
+        </a>
+        <a href="https://wa.me/6281234567890" target="_blank" class="btn-ghost-white">
+          <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z" />
+            <path
+              d="M12 0C5.373 0 0 5.373 0 12c0 2.122.554 4.116 1.524 5.844L0 24l6.295-1.507A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
+          </svg>
+          Chat via WhatsApp
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ FOOTER ══════════════ -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div>
+          <div class="footer-brand-logo">
+            <div class="nav-logo-icon">
+              <svg width="16" height="16" fill="none" stroke="white" stroke-width="2.2" viewBox="0 0 24 24">
+                <path d="M5 12.55a11 11 0 0114.08 0" />
+                <path d="M1.42 9a16 16 0 0121.16 0" />
+                <path d="M8.53 16.11a6 6 0 016.95 0" />
+              </svg>
+            </div>
+            <span style="font-size:16px;font-weight:800;color:#fff">SKMNet <span
+                style="font-weight:400;color:rgba(255,255,255,.4)">Dashboard</span></span>
+          </div>
+          <p class="footer-brand-desc">Platform All-in-One untuk ISP dan RT/RW Net. Kelola pelanggan, jaringan, dan
+            keuangan dalam satu dashboard modern.</p>
+        </div>
+        <div>
+          <div class="footer-col-title">Fitur</div>
+          <ul class="footer-col-links">
+            <li><a href="#fitur">MikroTik Integration</a></li>
+            <li><a href="#fitur">GenieACS TR-069</a></li>
+            <li><a href="#fitur">Billing Otomatis</a></li>
+            <li><a href="#fitur">WhatsApp Gateway</a></li>
+            <li><a href="#fitur">Ticketing System</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Platform</div>
+          <ul class="footer-col-links">
+            <li><a href="/login">Dashboard Login</a></li>
+            <li><a href="#showcase">Screenshot</a></li>
+            <li><a href="#cara">Cara Setup</a></li>
+            <li><a href="#harga">Harga</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Kontak</div>
+          <ul class="footer-col-links">
+            <li><a href="https://wa.me/6281234567890" target="_blank">WhatsApp Support</a></li>
+            <li><a href="mailto:support@skmnet.com">Email Support</a></li>
+            <li><a href="#">Dokumentasi</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span class="footer-copy">© 2025 SKMNet Dashboard. All rights reserved.</span>
+        <span class="footer-copy">Built with ❤️ for Indonesian ISPs</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ── Navbar scroll ──
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', scrollY > 30);
+    });
+
+    // ── Scroll Reveal ──
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.sr,.sr-l,.sr-r').forEach(el => io.observe(el));
+
+    // ── FAQ toggle ──
+    function toggleFaq(btn) {
+      const item = btn.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    }
+
+    // ── Smooth scroll for anchor links ──
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+    });
+  </script>
+</body>
+
+</html>

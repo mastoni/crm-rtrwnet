@@ -780,7 +780,7 @@
 
             <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
                 <span id="period-label" style="font-size:13px;font-weight:700;color:var(--d-text)"></span>
-                <button onclick="openPrint()"
+                <button onclick="window.print()"
                     style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;background:linear-gradient(135deg,#0d1b3e,#1a3a7a);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;box-shadow:0 2px 8px rgba(13,27,62,.3);">
                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"
                         viewBox="0 0 24 24">
@@ -789,7 +789,7 @@
                     </svg>
                     Print / PDF
                 </button>
-                <button onclick="exportCSV()"
+                <button onclick="App.showToast('Fitur Export CSV Laporan dalam pengembangan', 'info')"
                     style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#fff;border:1.5px solid var(--d-border);font-size:12.5px;font-weight:600;color:var(--d-muted);cursor:pointer;font-family:'DM Sans',sans-serif;">
                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"
                         viewBox="0 0 24 24">

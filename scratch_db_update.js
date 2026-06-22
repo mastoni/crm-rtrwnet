@@ -59,6 +59,37 @@ async function updateDb() {
             }
         }
 
+        // 4. Create ping_targets table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS ping_targets (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                name VARCHAR(255) NOT NULL,
+                target VARCHAR(255) NOT NULL,
+                status VARCHAR(50) DEFAULT 'unknown',
+                latency INT DEFAULT 0,
+                loss INT DEFAULT 0,
+                last_checked DATETIME NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('Checked/Created ping_targets table.');
+
+        // Seed initial data if table is empty
+        const [existingTargets] = await db.query('SELECT COUNT(*) as count FROM ping_targets');
+        if (existingTargets[0].count === 0) {
+            const initialTargets = [
+                ['Core Router', '192.168.1.1'],
+                ['Distribution OLT', '192.168.10.2'],
+                ['Switch BTS Bukit', '10.10.10.5'],
+                ['Google DNS', '8.8.8.8'],
+                ['Cloudflare DNS', '1.1.1.1']
+            ];
+            for (const [name, target] of initialTargets) {
+                await db.query('INSERT INTO ping_targets (name, target) VALUES (?, ?)', [name, target]);
+            }
+            console.log('Seeded initial ping targets.');
+        }
+
         console.log('DB Update complete!');
         process.exit(0);
     } catch (error) {

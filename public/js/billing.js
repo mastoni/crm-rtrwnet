@@ -269,3 +269,16 @@ function _setBar(id, ratio) { const el = document.getElementById(id); if (el) el
 function _fmtDate(s) { return s ? new Date(s + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '–'; }
 function _esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function _debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+window.bilCardClick = function (el) {
+    document.querySelectorAll('.fin-card').forEach(c => c.classList.remove('fc-active'));
+    el.classList.add('fc-active');
+    
+    const filter = el.getAttribute('data-filter') || '';
+    const statusSel = document.getElementById('invoiceStatus');
+    if (statusSel) {
+        statusSel.value = filter;
+    }
+    _billPage = 1;
+    loadInvoices();
+};

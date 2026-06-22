@@ -531,3 +531,19 @@ async function loadMikrotikDevices() {
             `<option value="${dev.id}">${dev.name} (${dev.host})</option>`
         ).join('');
 }
+
+// ── KPI Card Clicking & Filtering ────────────────────────────
+window.custCardClick = function (el) {
+    document.querySelectorAll('.fin-card').forEach(c => c.classList.remove('fc-active'));
+    el.classList.add('fc-active');
+    const filter = el.getAttribute('data-filter');
+    const sel = document.getElementById('filterStatus');
+    if (sel) {
+        if (filter === 'total') sel.value = '';
+        else if (filter === 'overdue') sel.value = 'overdue';
+        else if (filter === 'duesoon') sel.value = 'due_soon';
+        else if (filter === 'revenue') sel.value = 'active';
+    }
+    _custPage = 1;
+    loadCustomers();
+};

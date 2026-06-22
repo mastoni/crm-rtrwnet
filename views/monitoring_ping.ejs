@@ -1194,6 +1194,65 @@
         </div>
     </main>
 
+    <!-- Modal Add Target -->
+    <div class="modal-overlay" id="addTargetModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add Ping Target</h2>
+                <button class="modal-close" onclick="closePingModals()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Host IP / Name</label>
+                    <input type="text" class="form-control" id="addName" placeholder="e.g. Core Router">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target (IP or Hostname)</label>
+                    <input type="text" class="form-control" id="addTarget" placeholder="e.g. 192.168.1.1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePingModals()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitAddTarget()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Target -->
+    <div class="modal-overlay" id="editTargetModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Edit Ping Target</h2>
+                <button class="modal-close" onclick="closePingModals()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label class="form-label">Host IP / Name</label>
+                    <input type="text" class="form-control" id="editName" placeholder="e.g. Core Router">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target (IP or Hostname)</label>
+                    <input type="text" class="form-control" id="editTarget" placeholder="e.g. 192.168.1.1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePingModals()">Cancel</button>
+                <button class="btn btn-primary" onclick="submitEditTarget()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <nav class="bottom-nav" id="bottomNav">
         <a href="/dashboard" class="bn-item" data-page="dashboard">
             <div class="bn-icon">

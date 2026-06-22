@@ -1,0 +1,950 @@
+<%- include('layouts/header') %>
+
+    <style>
+        .page-content {
+            padding: 0 !important;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        #map-wrapper {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+
+        #infraMap {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* ── Map top bar: satu baris, kiri-kanan ── */
+        /* ── Map overlay wrapper ── */
+        .map-topbar-wrap {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            z-index: 800;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+        }
+
+        .map-topbar-wrap>* {
+            pointer-events: all;
+        }
+
+        /* Baris 1: tile + tombol aksi + spacer + filter (desktop) */
+        .map-topbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+        }
+
+        /* Tile switcher */
+        .tile-switcher {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px 5px;
+            display: flex;
+            gap: 2px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.13);
+            flex-shrink: 0;
+        }
+
+        .tile-btn {
+            padding: 6px 12px;
+            border-radius: 7px;
+            border: none;
+            background: transparent;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .tile-btn.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .tile-btn:not(.active):hover {
+            background: var(--bg-secondary);
+        }
+
+        .tile-btn svg {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
+        }
+
+        /* Spacer — dorong filter ke kanan (desktop only) */
+        .map-topbar-spacer {
+            flex: 1;
+        }
+
+        /* Action buttons */
+        .map-add-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.35);
+            transition: transform .15s, box-shadow .15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .map-add-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+        }
+
+        .map-add-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Filter chips */
+        .filter-chips {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px 6px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: nowrap;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.13);
+            flex-shrink: 0;
+        }
+
+        .chip {
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1.5px solid;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            line-height: 1;
+        }
+
+        .chip-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .chip-all {
+            border-color: #64748b;
+            color: #64748b;
+            background: transparent;
+        }
+
+        .chip-all.active {
+            background: #64748b;
+            color: #fff;
+        }
+
+        .chip-odc {
+            border-color: #1d4ed8;
+            color: #1d4ed8;
+            background: transparent;
+        }
+
+        .chip-odc.active {
+            background: #1d4ed8;
+            color: #fff;
+        }
+
+        .chip-odp {
+            border-color: #104396;
+            color: #0d4296;
+            background: transparent;
+        }
+
+        .chip-odp.active {
+            background: #0c45a1;
+            color: #fff;
+        }
+
+        .chip-tower {
+            border-color: #64748b;
+            color: #475569;
+            background: transparent;
+        }
+
+        .chip-tower.active {
+            background: #475569;
+            color: #fff;
+        }
+
+        .chip-customer {
+            border-color: #f97316;
+            color: #f97316;
+            background: transparent;
+        }
+
+        .chip-customer.active {
+            background: #f97316;
+            color: #fff;
+        }
+
+        .chip-pop {
+            border-color: #ef4444;
+            color: #ef4444;
+            background: transparent;
+        }
+
+        .chip-pop.active {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        /* ── Responsive mobile ── */
+        @media (max-width: 768px) {
+            .map-topbar-wrap {
+                top: 8px;
+                left: 8px;
+                right: 8px;
+                gap: 5px;
+            }
+
+            /* Baris 1: tile + tombol icon only */
+            .map-topbar {
+                gap: 5px;
+            }
+
+            .map-topbar-spacer {
+                display: none;
+            }
+
+            /* Sembunyikan label teks tombol di mobile, icon saja */
+            .map-add-btn .btn-label,
+            .map-draw-btn .btn-label {
+                display: none;
+            }
+
+            .map-add-btn {
+                padding: 8px 10px;
+            }
+
+            .map-add-btn svg {
+                width: 15px;
+                height: 15px;
+            }
+
+            .map-draw-btn svg {
+                width: 15px;
+                height: 15px;
+            }
+
+            .tile-btn {
+                padding: 5px 9px;
+                font-size: 11px;
+            }
+
+            /* Baris 2: filter scrollable penuh */
+            .filter-chips {
+                flex-shrink: 1;
+                width: 100%;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+            .filter-chips::-webkit-scrollbar {
+                display: none;
+            }
+
+            .chip {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+        }
+
+        /* Stats bar — pill kecil di samping zoom control */
+        .map-stats {
+            display: inline-flex;
+            gap: 0;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 5px 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+            font-size: 11px;
+            white-space: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            max-width: calc(100vw - 80px);
+        }
+
+        .map-stats::-webkit-scrollbar {
+            display: none;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0 8px;
+            border-right: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .stat-item:first-child {
+            padding-left: 0;
+        }
+
+        .stat-item:last-child {
+            padding-right: 0;
+            border-right: none;
+        }
+
+        .stat-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .stat-val {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 11px;
+        }
+
+        .stat-lbl {
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        /* Zoom + stats: baris horizontal di kiri bawah */
+        .leaflet-bottom.leaflet-left {
+            bottom: 12px;
+            left: 12px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .leaflet-control-zoom {
+            border-radius: 10px !important;
+            border: 1px solid var(--border) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12) !important;
+            overflow: hidden;
+            margin: 0 !important;
+            flex-shrink: 0;
+        }
+
+        .leaflet-control-zoom a {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+            border-bottom-color: var(--border) !important;
+            font-size: 16px !important;
+            width: 32px !important;
+            height: 32px !important;
+            line-height: 32px !important;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background: var(--bg-secondary) !important;
+        }
+
+        /* Place/draw mode bar */
+        .place-mode-bar {
+            position: absolute;
+            top: 62px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 810;
+            background: rgba(0, 0, 0, 0.95);
+            color: #fff;
+            border-radius: 10px;
+            padding: 9px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            white-space: nowrap;
+        }
+
+        .place-mode-bar.active {
+            display: flex;
+        }
+
+        .place-cancel {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 8px;
+            color: #fff;
+            padding: 3px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        #infraMap.place-mode {
+            cursor: crosshair !important;
+        }
+
+        /* Desktop: tampilkan filter di baris 1, sembunyikan baris 2 */
+        .map-filter-mobile {
+            display: none;
+        }
+
+        .map-filter-desktop {
+            display: flex;
+        }
+
+        @media (max-width: 768px) {
+
+            /* Mobile: sembunyikan filter baris 1, tampilkan baris 2 */
+            .map-filter-desktop {
+                display: none !important;
+            }
+
+            .map-filter-mobile {
+                display: flex;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                width: 100%;
+            }
+
+            .map-filter-mobile::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
+        .modal {
+            max-width: 520px;
+        }
+
+        .modal-tabs {
+            display: flex;
+            gap: 2px;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+            margin-top: -4px;
+        }
+
+        .modal-tab {
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .modal-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .coord-preview {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .coord-preview svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* ── Anti tile-grid ── */
+        .leaflet-tile {
+            border: none !important;
+            outline: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+        }
+
+        .leaflet-container {
+            background: #e8e0d8;
+        }
+
+        .customer-search-wrap {
+            position: relative;
+        }
+
+        .customer-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1100;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            display: none;
+        }
+
+        .customer-dropdown.open {
+            display: block;
+        }
+
+        .cust-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .cust-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .cust-item strong {
+            display: block;
+            font-weight: 600;
+        }
+
+        .cust-item span {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Animated line tooltip */
+        .infra-line-tooltip {
+            background: rgba(15, 15, 20, 0.85) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            color: #fff !important;
+            font-family: 'DM Sans', sans-serif !important;
+            font-size: 12px !important;
+            padding: 4px 10px !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+            white-space: nowrap;
+        }
+
+        .infra-line-tooltip::before {
+            display: none !important;
+        }
+
+        /* Flowing dot */
+        .flow-dot {
+            transition: none !important;
+        }
+
+        /* ── Customer popup redesign ── */
+        .cp-popup-wrap .leaflet-popup-content-wrapper {
+            padding: 0 !important;
+            border-radius: 14px !important;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22) !important;
+            border: none !important;
+            min-width: 260px;
+        }
+
+        .cp-popup-wrap .leaflet-popup-content {
+            margin: 0 !important;
+            width: auto !important;
+        }
+
+        .cp-popup-wrap .leaflet-popup-tip-container {
+            display: none;
+        }
+
+        .cp-popup-wrap .leaflet-popup-close-button {
+            color: rgba(255, 255, 255, 0.7) !important;
+            font-size: 18px !important;
+            top: 10px !important;
+            right: 12px !important;
+            z-index: 10;
+        }
+
+        .cp-popup-wrap .leaflet-popup-close-button:hover {
+            color: #fff !important;
+        }
+
+        .cp-popup {
+            font-family: 'DM Sans', sans-serif;
+            width: 260px;
+        }
+
+        .cp-header {
+            background: #1e3a8a;
+            color: #fff;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .cp-body {
+            background: #fff;
+            padding: 4px 0 8px;
+        }
+
+        .cp-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        .cp-row:last-child {
+            border-bottom: none;
+        }
+
+        .cp-lbl {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .cp-val {
+            color: #1e293b;
+            font-weight: 600;
+            text-align: right;
+            max-width: 155px;
+        }
+
+        .cp-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .cp-btn {
+            padding: 11px 0;
+            border: none;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: opacity .15s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .cp-btn:hover {
+            opacity: 0.85;
+        }
+
+        .cp-nav {
+            background: #1e3a8a;
+            color: #fff;
+            border-radius: 0 0 0 14px;
+        }
+
+        .cp-edit {
+            background: #f1f5f9;
+            color: #334155;
+            border-radius: 0 0 14px 0;
+            border-left: 1px solid #e2e8f0;
+        }
+    </style>
+
+    <main class="page-content">
+        <div id="map-wrapper">
+            <div id="infraMap"></div>
+
+            <!-- Top bar wrapper: baris 1 = tile+aksi, baris 2 = filter -->
+            <div class="map-topbar-wrap">
+
+                <!-- Baris 1: tile switcher | Tambah Titik | Draw Link | spacer | filter (desktop) -->
+                <div class="map-topbar">
+                    <div class="tile-switcher">
+                        <button class="tile-btn active" data-tile="streets" onclick="switchTile('streets',this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2 1,6" />
+                            </svg>
+                            <span class="btn-label">Map</span>
+                        </button>
+                        <button class="tile-btn" data-tile="satellite" onclick="switchTile('satellite',this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="2" y1="12" x2="22" y2="12" />
+                                <path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" />
+                            </svg>
+                            <span class="btn-label">Satelite</span>
+                        </button>
+                        <button class="tile-btn" data-tile="dark" onclick="switchTile('dark',this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                            </svg>
+                            <span class="btn-label">Dark</span>
+                        </button>
+                    </div>
+
+                    <button class="map-add-btn" onclick="openAddModal()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        <span class="btn-label">Tambah Titik</span>
+                    </button>
+
+                    <button class="map-draw-btn" id="drawBtn" onclick="toggleDrawMode()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14" />
+                            <path d="M12 5l7 7-7 7" />
+                        </svg>
+                        <span class="btn-label">Draw Link</span>
+                    </button>
+
+                    <!-- Spacer: dorong filter ke kanan di desktop -->
+                    <div class="map-topbar-spacer"></div>
+
+                    <!-- Filter: tampil di baris 1 pada desktop -->
+                    <div class="filter-chips map-filter-desktop">
+                        <div class="chip chip-all active" data-type="" onclick="setFilter('',this)"><span
+                                class="chip-dot" style="background:#64748b"></span>Semua</div>
+                        <div class="chip chip-odc" data-type="odc" onclick="setFilter('odc',this)"><span
+                                class="chip-dot" style="background:#1d4ed8"></span>ODC</div>
+                        <div class="chip chip-odp" data-type="odp" onclick="setFilter('odp',this)"><span
+                                class="chip-dot" style="background:#3b82f6"></span>ODP</div>
+                        <div class="chip chip-tower" data-type="tower" onclick="setFilter('tower',this)"><span
+                                class="chip-dot" style="background:#475569"></span>Tiang</div>
+                        <div class="chip chip-customer" data-type="customer" onclick="setFilter('customer',this)"><span
+                                class="chip-dot" style="background:#f97316"></span>Pelanggan</div>
+                        <div class="chip chip-pop" data-type="pop" onclick="setFilter('pop',this)"><span
+                                class="chip-dot" style="background:#ef4444"></span>POP</div>
+                    </div>
+                </div>
+
+                <!-- Baris 2: filter (mobile only) -->
+                <div class="filter-chips map-filter-mobile">
+                    <div class="chip chip-all active" data-type="" onclick="setFilter('',this)"><span class="chip-dot"
+                            style="background:#64748b"></span>Semua</div>
+                    <div class="chip chip-odc" data-type="odc" onclick="setFilter('odc',this)"><span class="chip-dot"
+                            style="background:#1d4ed8"></span>ODC</div>
+                    <div class="chip chip-odp" data-type="odp" onclick="setFilter('odp',this)"><span class="chip-dot"
+                            style="background:#3b82f6"></span>ODP</div>
+                    <div class="chip chip-tower" data-type="tower" onclick="setFilter('tower',this)"><span
+                            class="chip-dot" style="background:#475569"></span>Tiang</div>
+                    <div class="chip chip-customer" data-type="customer" onclick="setFilter('customer',this)"><span
+                            class="chip-dot" style="background:#f97316"></span>Pelanggan</div>
+                    <div class="chip chip-pop" data-type="pop" onclick="setFilter('pop',this)"><span class="chip-dot"
+                            style="background:#ef4444"></span>POP</div>
+                </div>
+
+            </div>
+
+            <!-- Place mode bar -->
+            <div class="place-mode-bar" id="placeModeBar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span id="placeModeText">Klik peta untuk memilih lokasi</span>
+                <button class="place-cancel" onclick="cancelPlaceMode()">Batal</button>
+            </div>
+
+            <!-- Draw mode bar -->
+            <div id="drawModeBar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="5" cy="12" r="2.5" />
+                    <circle cx="19" cy="12" r="2.5" />
+                    <line x1="7.5" y1="12" x2="16.5" y2="12" stroke-dasharray="3 2" />
+                </svg>
+                <span id="drawModeText">Klik titik PERTAMA — lalu klik peta untuk belokkan kabel</span>
+                <button class="draw-cancel" onclick="cancelDrawMode()">Batal</button>
+            </div>
+
+            <!-- Stats bar -->
+            <div class="map-stats">
+                <div class="stat-item">
+                    <div class="stat-dot" style="background:#22c55e;box-shadow:0 0 5px rgba(34,197,94,.6)"></div><span
+                        class="stat-val" id="st-online" style="color:#22c55e">0</span><span
+                        class="stat-lbl">Online</span>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-dot" style="background:#1d4ed8"></div><span class="stat-val"
+                        id="st-odc">0</span><span class="stat-lbl">ODC</span>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-dot" style="background:#3b82f6"></div><span class="stat-val"
+                        id="st-odp">0</span><span class="stat-lbl">ODP</span>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-dot" style="background:#475569"></div><span class="stat-val"
+                        id="st-tower">0</span><span class="stat-lbl">Tiang</span>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-dot" style="background:#f97316"></div><span class="stat-val"
+                        id="st-cust">0</span><span class="stat-lbl">Pelanggan</span>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-dot" style="background:#ef4444"></div><span class="stat-val"
+                        id="st-pop">0</span><span class="stat-lbl">POP</span>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Infra Modal -->
+        <div id="infraModal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+            <div class="modal" style="background:#fff; border-radius:12px; width:100%; max-width:520px; box-shadow:0 10px 40px rgba(0,0,0,0.2); overflow:hidden;">
+                
+                <div style="padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                    <h3 id="modalTitle" style="margin:0; font-size:16px; font-weight:700; color:var(--text-primary);">Tambah Titik Infrastruktur</h3>
+                    <button onclick="document.getElementById('infraModal').style.display='none'; document.getElementById('infraModal').classList.remove('active');" style="background:none; border:none; cursor:pointer; font-size:18px; color:var(--text-secondary);">&times;</button>
+                </div>
+
+                <div id="modalTabs" class="modal-tabs">
+                    <button class="modal-tab" data-tab="odc">ODC</button>
+                    <button class="modal-tab" data-tab="odp">ODP</button>
+                    <button class="modal-tab" data-tab="tower">Tiang</button>
+                    <button class="modal-tab" data-tab="customer">Pelanggan</button>
+                    <button class="modal-tab" data-tab="pop">POP</button>
+                </div>
+
+                <div style="padding:20px; max-height:60vh; overflow-y:auto;">
+                    <!-- Coordinate Preview -->
+                    <div class="coord-preview">
+                        <div id="coordDot" style="width:10px; height:10px; border-radius:50%; background:#94a3b8;"></div>
+                        <div id="coordPreview" style="flex:1;">Pilih titik di peta</div>
+                        <button id="rePickBtn" onclick="rePickLocation()" style="display:none; padding:4px 8px; font-size:11px; border-radius:6px; background:#eff6ff; color:#1d4ed8; border:none; cursor:pointer;">Ubah Lokasi</button>
+                    </div>
+
+                    <!-- Panels -->
+                    <div id="tab-odc" class="tab-panel">
+                        <div class="form-row" style="margin-bottom:12px;">
+                            <div>
+                                <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Nama ODC</label>
+                                <input type="text" id="odcName" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Kapasitas Port</label>
+                                <input type="number" id="odcCapacity" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;" value="144">
+                            </div>
+                        </div>
+                        <input type="file" id="odc-photo-input" style="display:none;" accept="image/*">
+                        <input type="hidden" id="odc-photo-url">
+                        <button id="odc-upload-btn" type="button" style="padding:8px 12px; font-size:12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; cursor:pointer; width:100%; text-align:left;">Unggah Foto ODC</button>
+                        <img id="odc-photo-preview" style="display:none; width:100%; max-height:120px; object-fit:cover; margin-top:8px; border-radius:8px;">
+                        <button id="odc-photo-remove" type="button" style="display:none; margin-top:4px; font-size:11px; color:#dc2626; background:none; border:none; cursor:pointer;">Hapus Foto</button>
+                    </div>
+
+                    <div id="tab-odp" class="tab-panel">
+                        <div class="form-row" style="margin-bottom:12px;">
+                            <div>
+                                <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Nama ODP</label>
+                                <input type="text" id="odpName" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Kapasitas Port</label>
+                                <input type="number" id="odpCapacity" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px;" value="8">
+                            </div>
+                        </div>
+                        <input type="file" id="odp-photo-input" style="display:none;" accept="image/*">
+                        <input type="hidden" id="odp-photo-url">
+                        <button id="odp-upload-btn" type="button" style="padding:8px 12px; font-size:12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; cursor:pointer; width:100%; text-align:left;">Unggah Foto ODP</button>
+                        <img id="odp-photo-preview" style="display:none; width:100%; max-height:120px; object-fit:cover; margin-top:8px; border-radius:8px;">
+                        <button id="odp-photo-remove" type="button" style="display:none; margin-top:4px; font-size:11px; color:#dc2626; background:none; border:none; cursor:pointer;">Hapus Foto</button>
+                    </div>
+
+                    <div id="tab-tower" class="tab-panel">
+                        <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Nama Tiang / Tower</label>
+                        <input type="text" id="towerName" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; margin-bottom:12px;">
+                    </div>
+
+                    <div id="tab-customer" class="tab-panel">
+                        <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Cari Pelanggan</label>
+                        <div class="customer-search-wrap">
+                            <input type="text" id="cust-search" placeholder="Ketik nama atau CID..." style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; margin-bottom:4px;">
+                            <div id="custDropdown" class="customer-dropdown"></div>
+                        </div>
+                        <div id="custSelected" style="display:none; padding:8px 12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; font-size:12px; margin-bottom:12px;"></div>
+                    </div>
+
+                    <div id="tab-pop" class="tab-panel">
+                        <label style="display:block; font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Nama POP</label>
+                        <input type="text" id="popName" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; margin-bottom:12px;">
+                    </div>
+
+                    <div id="coordManualToggle" style="margin-top:16px; padding:8px 12px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; font-size:12px; text-align:center; cursor:pointer; color:var(--text-secondary);">Input Koordinat Manual</div>
+                    <div id="coordManualWrap" style="display:none; margin-top:8px; padding:12px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+                        <div class="form-row" style="margin-bottom:8px;">
+                            <div>
+                                <label style="display:block; font-size:11px; color:#64748b; margin-bottom:2px;">Latitude</label>
+                                <input type="text" id="manualLat" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:11px; color:#64748b; margin-bottom:2px;">Longitude</label>
+                                <input type="text" id="manualLng" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+                            </div>
+                        </div>
+                        <label style="display:block; font-size:11px; color:#64748b; margin-bottom:2px;">Atau paste koordinat (Lat, Lng)</label>
+                        <input type="text" id="pasteCoord" placeholder="Misal: -6.595, 106.790" style="width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:12px;">
+                    </div>
+
+                </div>
+
+                <div style="padding:16px 20px; border-top:1px solid var(--border); background:#f8fafc; display:flex; justify-content:flex-end; gap:8px;">
+                    <button onclick="document.getElementById('infraModal').style.display='none'; document.getElementById('infraModal').classList.remove('active');" style="padding:8px 16px; border:1px solid var(--border); border-radius:8px; background:#fff; color:var(--text-secondary); font-size:13px; font-weight:600; cursor:pointer;">Batal</button>
+                    <button id="saveBtn" onclick="saveInfraPoint()" style="padding:8px 16px; border:none; border-radius:8px; background:var(--primary); color:#fff; font-size:13px; font-weight:600; cursor:pointer;">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <%- include('layouts/footer') %>

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice <%= invoice.invoice_number %> - <%= invoice.customer_name %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #f0f4f8;
+            --bg-card: #ffffff;
+            --text-main: #334155;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #f1f5f9;
+            
+            /* Badges HSL */
+            --bg-badge-paid: #dcfce7;
+            --text-badge-paid: #15803d;
+            --border-badge-paid: #86efac;
+            
+            --bg-badge-unpaid: #fef9c3;
+            --text-badge-unpaid: #92400e;
+            --border-badge-unpaid: #fde047;
+            
+            --bg-badge-overdue: #fee2e2;
+            --text-badge-overdue: #991b1b;
+            --border-badge-overdue: #fca5a5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            background-color: var(--bg-page);
+            line-height: 1.5;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Top Action Bar */
+        .action-bar {
+            width: 100%;
+            max-width: 780px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            color: var(--text-dark);
+            border: 1px solid #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-back:hover {
+            background: #f8fafc;
+        }
+
+        .right-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #ffffff;
+            transition: opacity 0.15s;
+        }
+
+        .btn-action:hover {
+            opacity: 0.9;
+        }
+
+        .btn-wa {
+            background-color: #22c55e;
+        }
+
+        .btn-pdf {
+            background-color: #1e40af;
+        }
+
+        /* Invoice Container */
+        .invoice-container {
+            background-color: var(--bg-card);
+            width: 100%;
+            max-width: 780px;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Gradient Header */
+        .invoice-header {
+            background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%);
+            margin: -40px -40px 30px -40px;
+            padding: 40px;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative Background Circles */
+        .invoice-header::before {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            top: -50px;
+            right: -30px;
+            pointer-events: none;
+        }
+
+        .invoice-header::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            bottom: -30px;
+            right: 80px;
+            pointer-events: none;
+        }
+
+        .brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-sub {
+            font-size: 12px;
+            opacity: 0.85;
+            font-weight: 500;
+        }
+
+        .header-right {
+            text-align: right;
+            z-index: 2;
+        }
+
+        .header-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.75;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .invoice-number-large {
+            font-family: 'DM Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        /* Status Badge in Header */
+        .header-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1.5px solid transparent;
+        }
+
+        .header-status-paid {
+            background-color: var(--bg-badge-paid);
+            color: var(--text-badge-paid);
+            border-color: var(--border-badge-paid);
+        }
+
+        .header-status-unpaid {
+            background-color: var(--bg-badge-unpaid);
+            color: var(--text-badge-unpaid);
+            border-color: var(--border-badge-unpaid);
+        }
+
+        .header-status-overdue {
+            background-color: var(--bg-badge-overdue);
+            color: var(--text-badge-overdue);
+            border-color: var(--border-badge-overdue);
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .info-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .customer-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        /* CID Badge */
+        .cid-badge {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .metadata-list {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px 12px;
+            font-size: 13px;
+        }
+
+        .metadata-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .metadata-val {
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: right;
+        }
+
+        .metadata-val-mono {
+            font-family: 'DM Mono', monospace;
+            font-weight: 700;
+        }
+
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+
+        .items-table th {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            padding: 10px 12px;
+            border-bottom: 1.5px solid var(--border-color);
+            background-color: #f8fafc;
+            text-align: left;
+        }
+
+        .items-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .items-table th.num-col, .items-table td.num-col {
+            text-align: center;
+            width: 40px;
+        }
+
+        .items-table th.price-col, .items-table td.price-col {
+            text-align: right;
+            width: 120px;
+        }
+
+        .item-service-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+
+        .item-service-desc {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        /* Totals Block */
+        .totals-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 24px;
+        }
+
+        .totals-box {
+            width: 100%;
+            max-width: 280px;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px 16px;
+            padding: 14px;
+            font-size: 13px;
+        }
+
+        .totals-label {
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .totals-val {
+            font-weight: 600;
+            color: var(--text-dark);
+            text-align: right;
+        }
+
+        .grand-total-label {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #1e40af, #2563eb);
+            color: #ffffff;
+            margin: 6px -14px -14px -14px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* Bottom Status Strip */
+        .status-strip {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            gap: 30px;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .strip-item-title {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .strip-item-val {
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .strip-status-paid { color: var(--text-badge-paid); }
+        .strip-status-unpaid { color: var(--text-badge-unpaid); }
+        .strip-status-overdue { color: var(--text-badge-overdue); }
+
+        /* Megaphone Warning/Validity Banner */
+        .validity-banner {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 1.5px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12.5px;
+            color: #15803d;
+            margin-bottom: 30px;
+        }
+
+        .banner-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .banner-text strong {
+            font-weight: 700;
+            color: #166534;
+        }
+
+        /* Footer Stamp Area */
+        .invoice-footer {
+            border-top: 1.5px dashed var(--border-color);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .footer-note {
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        .stamp-box {
+            width: 140px;
+            height: 70px;
+            border: 1.5px dashed #bfdbfe;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #93c5fd;
+            font-weight: 700;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background-color: #fafcff;
+        }
+
+        .stamp-brand {
+            font-size: 11px;
+            color: #60a5fa;
+            margin-bottom: 2px;
+            font-weight: 800;
+        }
+
+        /* Print Media Styles */
+        @media print {
+            body {
+                background-color: #ffffff;
+                padding: 0;
+            }
+
+            .action-bar {
+                display: none !important;
+            }
+
+            .invoice-container {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .invoice-header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .items-table th {
+                background-color: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .totals-box {
+                background-color: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .grand-total-label {
+                background: linear-gradient(135deg, #1e40af, #2563eb) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .status-strip {
+                background-color: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .validity-banner {
+                background: linear-gradient(135deg, #f0fdf4, #dcfce7) !important;
+                border-color: #bbf7d0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Action Bar (Hidden on print) -->
+    <div class="action-bar">
+        <a href="javascript:history.back()" class="btn-back">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"></path>
+            </svg>
+            Kembali
+        </a>
+        <div class="right-actions">
+            <button class="btn-action btn-wa" onclick="sendWaInvoice()">
+                <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path>
+                </svg>
+                Kirim via WA
+            </button>
+            <button class="btn-action btn-pdf" onclick="window.print()">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.82l-.24-2.128A4.978 4.978 0 0111.412 6h1.176a4.978 4.978 0 014.932 4.692l-.24 2.128m-10.8 0A2.25 2.25 0 014.5 16.072v1.678A2.25 2.25 0 006.75 20h10.5a2.25 2.25 0 002.25-2.25v-1.678a2.25 2.25 0 00-2.25-2.25M6.72 13.82h10.56M12 10.5v.008M12 13.5v.008M15 13.5v.008M9 13.5v.008"></path>
+                </svg>
+                Print / Save PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Invoice Card -->
+    <div class="invoice-container">
+        
+        <!-- Header -->
+        <div class="invoice-header">
+            <div>
+                <div class="brand-name">CRM RTRWNet</div>
+                <div class="brand-sub">Internet Service Provider</div>
+            </div>
+            <div class="header-right">
+                <div class="header-label">Invoice</div>
+                <div class="invoice-number-large"><%= invoice.invoice_number %></div>
+                <div>
+                    <% if (invoice.status === 'paid') { %>
+                        <span class="header-status-badge header-status-paid">✓ Lunas</span>
+                    <% } else if (invoice.status === 'unpaid') { %>
+                        <span class="header-status-badge header-status-unpaid">⚠ Belum Bayar</span>
+                    <% } else { %>
+                        <span class="header-status-badge header-status-overdue">✗ Overdue</span>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="info-grid">
+            
+            <!-- Customer Info -->
+            <div>
+                <div class="info-title">Tagihan Untuk</div>
+                <div class="customer-name"><%= invoice.customer_name %></div>
+                <div class="cid-badge"><%= invoice.customer_code %></div>
+            </div>
+
+            <!-- Details -->
+            <div>
+                <div class="info-title">Detail Invoice</div>
+                <div class="metadata-list">
+                    <span class="metadata-label">No. Invoice</span>
+                    <span class="metadata-val metadata-val-mono"><%= invoice.invoice_number %></span>
+
+                    <span class="metadata-label">
+                        <%= invoice.status === 'paid' ? 'Tanggal Bayar' : 'Tanggal Jatuh Tempo' %>
+                    </span>
+                    <span class="metadata-val">
+                        <% 
+                            const targetDate = invoice.status === 'paid' ? (invoice.paid_date || payment.payment_date || new Date()) : invoice.due_date;
+                        %>
+                        <%= targetDate ? new Date(targetDate).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '–' %>
+                    </span>
+
+                    <span class="metadata-label">Periode</span>
+                    <span class="metadata-val">
+                        <% 
+                            const months = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                            const periodName = months[invoice.period_month] + " " + invoice.period_year;
+                        %>
+                        <%= periodName %>
+                    </span>
+
+                    <span class="metadata-label">Dicatat oleh</span>
+                    <span class="metadata-val"><%= payment.recorded_by_name || 'System' %></span>
+
+                    <span class="metadata-label">Dicetak</span>
+                    <span class="metadata-val">
+                        <%= new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }) %> <%= new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) %>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th class="num-col">#</th>
+                    <th>Deskripsi Layanan</th>
+                    <th class="num-col">Qty</th>
+                    <th class="price-col">Harga</th>
+                    <th class="price-col">Jumlah</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="num-col" style="color: var(--text-muted);">01</td>
+                    <td>
+                        <div class="item-service-name">
+                            Langganan <%= invoice.package_name || 'Internet Custom' %>
+                            <% if (invoice.package_speed_down || invoice.package_speed_up) { %>
+                                <%= invoice.package_speed_down || '—' %> Mbps
+                            <% } %>
+                        </div>
+                        <div class="item-service-desc">
+                            Periode: <%= periodName %> · CID: <%= invoice.customer_code %>
+                        </div>
+                    </td>
+                    <td class="num-col">1</td>
+                    <td class="price-col">Rp <%= parseFloat(invoice.amount).toLocaleString('id-ID') %></td>
+                    <td class="price-col" style="font-weight: 600; color: var(--text-dark);">
+                        Rp <%= parseFloat(invoice.amount).toLocaleString('id-ID') %>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Totals Block -->
+        <div class="totals-wrapper">
+            <div class="totals-box">
+                <span class="totals-label">Subtotal</span>
+                <span class="totals-val">Rp <%= parseFloat(invoice.amount).toLocaleString('id-ID') %></span>
+
+                <span class="totals-label">PPN</span>
+                <span class="totals-val">Rp 0</span>
+
+                <div class="grand-total-label">
+                    <span>Total Tagihan</span>
+                    <span>Rp <%= parseFloat(invoice.amount).toLocaleString('id-ID') %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strip Pembayaran -->
+        <div class="status-strip">
+            <div>
+                <div class="strip-item-title">Metode Pembayaran</div>
+                <div class="strip-item-val">
+                    <% if (invoice.status === 'paid') { %>
+                        <% 
+                            const labels = {
+                                cash: 'Tunai (Cash)', transfer: 'Transfer Bank', dana: 'DANA', ovo: 'OVO',
+                                gopay: 'GoPay', qris: 'QRIS', ewallet: 'E-Wallet', gateway: 'Payment Gateway', other: 'Lainnya'
+                            };
+                        %>
+                        <%= labels[payment.payment_method] || payment.payment_method || 'Tunai (Cash)' %>
+                    <% } else { %>
+                        –
+                    <% } %>
+                </div>
+            </div>
+            <div>
+                <div class="strip-item-title">Status</div>
+                <div class="strip-item-val">
+                    <% if (invoice.status === 'paid') { %>
+                        <span class="strip-status-paid">PAID</span>
+                    <% } else if (invoice.status === 'unpaid') { %>
+                        <span class="strip-status-unpaid">UNPAID</span>
+                    <% } else { %>
+                        <span class="strip-status-overdue">OVERDUE</span>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validity Megaphone Banner -->
+        <div class="validity-banner">
+            <span class="banner-icon">📢</span>
+            <div class="banner-text">
+                <% 
+                    const nextDate = new Date(targetDate);
+                    nextDate.setDate(nextDate.getDate() + 30);
+                    const validityStr = nextDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                %>
+                Layanan aktif hingga: <strong><%= validityStr %></strong>. Perpanjang sebelum tanggal tersebut agar layanan tidak terputus.
+            </div>
+        </div>
+
+        <!-- Footer Note & Stamp -->
+        <div class="invoice-footer">
+            <div class="footer-note">
+                <p>Terima kasih telah menggunakan layanan kami.</p>
+                <p style="margin-top: 3px;">Dokumen ini digenerate otomatis oleh sistem. Invoice ini sah tanpa tanda tangan basah.</p>
+            </div>
+            <div class="stamp-box">
+                <span class="stamp-brand">CRM RTRWNet</span>
+                <span>Stempel / TTD</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script for sending WA -->
+    <script>
+        async function sendWaInvoice() {
+            const btn = document.querySelector('.btn-wa');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.textContent = 'Mengirim...';
+            try {
+                // Determine invoice ID based on the URL or EJS
+                const invId = "<%= invoice.id %>";
+                const response = await fetch(`/api/billing/invoices/${invId}/reminder`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const resData = await response.json();
+                if (resData && resData.success) {
+                    alert(resData.message || 'Invoice berhasil dikirim via WhatsApp!');
+                } else {
+                    alert(resData.message || 'Gagal mengirim WhatsApp.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Terjadi kesalahan saat mengirim.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+    </script>
+
+</body>
+</html>
