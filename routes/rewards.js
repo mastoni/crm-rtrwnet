@@ -16,53 +16,95 @@ async function processPaymentReward(invoiceId) {
         
         if (!customer.is_reward_enabled) return;
 
-        // Hitung selisih hari antara tanggal bayar dan jatuh tempo
-        const paymentDate = new Date(); // Hari ini
-        paymentDate.setHours(0,0,0,0);
-        
-        let dueObj;
-        if (invoice.due_date) {
-            dueObj = new Date(invoice.due_date);
-        } else {
-            // Default jika tidak ada due_date, anggap tepat waktu
-            dueObj = new Date();
-        }
-        dueObj.setHours(0,0,0,0);
+        // Retrieve settings
+        const [settingsRows] = await db.query('SELECT setting_key, setting_value FROM app_settings');
+        const settings = {};
+        settingsRows.forEach(r => { settings[r.setting_key] = r.setting_value; });
 
-        const diffTime = dueObj - paymentDate;
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); // Positif = lebih cepat, Negatif = telat
+        let pointsPerAmount = parseInt(settings.reward_points_per_amount, 10);
+        if (isNaN(pointsPerAmount) || pointsPerAmount <= 0) pointsPerAmount = 1000;
         
-        let earnedPoints = 0;
+        const onTimeBonus = parseInt(settings.reward_points_ontime_bonus, 10) || 10;
+
+        let basePoints = Math.floor(parseFloat(invoice.amount) / pointsPerAmount);
+        let rewardEnabledForPkg = true;
+
+        if (customer.package_id) {
+            const [pkgs] = await db.query('SELECT reward_points, is_reward_enabled FROM packages WHERE id = ?', [customer.package_id]);
+            if (pkgs.length > 0) {
+                const pkg = pkgs[0];
+                if (!pkg.is_reward_enabled) {
+                    rewardEnabledForPkg = false;
+                } else if (pkg.reward_points > 0) {
+                    basePoints = pkg.reward_points;
+                }
+            }
+        }
+
+        if (!rewardEnabledForPkg) {
+            console.log(`[REWARD] Rewards are disabled for customer package: ${customer.package_id}. Skipping.`);
+            return;
+        }
+
+        // WIB Timezone normalization
+        const todayWIB = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+        let dueDateStr = invoice.due_date;
+        if (dueDateStr instanceof Date) {
+            dueDateStr = dueDateStr.toISOString().split('T')[0];
+        } else if (typeof dueDateStr === 'string') {
+            dueDateStr = dueDateStr.split('T')[0].split(' ')[0];
+        }
+
+        const d1 = new Date(todayWIB);
+        const d2 = new Date(dueDateStr);
+        const diffTime = d2.getTime() - d1.getTime(); // Positif = lebih awal, Negatif = terlambat
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        
+        let totalPoints = basePoints;
         let description = '';
 
         if (diffDays === 0) {
-            // Tepat waktu
-            earnedPoints = 10;
-            description = 'Bonus bayar tepat waktu';
-        } else if (diffDays > 0) {
-            // Sebelum jatuh tempo
-            earnedPoints = 10 + diffDays; // Bonus 10 + 1 poin per hari lebih cepat
-            description = `Bonus bayar lebih awal (${diffDays} hari)`;
+            // Tepat waktu (H-0)
+            totalPoints += onTimeBonus;
+            description = `Pembayaran tagihan ${invoice.invoice_number} (Base: ${basePoints}) + Bonus Tepat Waktu: ${onTimeBonus}`;
+        } else if (diffDays < 0) {
+            // Terlambat (H+n)
+            totalPoints = basePoints;
+            description = `Pembayaran tagihan ${invoice.invoice_number} (Base: ${basePoints}) (Bonus Hilang) - Pembayaran terlambat ${Math.abs(diffDays)} hari.`;
         } else {
-            // Terlambat (diffDays < 0)
-            // Pengurangan 1 hari 1 poin (berarti ditambah nilai negatif)
-            earnedPoints = diffDays; 
-            description = `Pengurangan poin telat bayar (${Math.abs(diffDays)} hari)`;
+            // Lebih awal (H-n)
+            const daysEarly = diffDays;
+            const extraBonus = Math.round(Math.pow(1.1, daysEarly));
+            totalPoints = basePoints + onTimeBonus + extraBonus;
+            description = `Pembayaran tagihan ${invoice.invoice_number} (Base: ${basePoints}) + Bonus Tepat Waktu: ${onTimeBonus} + Reward Awal ${daysEarly} hari: ${extraBonus}`;
+        }
+
+        // Idempotency check (prevent double reward)
+        const [alreadyRewarded] = await db.query(
+            "SELECT id FROM reward_history WHERE customer_id = ? AND reference_id = ? AND type = 'earn_payment' LIMIT 1",
+            [customer.id, invoiceId]
+        );
+        if (alreadyRewarded.length > 0) {
+            console.log(`[REWARD] Invoice ${invoiceId} already rewarded, skipping.`);
+            return;
         }
 
         // Simpan transaksi point
         await db.query(`
             INSERT INTO reward_history (customer_id, points, type, description, reference_id)
-            VALUES (?, ?, ?, ?, ?)
-        `, [customer.id, earnedPoints, earnedPoints >= 0 ? 'earn_ontime' : 'adjustment', description, invoice.id]);
+            VALUES (?, ?, 'earn_payment', ?, ?)
+        `, [customer.id, totalPoints, description, invoice.id]);
 
-        // Update poin pelanggan
+        // Update poin pelanggan (Zero-floor protected)
         await db.query(`
-            UPDATE customers SET points = points + ?, reward_points = reward_points + ?, last_reward_at = NOW()
+            UPDATE customers SET 
+                points = GREATEST(0, points + ?), 
+                reward_points = GREATEST(0, reward_points + ?), 
+                last_reward_at = NOW()
             WHERE id = ?
-        `, [earnedPoints, earnedPoints, customer.id]);
+        `, [totalPoints, totalPoints, customer.id]);
 
-        console.log(`[REWARD] Processed invoice ${invoiceId} for ${customer.name}: ${earnedPoints} points (${description})`);
+        console.log(`[REWARD] Processed invoice ${invoiceId} for ${customer.name}: ${totalPoints} points (${description})`);
 
     } catch (err) {
         console.error('[REWARD] Error processing payment reward:', err);

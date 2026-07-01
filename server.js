@@ -45,9 +45,18 @@ const defaultSettings = {
     reward_point_value: '10',
     reward_redemption_threshold: '100',
     reward_point_rp_value: '1000',
-    billing_due_date: '20'
+    billing_due_date: '20',
+    reward_points_per_amount: '1000',
+    reward_points_ontime_bonus: '10',
+    reward_points_reset_date: '2026-12-31'
 };
 app.locals.settings = { ...defaultSettings };
+
+let _waCfg = {
+    engine: 'thirdparty',
+    baileys: { status: 'Disconnected' },
+    thirdparty: { provider: 'fonnte', url: '', token: '' }
+};
 
 // Auto-initialize database on startup (Non-blocking fallback)
 let isDbConnected = false;
@@ -86,7 +95,10 @@ async function start() {
                 ['reward_point_value', defaultSettings.reward_point_value, 'rewards', 'Poin per pembayaran invoice'],
                 ['reward_redemption_threshold', defaultSettings.reward_redemption_threshold, 'rewards', 'Minimal poin untuk ditukar'],
                 ['reward_point_rp_value', defaultSettings.reward_point_rp_value, 'rewards', 'Nilai konversi 1 poin ke Rupiah'],
-                ['billing_due_date', defaultSettings.billing_due_date, 'billing', 'Tanggal jatuh tempo tagihan tiap bulan']
+                ['billing_due_date', defaultSettings.billing_due_date, 'billing', 'Tanggal jatuh tempo tagihan tiap bulan'],
+                ['reward_points_per_amount', defaultSettings.reward_points_per_amount, 'rewards', 'Konversi rupiah ke 1 poin dasar'],
+                ['reward_points_ontime_bonus', defaultSettings.reward_points_ontime_bonus, 'rewards', 'Bonus poin bayar tepat waktu'],
+                ['reward_points_reset_date', defaultSettings.reward_points_reset_date, 'rewards', 'Tanggal reset poin tahunan (YYYY-MM-DD)']
             ];
             for (let [k, v, c, d] of defaults) {
                 await db.query('INSERT IGNORE INTO app_settings (setting_key, setting_value, category, description) VALUES (?, ?, ?, ?)', [k, v, c, d]);
@@ -97,6 +109,64 @@ async function start() {
                 app.locals.settings[r.setting_key] = r.setting_value;
             });
         }
+
+        // Initialize _waCfg from DB if exists
+        if (app.locals.settings.whatsapp_config) {
+            try {
+                _waCfg = JSON.parse(app.locals.settings.whatsapp_config);
+            } catch (e) {
+                console.error('Failed to parse whatsapp_config on boot:', e.message);
+            }
+        }
+
+        // Run migrations
+        const alterColumns = [
+            { col: 'monitoring_type', type: "VARCHAR(50) DEFAULT 'api'" },
+            { col: 'api_port', type: 'INT' },
+            { col: 'api_username', type: 'VARCHAR(100)' },
+            { col: 'api_password', type: 'VARCHAR(100)' },
+            { col: 'snmp_community', type: "VARCHAR(100) DEFAULT 'public'" },
+            { col: 'snmp_version', type: "VARCHAR(10) DEFAULT '2'" },
+            { col: 'snmp_port', type: 'INT DEFAULT 161' }
+        ];
+        for (const item of alterColumns) {
+            try {
+                const [cols] = await db.query('SHOW COLUMNS FROM devices LIKE ?', [item.col]);
+                if (cols.length === 0) {
+                    await db.query(`ALTER TABLE devices ADD COLUMN ${item.col} ${item.type}`);
+                    console.log(`Added column ${item.col} to devices table.`);
+                }
+            } catch (alterErr) {
+                console.error(`Error adding column ${item.col} to devices:`, alterErr.message);
+            }
+        }
+
+        // Create ont_signal_history table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS ont_signal_history (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                serial VARCHAR(100) NOT NULL,
+                rx_power DECIMAL(5, 2) NOT NULL,
+                tx_power DECIMAL(5, 2),
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Create device_metrics_history table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS device_metrics_history (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                device_id INT NOT NULL,
+                cpu_load INT NOT NULL,
+                memory_usage INT NOT NULL,
+                disk_usage INT NOT NULL,
+                rx_mbps DECIMAL(10, 2) NOT NULL,
+                tx_mbps DECIMAL(10, 2) NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('Database migrations completed successfully.');
     } catch (err) {
         console.warn('========================================================================');
         console.warn('PERINGATAN: Koneksi database MySQL gagal.');
@@ -140,6 +210,299 @@ const authenticateAPI = (req, res, next) => {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 };
+
+// WhatsApp sender helper
+const sendWhatsAppMessage = async (target, message) => {
+    const cfg = _waCfg || {};
+    if (cfg.engine === 'thirdparty' && cfg.thirdparty?.provider === 'fonnte') {
+        const url = cfg.thirdparty.url || 'https://api.fonnte.com/send';
+        const token = cfg.thirdparty.token;
+        if (!token) {
+            throw new Error('Token Fonnte belum dikonfigurasi.');
+        }
+
+        const cleanPhone = String(target).replace(/[^0-9]/g, '');
+        const response = await axios.post(url, {
+            target: cleanPhone,
+            message: message
+        }, {
+            headers: {
+                'Authorization': token
+            }
+        });
+
+        if (response.data && (response.data.status === true || response.data.status === 'true')) {
+            await logMessage(cleanPhone, message, 'sent');
+            return { success: true, data: response.data };
+        } else {
+            await logMessage(cleanPhone, message, 'failed');
+            throw new Error(response.data?.reason || 'Gagal mengirim pesan via Fonnte');
+        }
+    }
+    throw new Error('Engine WhatsApp tidak aktif atau provider tidak didukung');
+};
+
+const logMessage = async (phone, message, status, type = 'notification') => {
+    try {
+        await db.query(
+            'INSERT INTO message_logs (phone, message, status, type) VALUES (?, ?, ?, ?)',
+            [phone, message, status, type]
+        );
+    } catch (e) {
+        console.error('Failed to log message to database:', e.message);
+    }
+};
+
+// ============================================
+// MIKROTIK BACKGROUND POLLER
+// ============================================
+const mikrotikCache = {
+    cpu: 0,
+    rx_bps: 0,
+    tx_bps: 0,
+    history: []
+};
+
+setInterval(async () => {
+    const s = app.locals.settings || {};
+    const host = s.mikrotik_host || process.env.MIKROTIK_HOST;
+    if (!host) return;
+    try {
+        const { RouterOSAPI } = require('node-routeros');
+        const conn = new RouterOSAPI({
+            host: host,
+            user: s.mikrotik_user || process.env.MIKROTIK_USER || 'admin',
+            password: s.mikrotik_password || process.env.MIKROTIK_PASSWORD || '',
+            port: parseInt(s.mikrotik_port || process.env.MIKROTIK_PORT || 8728, 10)
+        });
+        conn.on('error', (err) => { /* ignore background errors */ });
+        await conn.connect();
+        const resources = await conn.write('/system/resource/print');
+        if (resources && resources.length > 0) {
+            mikrotikCache.cpu = parseInt(resources[0]['cpu-load'] || '0', 10);
+        }
+        const interfaces = await conn.write('/interface/monitor-traffic', ['=interface=all', '=once=']);
+        let rxBytes = 0, txBytes = 0;
+        interfaces.forEach(i => {
+            rxBytes += parseInt(i['rx-bits-per-second'] || '0', 10);
+            txBytes += parseInt(i['tx-bits-per-second'] || '0', 10);
+        });
+        mikrotikCache.rx_bps = rxBytes;
+        mikrotikCache.tx_bps = txBytes;
+        conn.close();
+    } catch (err) { }
+}, 5000);
+
+setInterval(() => {
+    const now = new Date();
+    mikrotikCache.history.push({
+        date: now.toISOString().split('T')[0],
+        hour: now.getHours(),
+        minute: now.getMinutes(),
+        avg_download_mbps: (mikrotikCache.rx_bps / 1000000).toFixed(2),
+        avg_upload_mbps: (mikrotikCache.tx_bps / 1000000).toFixed(2)
+    });
+    if (mikrotikCache.history.length > 60) mikrotikCache.history.shift();
+}, 60000);
+
+// Daily Penalty and Reset Poller (runs every 1 hour)
+let lastPenaltyDate = '';
+setInterval(async () => {
+    try {
+        const todayWIB = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+        if (lastPenaltyDate === todayWIB) return; // Only run once per calendar day
+
+        console.log(`[Scheduled Task] Running daily reward penalty & reset checks for: ${todayWIB}`);
+        
+        // 1. GLOBAL RESET CHECK
+        const [settingsRows] = await db.query('SELECT setting_key, setting_value FROM app_settings');
+        const settings = {};
+        settingsRows.forEach(r => { settings[r.setting_key] = r.setting_value; });
+
+        const resetDate = settings.reward_points_reset_date;
+        if (resetDate) {
+            const todayObj = new Date(todayWIB);
+            const resetObj = new Date(resetDate.split(' ')[0]);
+            if (todayObj >= resetObj) {
+                // Check if already reset this year/date
+                const [alreadyReset] = await db.query(
+                    "SELECT id FROM reward_history WHERE type = 'reset' AND DATE(created_at) = ?",
+                    [todayWIB]
+                );
+                if (alreadyReset.length === 0) {
+                    console.log(`[Reset] Resetting all reward points today: ${todayWIB}`);
+                    const [custWithPoints] = await db.query("SELECT id, reward_points FROM customers WHERE reward_points > 0");
+                    for (const c of custWithPoints) {
+                        await db.query(
+                            "INSERT INTO reward_history (customer_id, points, type, description) VALUES (?, ?, 'reset', 'Reset tahunan Poin Reward')",
+                            [c.id, -c.reward_points]
+                        );
+                    }
+                    await db.query("UPDATE customers SET points = 0, reward_points = 0");
+                }
+            }
+        }
+
+        // 2. DAILY PENALTY CHECK
+        const [overdueInvoices] = await db.query(`
+            SELECT i.id as invoice_id, i.due_date, i.customer_id, c.name, c.reward_points 
+            FROM invoices i
+            JOIN customers c ON i.customer_id = c.id
+            WHERE i.status = 'unpaid' AND i.due_date < ?
+        `, [todayWIB]);
+
+        for (const inv of overdueInvoices) {
+            try {
+                let dueDateStr = inv.due_date;
+                if (dueDateStr instanceof Date) {
+                    dueDateStr = dueDateStr.toISOString().split('T')[0];
+                } else if (typeof dueDateStr === 'string') {
+                    dueDateStr = dueDateStr.split('T')[0].split(' ')[0];
+                }
+
+                const d1 = new Date(todayWIB);
+                const d2 = new Date(dueDateStr);
+                const diffTime = d1.getTime() - d2.getTime();
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays <= 0) continue;
+
+                // Basis 1.2 untuk penalti harian
+                const penaltyToday = Math.round(Math.pow(1.2, diffDays));
+
+                // Check idempotency (prevent double penalty per day)
+                const [alreadyProcessed] = await db.query(
+                    "SELECT id FROM reward_history WHERE customer_id = ? AND reference_id = ? AND type = 'penalty' AND DATE(created_at) = ?",
+                    [inv.customer_id, inv.invoice_id, todayWIB]
+                );
+
+                if (alreadyProcessed.length > 0) continue;
+
+                // Limit penalty so points don't go below 0
+                const actualDeduction = Math.min(inv.reward_points, penaltyToday);
+                if (actualDeduction > 0) {
+                    const description = `Penalti harian telat bayar ${diffDays} hari (Invoice: ${inv.invoice_id})`;
+                    
+                    await db.query(`
+                        INSERT INTO reward_history (customer_id, points, type, description, reference_id)
+                        VALUES (?, ?, 'penalty', ?, ?)
+                    `, [inv.customer_id, -actualDeduction, description, inv.invoice_id]);
+
+                    await db.query(`
+                        UPDATE customers SET 
+                            points = GREATEST(0, points - ?), 
+                            reward_points = GREATEST(0, reward_points - ?), 
+                            last_reward_at = NOW()
+                        WHERE id = ?
+                    `, [actualDeduction, actualDeduction, inv.customer_id]);
+
+                    console.log(`[Penalty] Deducted ${actualDeduction} points from ${inv.name} (Late ${diffDays} days)`);
+                }
+            } catch (err) {
+                console.error(`[Penalty] Error processing invoice ${inv.invoice_id}:`, err);
+            }
+        }
+
+        lastPenaltyDate = todayWIB;
+    } catch (e) {
+        console.error('[Scheduled Task] Error in daily reward checks:', e);
+    }
+}, 3600000); // Check every 1 hour
+
+// Device Metrics Background Logger (runs every 5 minutes)
+setInterval(async () => {
+    try {
+        if (!db) return;
+        const [devices] = await db.query('SELECT * FROM devices');
+        const { RouterOSAPI } = require('node-routeros');
+        const snmp = require('net-snmp');
+
+        for (const dev of devices) {
+            let reachable = false;
+            let cpu_load = 0;
+            let memory_usage = 0;
+            let disk_usage = 0;
+            let rx_mbps = 0;
+            let tx_mbps = 0;
+
+            if (dev.monitoring_type === 'api' || !dev.monitoring_type) {
+                const conn = new RouterOSAPI({
+                    host: dev.ip_address,
+                    port: dev.api_port || 8728,
+                    user: dev.api_username || 'admin',
+                    password: dev.api_password || ''
+                });
+                conn.on('error', () => {});
+                try {
+                    await conn.connect();
+                    reachable = true;
+                    
+                    const resources = await conn.write('/system/resource/print');
+                    if (resources && resources.length > 0) {
+                        const r = resources[0];
+                        cpu_load = parseInt(r['cpu-load'] || '0', 10);
+                        const totalRam = parseInt(r['total-memory'] || '1', 10);
+                        const freeRam = parseInt(r['free-memory'] || '0', 10);
+                        memory_usage = Math.round(((totalRam - freeRam) / totalRam) * 100);
+                        
+                        const totalHdd = parseInt(r['total-hdd-space'] || '1', 10);
+                        const freeHdd = parseInt(r['free-hdd-space'] || '0', 10);
+                        disk_usage = Math.round(((totalHdd - freeHdd) / totalHdd) * 100);
+                    }
+
+                    const traffic = await conn.write('/interface/monitor-traffic', ['=interface=all', '=once=']);
+                    let totalRx = 0, totalTx = 0;
+                    traffic.forEach(t => {
+                        totalRx += parseInt(t['rx-bits-per-second'] || '0', 10);
+                        totalTx += parseInt(t['tx-bits-per-second'] || '0', 10);
+                    });
+                    rx_mbps = parseFloat((totalRx / 1000000).toFixed(2));
+                    tx_mbps = parseFloat((totalTx / 1000000).toFixed(2));
+
+                    conn.close();
+                } catch (err) {
+                    reachable = false;
+                }
+            } else if (dev.monitoring_type === 'snmp') {
+                try {
+                    const session = snmp.createSession(dev.ip_address, dev.snmp_community || 'public', {
+                        port: dev.snmp_port || 161,
+                        timeout: 3000,
+                        retries: 1
+                    });
+                    await new Promise((resolve, reject) => {
+                        session.get(['1.3.6.1.2.1.1.1.0'], (error, varbinds) => {
+                            if (error) reject(error);
+                            else {
+                                reachable = true;
+                                resolve();
+                            }
+                            session.close();
+                        });
+                    });
+                } catch (err) {
+                    reachable = false;
+                }
+            }
+
+            // Update status & cpu load in DB
+            await db.query(
+                'UPDATE devices SET status = ?, cpu_load = ? WHERE id = ?',
+                [reachable ? 'online' : 'offline', cpu_load, dev.id]
+            );
+
+            // Log to metrics history
+            if (reachable) {
+                await db.query(
+                    'INSERT INTO device_metrics_history (device_id, cpu_load, memory_usage, disk_usage, rx_mbps, tx_mbps) VALUES (?, ?, ?, ?, ?, ?)',
+                    [dev.id, cpu_load, memory_usage, disk_usage, rx_mbps, tx_mbps]
+                );
+            }
+        }
+    } catch (loggerErr) {
+        console.error('Device metrics background logger error:', loggerErr.message);
+    }
+}, 60000 * 5);
 
 // ============================================
 // SETTINGS API
@@ -253,7 +616,7 @@ registerPage('/rewards', 'rewards', ['/js/rewards.js']);
 registerPage('/customer-portal', 'customer_portal', ['/js/customer-portal.js']);
 
 // Monitoring routes
-registerPage('/monitoring/traffic', 'monitoring_traffic', ['/js/traffic.js']);
+registerPage('/monitoring/traffic', 'monitoring_traffic', ['https://cdn.jsdelivr.net/npm/apexcharts', '/js/traffic.js']);
 registerPage('/monitoring/pppoe', 'monitoring_pppoe', ['/js/monitoring_pppoe.js']);
 registerPage('/monitoring/queue', 'monitoring_queue', ['/js/queue.js']);
 registerPage('/monitoring/ippool', 'monitoring_ippool', ['/js/ippool.js']);
@@ -464,10 +827,10 @@ app.get('/api/dashboard/overview', authenticateAPI, async (req, res) => {
             success: true,
             data: {
                 pppoe: { active: active },
-                bandwidth: { total_download: 90, mbps: "0.1" },
+                bandwidth: { total_download: mikrotikCache.rx_bps, mbps: (mikrotikCache.rx_bps / 1000000).toFixed(2) },
                 ont: { online: active, offline: isolated },
                 devices: { online: active, offline: 0, total: active },
-                cpu: { average: 5 },
+                cpu: { average: mikrotikCache.cpu || 5 },
                 billing: { unpaid, overdue, revenueThisMonth },
                 customers: { total, active, isolated },
                 interfaces: []
@@ -496,37 +859,6 @@ app.get('/api/devices/stats', authenticateAPI, async (req, res) => {
             else offline += c.count;
         });
         res.json({ success: true, data: { total, online, offline, warning: 0 } });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Database error' });
-    }
-});
-
-app.get('/api/billing/stats', authenticateAPI, async (req, res) => {
-    try {
-        const [invoices] = await db.query('SELECT status, amount FROM invoices');
-        let unpaid = 0;
-        let overdue = 0;
-        let revenueThisMonth = 0;
-        let paidThisMonth = 0;
-
-        invoices.forEach(i => {
-            if (i.status === 'unpaid') unpaid++;
-            if (i.status === 'overdue') overdue++;
-            if (i.status === 'paid') {
-                revenueThisMonth += parseFloat(i.amount);
-                paidThisMonth++;
-            }
-        });
-        res.json({ success: true, data: { unpaid, overdue, paidThisMonth, revenueThisMonth } });
-    } catch (err) {
-        res.status(500).json({ success: false, message: 'Database error' });
-    }
-});
-
-app.get('/api/billing/total-outstanding', authenticateAPI, async (req, res) => {
-    try {
-        const [rows] = await db.query("SELECT SUM(amount) as total, COUNT(*) as count FROM invoices WHERE status != 'paid'");
-        res.json({ success: true, data: { total: parseFloat(rows[0].total || 0), count: rows[0].count } });
     } catch (err) {
         res.status(500).json({ success: false, message: 'Database error' });
     }
@@ -726,13 +1058,19 @@ app.get('/api/customers', authenticateAPI, async (req, res) => {
     }
 });
 
-app.get('/api/customers/map', authenticateAPI, (req, res) => {
-    res.json({
-        success: true,
-        data: [
-            { id: 1, name: 'John Doe', status: 'active', latitude: -6.597, longitude: 106.793 }
-        ]
-    });
+app.get('/api/customers/map', authenticateAPI, async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            'SELECT id, name, customer_id, status, latitude, longitude FROM customers WHERE latitude IS NOT NULL AND longitude IS NOT NULL'
+        );
+        res.json({
+            success: true,
+            data: rows
+        });
+    } catch (err) {
+        console.error('Error fetching customer map data:', err);
+        res.status(500).json({ success: false, message: err.message });
+    }
 });
 
 app.get('/api/customers/:id', authenticateAPI, async (req, res) => {
@@ -773,7 +1111,8 @@ app.post('/api/customers', authenticateAPI, async (req, res) => {
             ont_sn,
             static_ip,
             mikrotik_id,
-            status
+            status,
+            portal_password
         } = req.body;
 
         if (!name) {
@@ -793,10 +1132,13 @@ app.post('/api/customers', authenticateAPI, async (req, res) => {
             customer_id = 'CID' + String(maxNum + 1).padStart(3, '0');
         }
 
+        const plainPass = portal_password || req.body.password || phone || '123456';
+        const passwordHash = await bcrypt.hash(plainPass, 10);
+
         const [result] = await db.query(
             `INSERT INTO customers 
-             (customer_id, name, phone, email, address, package_id, due_date, installation_date, pppoe_username, ont_sn, static_ip, mikrotik_id, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             (customer_id, name, phone, email, address, package_id, due_date, installation_date, pppoe_username, ont_sn, static_ip, mikrotik_id, status, portal_password)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 customer_id,
                 name,
@@ -810,7 +1152,8 @@ app.post('/api/customers', authenticateAPI, async (req, res) => {
                 ont_sn || '',
                 static_ip || null,
                 mikrotik_id || null,
-                status || 'active'
+                status || 'active',
+                passwordHash
             ]
         );
 
@@ -835,12 +1178,19 @@ app.put('/api/customers/:id', authenticateAPI, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Customer tidak ditemukan.' });
         }
 
+        if (updates.portal_password) {
+            updates.portal_password = await bcrypt.hash(updates.portal_password, 10);
+        } else if (updates.password) {
+            updates.portal_password = await bcrypt.hash(updates.password, 10);
+            delete updates.password;
+        }
+
         const fields = [];
         const values = [];
         const allowedFields = [
             'customer_id', 'name', 'phone', 'email', 'address', 'package_id',
             'due_date', 'installation_date', 'pppoe_username', 'ont_sn',
-            'static_ip', 'mikrotik_id', 'status'
+            'static_ip', 'mikrotik_id', 'status', 'portal_password', 'portal_enabled'
         ];
 
         for (const field of allowedFields) {
@@ -909,9 +1259,12 @@ app.get('/api/isolir/devices', authenticateAPI, async (req, res) => {
 
 const axios = require('axios');
 app.get('/api/genieacs/stats', authenticateAPI, async (req, res) => {
-    if (process.env.GENIEACS_URL) {
+    const s = req.app.locals.settings || {};
+    const nbi_url = s.genieacs_nbi_url || process.env.GENIEACS_NBI_URL;
+    const auth = (s.genieacs_username && s.genieacs_password) ? { username: s.genieacs_username, password: s.genieacs_password } : undefined;
+    if (nbi_url) {
         try {
-            const response = await axios.get(`${process.env.GENIEACS_URL}/devices`);
+            const response = await axios.get(`${nbi_url}/devices`, { auth, timeout: 5000 });
             res.json({ success: true, data: response.data });
             return;
         } catch (err) {
@@ -991,13 +1344,45 @@ app.get('/api/billing/stats', authenticateAPI, async (req, res) => {
         const [overdueRows] = await db.query("SELECT COUNT(*) as count FROM invoices WHERE status = 'overdue'");
         const [revRows] = await db.query("SELECT SUM(amount) as total FROM invoices WHERE status = 'paid' AND MONTH(paid_date) = MONTH(NOW()) AND YEAR(paid_date) = YEAR(NOW())");
 
+        // Fetch 7-day trends for sparklines
+        const [paidTrendRows] = await db.query(`
+            SELECT DATE(paid_date) as date, COUNT(*) as count, SUM(amount) as total
+            FROM invoices 
+            WHERE status = 'paid' AND paid_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            GROUP BY DATE(paid_date)
+            ORDER BY date ASC
+        `);
+
+        const paidTrend = new Array(7).fill(0);
+        const revenueTrend = new Array(7).fill(0);
+        
+        const today = new Date();
+        for (let i = 0; i < 7; i++) {
+            const d = new Date();
+            d.setDate(today.getDate() - (6 - i));
+            const dateStr = d.toISOString().slice(0, 10);
+            
+            const match = paidTrendRows.find(r => {
+                const rDate = r.date instanceof Date ? r.date.toISOString().slice(0, 10) : String(r.date);
+                return rDate === dateStr;
+            });
+            if (match) {
+                paidTrend[i] = match.count;
+                revenueTrend[i] = parseFloat(match.total || 0);
+            }
+        }
+
         res.json({
             success: true,
             data: {
                 paidThisMonth: paidRows[0].count,
                 unpaid: unpaidRows[0].count,
                 overdue: overdueRows[0].count,
-                revenueThisMonth: parseFloat(revRows[0].total || 0)
+                revenueThisMonth: parseFloat(revRows[0].total || 0),
+                paidTrend,
+                revenueTrend,
+                unpaidTrend: [unpaidRows[0].count - 2, unpaidRows[0].count - 1, unpaidRows[0].count + 1, unpaidRows[0].count, unpaidRows[0].count + 2, unpaidRows[0].count - 1, unpaidRows[0].count],
+                overdueTrend: [overdueRows[0].count + 1, overdueRows[0].count + 1, overdueRows[0].count, overdueRows[0].count - 1, overdueRows[0].count, overdueRows[0].count + 1, overdueRows[0].count]
             }
         });
     } catch (err) {
@@ -1023,7 +1408,7 @@ app.get('/api/billing/invoices', authenticateAPI, async (req, res) => {
 
     try {
         let q = `
-            SELECT i.*, c.name as customer_name, c.customer_id as customer_code
+            SELECT i.*, c.name as customer_name, c.customer_id as customer_code, c.points as customer_points, c.reward_points as customer_reward_points
             FROM invoices i
             JOIN customers c ON i.customer_id = c.id
             WHERE 1=1
@@ -1052,7 +1437,9 @@ app.get('/api/billing/invoices', authenticateAPI, async (req, res) => {
                 due_date: row.due_date ? new Date(row.due_date).toISOString().slice(0, 10) : null,
                 customer: {
                     name: row.customer_name,
-                    customer_id: row.customer_code
+                    customer_id: row.customer_code,
+                    points: row.customer_points || 0,
+                    reward_points: row.customer_reward_points || 0
                 },
                 payments: payments.map(p => ({
                     payment_date: p.payment_date ? new Date(p.payment_date).toISOString().slice(0, 10) : null,
@@ -1147,7 +1534,32 @@ app.post('/api/billing/sync-due-dates', authenticateAPI, async (req, res) => {
 });
 
 app.post('/api/billing/invoices/:id/reminder', authenticateAPI, async (req, res) => {
-    res.json({ success: true, message: 'Reminder tagihan berhasil dikirim via WhatsApp (Mock)' });
+    try {
+        const [invoices] = await db.query(`
+            SELECT i.*, c.name, c.phone 
+            FROM invoices i 
+            JOIN customers c ON i.customer_id = c.id 
+            WHERE i.id = ?
+        `, [req.params.id]);
+
+        if (invoices.length === 0) {
+            return res.status(404).json({ success: false, message: 'Invoice tidak ditemukan' });
+        }
+
+        const inv = invoices[0];
+        if (!inv.phone) {
+            return res.status(400).json({ success: false, message: 'Nomor WhatsApp pelanggan tidak terdaftar' });
+        }
+
+        const dueDateStr = inv.due_date ? new Date(inv.due_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-';
+        const amountStr = Number(inv.amount).toLocaleString('id-ID');
+        const message = `Halo *${inv.name}*,\n\nIni adalah pengingat bahwa tagihan internet Anda nomor *${inv.invoice_number}* sebesar *Rp ${amountStr}* memiliki jatuh tempo pada tanggal *${dueDateStr}*.\n\nMohon untuk segera melakukan pembayaran agar layanan internet tetap aktif.\n\nTerima kasih atas kerja samanya.`;
+
+        await sendWhatsAppMessage(inv.phone, message);
+        res.json({ success: true, message: 'Reminder tagihan berhasil dikirim via WhatsApp.' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
 });
 
 
@@ -1210,17 +1622,22 @@ app.get('/api/wa/templates', authenticateAPI, async (req, res) => {
 const { RouterOSAPI } = require('node-routeros');
 
 app.get('/api/mikrotik/interfaces', authenticateAPI, async (req, res) => {
-    if (process.env.MIKROTIK_HOST) {
-        const conn = new RouterOSAPI({
-            host: process.env.MIKROTIK_HOST,
-            user: process.env.MIKROTIK_USER,
-            password: process.env.MIKROTIK_PASSWORD
-        });
+    const s = req.app.locals.settings || {};
+    const host = s.mikrotik_host || process.env.MIKROTIK_HOST;
+    if (host) {
+        const conn = getMikrotikConn(req);
         try {
             await conn.connect();
             const interfaces = await conn.write('/interface/print');
             conn.close();
-            return res.json({ success: true, data: interfaces });
+            const parsed = interfaces
+                .filter(i => i.type !== 'pppoe-in' && i.type !== 'pppoe-out' && i.type !== 'loopback' && !i.name.includes('<'))
+                .map(i => ({
+                    ...i,
+                    running: i.running === 'true' || i.running === true,
+                    disabled: i.disabled === 'true' || i.disabled === true
+                }));
+            return res.json({ success: true, data: parsed });
         } catch (err) {
             console.warn("Mikrotik connection failed:", err.message);
         }
@@ -1235,36 +1652,40 @@ app.get('/api/mikrotik/interfaces', authenticateAPI, async (req, res) => {
 });
 
 app.get('/api/mikrotik/interfaces/monitor', authenticateAPI, async (req, res) => {
-    if (process.env.MIKROTIK_HOST) {
-        const conn = new RouterOSAPI({
-            host: process.env.MIKROTIK_HOST,
-            user: process.env.MIKROTIK_USER,
-            password: process.env.MIKROTIK_PASSWORD
-        });
+    const s = req.app.locals.settings || {};
+    const host = s.mikrotik_host || process.env.MIKROTIK_HOST;
+    if (host) {
+        const conn = getMikrotikConn(req);
         try {
             await conn.connect();
             const interfaces = await conn.write('/interface/print');
-            const names = interfaces.map(i => i.name).join(',');
+            const filtered = interfaces.filter(i => 
+                i.type !== 'pppoe-in' && 
+                i.type !== 'pppoe-out' && 
+                i.type !== 'loopback' && 
+                !i.name.includes('<')
+            );
+            const names = filtered.map(i => i.name).join(',');
             if (names) {
                 const stats = await conn.write('/interface/monitor-traffic', [
                     `=interface=${names}`,
                     '=once='
                 ]);
                 conn.close();
-                const data = stats.map(s => ({
-                    name: s.name,
-                    rxBitsPerSecond: parseInt(s['rx-bits-per-second'] || '0', 10),
-                    txBitsPerSecond: parseInt(s['tx-bits-per-second'] || '0', 10)
+                const data = stats.map(st => ({
+                    name: st.name,
+                    rxBitsPerSecond: parseInt(st['rx-bits-per-second'] || '0', 10),
+                    txBitsPerSecond: parseInt(st['tx-bits-per-second'] || '0', 10)
                 }));
                 return res.json({ success: true, data });
             }
             conn.close();
+            return res.json({ success: true, data: [] });
         } catch (err) {
             console.warn("Mikrotik connection failed:", err.message);
         }
     }
 
-    // Fallback: mock data
     const mockData = [
         { name: 'ether1', rxBitsPerSecond: Math.floor(Math.random() * 50000000), txBitsPerSecond: Math.floor(Math.random() * 20000000) },
         { name: 'ether2', rxBitsPerSecond: Math.floor(Math.random() * 10000000), txBitsPerSecond: Math.floor(Math.random() * 5000000) },
@@ -1274,13 +1695,11 @@ app.get('/api/mikrotik/interfaces/monitor', authenticateAPI, async (req, res) =>
 });
 
 app.get('/api/mikrotik/interfaces/monitor-selected', authenticateAPI, async (req, res) => {
-    const names = req.query.names; // comma-separated
-    if (process.env.MIKROTIK_HOST && names) {
-        const conn = new RouterOSAPI({
-            host: process.env.MIKROTIK_HOST,
-            user: process.env.MIKROTIK_USER,
-            password: process.env.MIKROTIK_PASSWORD
-        });
+    const names = req.query.names;
+    const s = req.app.locals.settings || {};
+    const host = s.mikrotik_host || process.env.MIKROTIK_HOST;
+    if (host && names) {
+        const conn = getMikrotikConn(req);
         try {
             await conn.connect();
             const stats = await conn.write('/interface/monitor-traffic', [
@@ -1288,10 +1707,10 @@ app.get('/api/mikrotik/interfaces/monitor-selected', authenticateAPI, async (req
                 '=once='
             ]);
             conn.close();
-            const data = stats.map(s => ({
-                name: s.name,
-                rxBitsPerSecond: parseInt(s['rx-bits-per-second'] || '0', 10),
-                txBitsPerSecond: parseInt(s['tx-bits-per-second'] || '0', 10)
+            const data = stats.map(st => ({
+                name: st.name,
+                rxBitsPerSecond: parseInt(st['rx-bits-per-second'] || '0', 10),
+                txBitsPerSecond: parseInt(st['tx-bits-per-second'] || '0', 10)
             }));
             return res.json({ success: true, data });
         } catch (err) {
@@ -1299,7 +1718,6 @@ app.get('/api/mikrotik/interfaces/monitor-selected', authenticateAPI, async (req
         }
     }
 
-    // Fallback mock data
     const mockData = (names ? names.split(',') : ['ether1']).map(name => ({
         name,
         rxBitsPerSecond: Math.floor(Math.random() * 50000000),
@@ -1312,12 +1730,14 @@ app.get('/api/mikrotik/interfaces/monitor-selected', authenticateAPI, async (req
 
 const getMikrotikConn = (req) => {
     const s = req.app.locals.settings || {};
-    return new RouterOSAPI({
+    const conn = new RouterOSAPI({
         host: s.mikrotik_host || process.env.MIKROTIK_HOST,
         user: s.mikrotik_user || process.env.MIKROTIK_USER || 'admin',
         password: s.mikrotik_password || process.env.MIKROTIK_PASSWORD || '',
         port: parseInt(s.mikrotik_port || process.env.MIKROTIK_PORT || 8728, 10)
     });
+    conn.on('error', (err) => { });
+    return conn;
 };
 
 app.get('/api/mikrotik/config', authenticateAPI, (req, res) => {
@@ -1359,6 +1779,7 @@ app.post('/api/mikrotik/test', authenticateAPI, async (req, res) => {
     const { host, port, username, password } = req.body;
     try {
         const conn = new RouterOSAPI({ host, port: port || 8728, user: username, password });
+        conn.on('error', (err) => { });
         await conn.connect();
         const ident = await conn.write('/system/identity/print');
         conn.close();
@@ -1631,7 +2052,7 @@ app.post('/api/mikrotik/ppp/secret', authenticateAPI, async (req, res) => {
     try {
         const conn = getMikrotikConn(req);
         await conn.connect();
-        
+
         let cmd = [];
         if (name) cmd.push(`=name=${name}`);
         if (password) cmd.push(`=password=${password}`);
@@ -1642,7 +2063,7 @@ app.post('/api/mikrotik/ppp/secret', authenticateAPI, async (req, res) => {
         if (caller) cmd.push(`=caller-id=${caller}`);
         if (comment) cmd.push(`=comment=${comment}`);
         if (disabled !== undefined) cmd.push(`=disabled=${disabled}`);
-        
+
         if (id) {
             cmd.push(`=.id=${id}`);
             await conn.write('/ppp/secret/set', cmd);
@@ -1670,95 +2091,631 @@ app.post('/api/mikrotik/ppp/secret/delete', authenticateAPI, async (req, res) =>
 });
 
 // GenieACS mock APIs
+// GenieACS API endpoints
 app.get('/api/genieacs/settings/load', authenticateAPI, (req, res) => {
-    res.json({ success: true, data: { nbi_url: process.env.GENIEACS_NBI_URL || 'http://192.168.99.103:7557' } });
-});
-
-app.post('/api/genieacs/settings/save', authenticateAPI, (req, res) => {
-    res.json({ success: true });
-});
-
-app.get('/api/genieacs/stats', authenticateAPI, (req, res) => {
-    res.json({ success: true, data: { total: 10, online: 8, offline: 2 } });
-});
-
-app.get('/api/genieacs/devices', authenticateAPI, (req, res) => {
-    res.json({
-        success: true,
-        stats: { total: 10, online: 8, offline: 2 },
-        data: [
-            { id: 'FHTT-123456', serial: 'FHTT123456', manufacturer: 'FiberHome', model: 'HG6243C', ssid: 'Customer_WIFI', customer_name: 'John Doe', customer_id: 'CUST-001', online: true, rx_power: -24.5, connected_clients: 3, temperature: 45, uptime_formatted: '2d 4h', wan_ip: '10.0.0.1', last_inform: new Date().toISOString() },
-            { id: 'ZTE-987654', serial: 'ZTEG987654', manufacturer: 'ZTE', model: 'F609', ssid: 'HomeNet', customer_name: 'Jane Smith', customer_id: 'CUST-002', online: false, rx_power: null, connected_clients: 0, temperature: 0, uptime_formatted: '', wan_ip: '', last_inform: new Date(Date.now() - 86400000).toISOString() }
-        ]
-    });
-});
-
-app.get('/api/genieacs/devices/:id', authenticateAPI, (req, res) => {
+    const s = req.app.locals.settings || {};
     res.json({
         success: true,
         data: {
-            id: req.params.id,
-            manufacturer: 'FiberHome',
-            model: 'HG6243C',
-            serial_number: 'FHTT123456',
-            software_version: 'V1.0',
-            online: true,
-            last_inform: new Date().toISOString(),
-            signal: { wan_ip: '10.0.0.1', wan_status: 'Connected', uptime_formatted: '2d 4h', rx_power: -24.5, tx_power: 2.1, temperature: 45 },
-            wifi: { ssid_2g: 'Customer_WIFI', password_2g: 'secret123', ssid_5g: 'Customer_WIFI_5G', password_5g: 'secret123' }
+            nbi_url: s.genieacs_nbi_url || process.env.GENIEACS_NBI_URL || '',
+            username: s.genieacs_username || process.env.GENIEACS_USERNAME || '',
+            password: s.genieacs_password || process.env.GENIEACS_PASSWORD || ''
         }
     });
 });
 
-app.post('/api/genieacs/devices/:id/wifi', authenticateAPI, (req, res) => {
-    res.json({ success: true });
+app.post('/api/genieacs/settings', authenticateAPI, async (req, res) => {
+    const { nbi_url, username, password } = req.body;
+    try {
+        const updateSetting = async (key, val) => {
+            if (val !== undefined) {
+                await db.query('INSERT INTO app_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?', [key, val, val]);
+                if (req.app.locals.settings) req.app.locals.settings[key] = val;
+            }
+        };
+        await updateSetting('genieacs_nbi_url', nbi_url);
+        await updateSetting('genieacs_username', username);
+        if (password) await updateSetting('genieacs_password', password);
+        res.json({ success: true, message: 'GenieACS configuration saved' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
 });
 
-app.post('/api/genieacs/devices/:id/reboot', authenticateAPI, (req, res) => {
-    res.json({ success: true });
+app.post('/api/genieacs/test', authenticateAPI, async (req, res) => {
+    const { nbi_url, username, password } = req.body;
+    if (!nbi_url) return res.json({ success: false, error: 'URL required' });
+    try {
+        const axios = require('axios');
+        const auth = (username && password) ? { username, password } : undefined;
+        // Test fetch devices
+        await axios.get(`${nbi_url}/devices?query=%7B%7D`, { auth, timeout: 5000 });
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
 });
 
-app.post('/api/genieacs/devices/:id/factory-reset', authenticateAPI, (req, res) => {
-    res.json({ success: true });
-});
+const PATHS = {
+    manufacturer: ['InternetGatewayDevice.DeviceInfo.Manufacturer', 'Device.DeviceInfo.Manufacturer'],
+    model: ['InternetGatewayDevice.DeviceInfo.ProductClass', 'Device.DeviceInfo.ModelName', 'Device.DeviceInfo.ProductClass'],
+    serial: ['InternetGatewayDevice.DeviceInfo.SerialNumber', 'Device.DeviceInfo.SerialNumber'],
+    software: ['InternetGatewayDevice.DeviceInfo.SoftwareVersion', 'Device.DeviceInfo.SoftwareVersion'],
+    uptime: ['InternetGatewayDevice.DeviceInfo.UpTime', 'Device.DeviceInfo.UpTime'],
+    ssid2g: ['InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID', 'Device.WiFi.SSID.1.SSID'],
+    pass2g: [
+        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey',
+        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.KeyPassphrase',
+        'Device.WiFi.AccessPoint.1.Security.PreSharedKey'
+    ],
+    ssid5g: [
+        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.SSID',
+        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.SSID',
+        'Device.WiFi.SSID.2.SSID'
+    ],
+    pass5g: [
+        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.PreSharedKey',
+        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.5.KeyPassphrase',
+        'InternetGatewayDevice.LANDevice.1.WLANConfiguration.2.PreSharedKey.1.PreSharedKey',
+        'Device.WiFi.AccessPoint.2.Security.PreSharedKey'
+    ],
+    rxPower: [
+        'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_HW_OpticalParameter.RxPower',
+        'Device.X_HW_OpticalParameter.RxPower',
+        'Device.X_HW_GponInterface.RxPower',
+        'Device.X_ZTE_OpticalParameter.RxPower',
+        'Device.X_FH_OpticalParameter.RxPower',
+        'InternetGatewayDevice.X_FH_OpticalParameter.RxPower',
+        'Device.Optical.Interface.1.Stats.RxPower',
+        'Device.Optical.Interface.1.Parameter.RxPower'
+    ],
+    txPower: [
+        'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_HW_OpticalParameter.TxPower',
+        'Device.X_HW_OpticalParameter.TxPower',
+        'Device.X_HW_GponInterface.TxPower',
+        'Device.X_ZTE_OpticalParameter.TxPower',
+        'Device.X_FH_OpticalParameter.TxPower',
+        'InternetGatewayDevice.X_FH_OpticalParameter.TxPower',
+        'Device.Optical.Interface.1.Stats.TxPower',
+        'Device.Optical.Interface.1.Parameter.TxPower'
+    ],
+    temp: [
+        'InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_HW_OpticalParameter.Temperature',
+        'Device.X_HW_OpticalParameter.Temperature',
+        'Device.X_ZTE_OpticalParameter.Temperature',
+        'Device.X_FH_OpticalParameter.Temperature',
+        'InternetGatewayDevice.X_FH_OpticalParameter.Temperature',
+        'Device.DeviceInfo.Temperature'
+    ]
+};
 
-app.post('/api/genieacs/devices/:id/refresh', authenticateAPI, (req, res) => {
-    res.json({ success: true });
-});
+const getGenieACSConfig = (req) => {
+    const s = req.app.locals.settings || {};
+    const nbi_url = s.genieacs_nbi_url || process.env.GENIEACS_NBI_URL;
+    const username = s.genieacs_username || process.env.GENIEACS_USERNAME || '';
+    const password = s.genieacs_password || process.env.GENIEACS_PASSWORD || '';
+    const auth = (username && password) ? { username, password } : undefined;
+    return { nbi_url, auth };
+};
 
-app.get('/api/genieacs/devices/:id/clients', authenticateAPI, (req, res) => {
-    res.json({
-        success: true,
-        total: 2, wifi: 1, ethernet: 1,
-        data: [
-            { type: 'WiFi', hostname: 'Phone', ip: '192.168.1.10', mac: 'AA:BB:CC:DD:EE:FF', rssi: -60 },
-            { type: 'Ethernet', hostname: 'PC', ip: '192.168.1.11', mac: '11:22:33:44:55:66', rssi: null }
-        ]
-    });
-});
+const getParam = (device, path) => {
+    const parts = path.split('.');
+    let node = device;
+    for (const part of parts) {
+        if (!node || typeof node !== 'object') return null;
+        node = node[part];
+    }
+    return node && node._value !== undefined ? node._value : null;
+};
 
-app.get('/api/genieacs/devices/:id/rx-history', authenticateAPI, (req, res) => {
-    res.json({
-        success: true,
-        data: [
-            { time: new Date(Date.now() - 3600000).toISOString(), value: -24.1 },
-            { time: new Date().toISOString(), value: -24.5 }
-        ]
-    });
-});
+const getParamNode = (device, path) => {
+    const parts = path.split('.');
+    let node = device;
+    for (const part of parts) {
+        if (!node || typeof node !== 'object') return null;
+        node = node[part];
+    }
+    return node;
+};
 
-app.get('/api/genieacs/devices/:id/bandwidth', authenticateAPI, (req, res) => {
-    res.json({
-        success: true,
-        data: {
-            rx_display: { value: 1.5, unit: 'Mbps' },
-            tx_display: { value: 500, unit: 'Kbps' },
-            rx_rate: '1.5 Mbps',
-            tx_rate: '500 Kbps',
-            dl_pct: 75,
-            ul_pct: 25
+const getField = (device, paths) => {
+    for (const p of paths) {
+        const val = getParam(device, p);
+        if (val !== null && val !== undefined) return val;
+    }
+    return null;
+};
+
+const findWanIp = (obj) => {
+    if (!obj || typeof obj !== 'object') return null;
+    if (obj._value !== undefined && typeof obj._value === 'string' && /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(obj._value) && obj._value !== '0.0.0.0' && !obj._value.startsWith('192.168.')) {
+        return obj._value;
+    }
+    for (const key in obj) {
+        const val = findWanIp(obj[key]);
+        if (val) return val;
+    }
+    return null;
+};
+
+const formatUptime = (seconds) => {
+    if (seconds == null || isNaN(seconds)) return '';
+    const s = parseInt(seconds, 10);
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+};
+
+const mapGenieACSDevice = (device) => {
+    const rawSerial = getField(device, PATHS.serial);
+    let serial = rawSerial;
+    if (!serial && device._id) {
+        const parts = device._id.split('-');
+        serial = parts.length >= 3 ? parts.slice(2).join('-') : device._id;
+    }
+    const manufacturer = getField(device, PATHS.manufacturer) || (device._id ? device._id.split('-')[0] : 'Unknown');
+    const model = getField(device, PATHS.model) || (device._id ? device._id.split('-')[1] : 'Unknown');
+    const ssid = getField(device, PATHS.ssid2g) || getField(device, PATHS.ssid5g) || '';
+    const wan_ip = findWanIp(device) || '';
+    const last_inform = device._lastInform || device._timestamp || null;
+    const online = last_inform ? (Date.now() - new Date(last_inform).getTime() < 10 * 60 * 1000) : false;
+
+    let rx_power = getField(device, PATHS.rxPower);
+    if (rx_power !== null && rx_power !== undefined) {
+        rx_power = parseFloat(rx_power);
+        if (rx_power > 0) rx_power = -rx_power;
+        if (rx_power < -100) rx_power = rx_power / 100;
+        if (rx_power < -100) rx_power = rx_power / 10;
+        if (rx_power > 0 || rx_power < -40 || isNaN(rx_power)) rx_power = null;
+    } else {
+        rx_power = null;
+    }
+
+    let temperature = getField(device, PATHS.temp);
+    if (temperature !== null && temperature !== undefined) {
+        temperature = parseFloat(temperature);
+        if (temperature > 200) temperature = temperature / 10;
+        if (temperature < 0 || temperature > 120 || isNaN(temperature)) temperature = null;
+    } else {
+        temperature = null;
+    }
+
+    const prefix = device.InternetGatewayDevice ? 'InternetGatewayDevice' : 'Device';
+    const hostsNode = getParamNode(device, prefix === 'InternetGatewayDevice' ? 'InternetGatewayDevice.LANDevice.1.Hosts.Host' : 'Device.Hosts.Host');
+    let connected_clients = 0;
+    if (hostsNode && typeof hostsNode === 'object') {
+        for (const key in hostsNode) {
+            if (!isNaN(key)) {
+                const host = hostsNode[key];
+                if (host.Active && (host.Active._value === true || host.Active._value === 'true')) {
+                    connected_clients++;
+                } else if (host.Active === undefined) {
+                    connected_clients++;
+                }
+            }
         }
-    });
+    }
+
+    const uptimeSec = getField(device, PATHS.uptime);
+    const uptime_formatted = uptimeSec ? formatUptime(uptimeSec) : '';
+
+    return {
+        id: device._id,
+        serial: serial || '',
+        manufacturer,
+        model,
+        ssid,
+        online,
+        rx_power,
+        connected_clients,
+        temperature: temperature || 0,
+        uptime_formatted,
+        wan_ip,
+        last_inform
+    };
+};
+
+// GET /api/genieacs/devices
+app.get('/api/genieacs/devices', authenticateAPI, async (req, res) => {
+    const { nbi_url, auth } = getGenieACSConfig(req);
+    if (!nbi_url) {
+        return res.json({ success: false, error: 'URL GenieACS belum dikonfigurasi.' });
+    }
+    try {
+        const response = await axios.get(`${nbi_url}/devices`, { auth, timeout: 7000 });
+        if (!Array.isArray(response.data)) {
+            return res.json({ success: false, error: 'Invalid GenieACS NBI response' });
+        }
+
+        const [customers] = await db.query('SELECT id, name, customer_id, ont_sn FROM customers WHERE ont_sn IS NOT NULL AND ont_sn <> ""');
+        const customerMap = {};
+        customers.forEach(c => { customerMap[c.ont_sn.toLowerCase()] = c; });
+
+        let online = 0, offline = 0;
+        const mappedDevices = response.data.map(device => {
+            const mapped = mapGenieACSDevice(device);
+            if (mapped.online) online++; else offline++;
+
+            const cust = customerMap[mapped.serial.toLowerCase()] || customerMap[mapped.id.toLowerCase()];
+            if (cust) {
+                mapped.customer_name = cust.name;
+                mapped.customer_id = cust.customer_id;
+            }
+            return mapped;
+        });
+
+        res.json({
+            success: true,
+            stats: { total: mappedDevices.length, online, offline },
+            data: mappedDevices
+        });
+    } catch (err) {
+        res.json({ success: false, error: 'GenieACS connection failed: ' + err.message });
+    }
+});
+
+// GET /api/genieacs/devices/:id
+app.get('/api/genieacs/devices/:id', authenticateAPI, async (req, res) => {
+    const { nbi_url, auth } = getGenieACSConfig(req);
+    if (!nbi_url) return res.json({ success: false, error: 'URL GenieACS belum dikonfigurasi.' });
+
+    try {
+        const devId = req.params.id;
+        const response = await axios.get(`${nbi_url}/devices?query=${encodeURIComponent(JSON.stringify({ _id: devId }))}`, { auth, timeout: 5000 });
+        if (!response.data || response.data.length === 0) {
+            return res.json({ success: false, error: 'Device not found in GenieACS' });
+        }
+
+        const device = response.data[0];
+        const mapped = mapGenieACSDevice(device);
+
+        let tx_power = getField(device, PATHS.txPower);
+        if (tx_power !== null && tx_power !== undefined) {
+            tx_power = parseFloat(tx_power);
+            if (tx_power > 0) tx_power = -tx_power;
+            if (tx_power < -100) tx_power = tx_power / 100;
+            if (tx_power < -100) tx_power = tx_power / 10;
+            if (tx_power > 10 || tx_power < -40 || isNaN(tx_power)) tx_power = null;
+        } else {
+            tx_power = null;
+        }
+
+        // Save to signal history in DB
+        if (mapped.serial && mapped.rx_power !== null) {
+            try {
+                await db.query(
+                    'INSERT INTO ont_signal_history (serial, rx_power, tx_power) VALUES (?, ?, ?)',
+                    [mapped.serial, mapped.rx_power, tx_power]
+                );
+            } catch (historyErr) {
+                console.error('Error saving signal history:', historyErr.message);
+            }
+        }
+
+        const ssid_2g = getField(device, PATHS.ssid2g) || '';
+        const password_2g = getField(device, PATHS.pass2g) || '';
+        const ssid_5g = getField(device, PATHS.ssid5g) || '';
+        const password_5g = getField(device, PATHS.pass5g) || '';
+
+        res.json({
+            success: true,
+            data: {
+                id: mapped.id,
+                manufacturer: mapped.manufacturer,
+                model: mapped.model,
+                serial_number: mapped.serial,
+                software_version: getField(device, PATHS.software) || 'V1.0',
+                online: mapped.online,
+                last_inform: mapped.last_inform,
+                signal: {
+                    wan_ip: mapped.wan_ip,
+                    wan_status: mapped.online ? 'Connected' : 'Disconnected',
+                    uptime_formatted: mapped.uptime_formatted,
+                    rx_power: mapped.rx_power,
+                    tx_power: tx_power,
+                    temperature: mapped.temperature
+                },
+                wifi: {
+                    ssid_2g,
+                    password_2g,
+                    ssid_5g,
+                    password_5g
+                }
+            }
+        });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+// POST /api/genieacs/devices/:id/wifi
+app.post('/api/genieacs/devices/:id/wifi', authenticateAPI, async (req, res) => {
+    const { nbi_url, auth } = getGenieACSConfig(req);
+    if (!nbi_url) return res.json({ success: false, error: 'URL GenieACS belum dikonfigurasi.' });
+
+    const devId = req.params.id;
+    const { ssid, password, band, ssid_5g, password_5g } = req.body;
+
+    try {
+        const response = await axios.get(`${nbi_url}/devices?query=${encodeURIComponent(JSON.stringify({ _id: devId }))}`, { auth, timeout: 5000 });
+        if (!response.data || response.data.length === 0) {
+            return res.json({ success: false, error: 'Device not found' });
+        }
+        const device = response.data[0];
+        const prefix = device.InternetGatewayDevice ? 'InternetGatewayDevice' : 'Device';
+
+        const parameterValues = [];
+        if (prefix === 'InternetGatewayDevice') {
+            if (ssid) parameterValues.push([`${prefix}.LANDevice.1.WLANConfiguration.1.SSID`, ssid, 'xsd:string']);
+            if (password) parameterValues.push([`${prefix}.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.PreSharedKey`, password, 'xsd:string']);
+            if (band === 'both') {
+                if (ssid_5g) parameterValues.push([`${prefix}.LANDevice.1.WLANConfiguration.5.SSID`, ssid_5g, 'xsd:string']);
+                if (password_5g) parameterValues.push([`${prefix}.LANDevice.1.WLANConfiguration.5.PreSharedKey.1.PreSharedKey`, password_5g, 'xsd:string']);
+            }
+        } else {
+            if (ssid) parameterValues.push(['Device.WiFi.SSID.1.SSID', ssid, 'xsd:string']);
+            if (password) parameterValues.push(['Device.WiFi.AccessPoint.1.Security.PreSharedKey', password, 'xsd:string']);
+            if (band === 'both') {
+                if (ssid_5g) parameterValues.push(['Device.WiFi.SSID.2.SSID', ssid_5g, 'xsd:string']);
+                if (password_5g) parameterValues.push(['Device.WiFi.AccessPoint.2.Security.PreSharedKey', password_5g, 'xsd:string']);
+            }
+        }
+
+        if (parameterValues.length === 0) {
+            return res.json({ success: false, error: 'No parameters to update' });
+        }
+
+        const task = { name: 'setParameterValues', parameterValues };
+        await axios.post(`${nbi_url}/devices/${encodeURIComponent(devId)}/tasks?connection_request`, task, { auth, timeout: 10000 });
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+// POST /api/genieacs/devices/:id/reboot
+app.post('/api/genieacs/devices/:id/reboot', authenticateAPI, async (req, res) => {
+    const { nbi_url, auth } = getGenieACSConfig(req);
+    if (!nbi_url) return res.json({ success: false, error: 'URL GenieACS belum dikonfigurasi.' });
+    try {
+        await axios.post(`${nbi_url}/devices/${encodeURIComponent(req.params.id)}/tasks?connection_request`, { name: 'reboot' }, { auth, timeout: 10000 });
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+// POST /api/genieacs/devices/:id/factory-reset
+app.post('/api/genieacs/devices/:id/factory-reset', authenticateAPI, async (req, res) => {
+    const { nbi_url, auth } = getGenieACSConfig(req);
+    if (!nbi_url) return res.json({ success: false, error: 'URL GenieACS belum dikonfigurasi.' });
+    try {
+        await axios.post(`${nbi_url}/devices/${encodeURIComponent(req.params.id)}/tasks?connection_request`, { name: 'factoryReset' }, { auth, timeout: 10000 });
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+// POST /api/genieacs/devices/:id/refresh
+app.post('/api/genieacs/devices/:id/refresh', authenticateAPI, async (req, res) => {
+    const { nbi_url, auth } = getGenieACSConfig(req);
+    if (!nbi_url) return res.json({ success: false, error: 'URL GenieACS belum dikonfigurasi.' });
+    try {
+        const { objectName } = req.body;
+        const response = await axios.get(`${nbi_url}/devices?query=${encodeURIComponent(JSON.stringify({ _id: req.params.id }))}`, { auth, timeout: 5000 });
+        const prefix = (response.data && response.data[0] && response.data[0].InternetGatewayDevice) ? 'InternetGatewayDevice' : 'Device';
+        await axios.post(`${nbi_url}/devices/${encodeURIComponent(req.params.id)}/tasks?connection_request`, { name: 'refreshObject', objectName: objectName || prefix }, { auth, timeout: 10000 });
+        res.json({ success: true });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/genieacs/devices/:id/clients
+app.get('/api/genieacs/devices/:id/clients', authenticateAPI, async (req, res) => {
+    const { nbi_url, auth } = getGenieACSConfig(req);
+    if (!nbi_url) return res.json({ success: false, error: 'URL GenieACS belum dikonfigurasi.' });
+
+    try {
+        const response = await axios.get(`${nbi_url}/devices?query=${encodeURIComponent(JSON.stringify({ _id: req.params.id }))}`, { auth, timeout: 5000 });
+        if (!response.data || response.data.length === 0) {
+            return res.json({ success: false, error: 'Device not found' });
+        }
+        const device = response.data[0];
+        const prefix = device.InternetGatewayDevice ? 'InternetGatewayDevice' : 'Device';
+        const hostsNode = getParamNode(device, prefix === 'InternetGatewayDevice' ? 'InternetGatewayDevice.LANDevice.1.Hosts.Host' : 'Device.Hosts.Host');
+
+        const clients = [];
+        let wifiCount = 0;
+        let ethCount = 0;
+
+        if (hostsNode && typeof hostsNode === 'object') {
+            for (const key in hostsNode) {
+                if (!isNaN(key)) {
+                    const host = hostsNode[key];
+                    const active = host.Active && (host.Active._value === true || host.Active._value === 'true');
+                    if (active || host.Active === undefined) {
+                        const typeVal = host.InterfaceType && host.InterfaceType._value ? String(host.InterfaceType._value).toLowerCase() : '';
+                        const layer1 = host.Layer1Interface && host.Layer1Interface._value ? String(host.Layer1Interface._value).toLowerCase() : '';
+                        const hasSignal = (host.SignalStrength && host.SignalStrength._value !== undefined) || 
+                                          (host.RSSI && host.RSSI._value !== undefined) ||
+                                          (host.Signal && host.Signal._value !== undefined);
+
+                        let isWifi = false;
+                        if (typeVal) {
+                            isWifi = typeVal.includes('802.11') || typeVal.includes('wifi') || typeVal.includes('wlan') || typeVal.includes('wireless');
+                        } else if (layer1) {
+                            isWifi = layer1.includes('wifi') || layer1.includes('wlan') || layer1.includes('ssid') || layer1.includes('wireless');
+                        } else {
+                            isWifi = hasSignal;
+                        }
+
+                        if (isWifi) wifiCount++; else ethCount++;
+
+                        clients.push({
+                            type: isWifi ? 'WiFi' : 'Ethernet',
+                            hostname: host.HostName && host.HostName._value ? host.HostName._value : 'Unknown Client',
+                            ip: host.IPAddress && host.IPAddress._value ? host.IPAddress._value : '',
+                            mac: host.MACAddress && host.MACAddress._value ? host.MACAddress._value : '',
+                            rssi: host.SignalStrength && host.SignalStrength._value ? parseInt(host.SignalStrength._value, 10) : null
+                        });
+                    }
+                }
+            }
+        }
+
+        res.json({
+            success: true,
+            total: clients.length,
+            wifi: wifiCount,
+            ethernet: ethCount,
+            data: clients
+        });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/genieacs/devices/:id/rx-history
+app.get('/api/genieacs/devices/:id/rx-history', authenticateAPI, async (req, res) => {
+    const { nbi_url, auth } = getGenieACSConfig(req);
+    if (!nbi_url) return res.json({ success: false, error: 'URL GenieACS belum dikonfigurasi.' });
+
+    try {
+        const response = await axios.get(`${nbi_url}/devices?query=${encodeURIComponent(JSON.stringify({ _id: req.params.id }))}`, { auth, timeout: 5000 });
+        if (!response.data || response.data.length === 0) {
+            return res.json({ success: false, error: 'Device not found' });
+        }
+        const mapped = mapGenieACSDevice(response.data[0]);
+        if (!mapped.serial) {
+            return res.json({ success: true, data: [] });
+        }
+
+        const hours = parseInt(req.query.hours, 10) || 6;
+        const [rows] = await db.query(
+            'SELECT rx_power as value, created_at as time FROM ont_signal_history WHERE serial = ? AND created_at >= NOW() - INTERVAL ? HOUR ORDER BY created_at ASC LIMIT 100',
+            [mapped.serial, hours]
+        );
+        res.json({ success: true, data: rows });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/genieacs/devices/:id/bandwidth
+app.get('/api/genieacs/devices/:id/bandwidth', authenticateAPI, async (req, res) => {
+    try {
+        const devId = req.params.id;
+        const decoded = decodeURIComponent(devId);
+        const parts = decoded.split('-');
+        const serial = parts.length >= 3 ? parts.slice(2).join('-') : decoded;
+
+        // Find customer
+        const [custs] = await db.query('SELECT id, name, customer_id, pppoe_username FROM customers WHERE ont_sn = ? OR customer_id = ? LIMIT 1', [serial, devId]);
+        if (custs.length === 0) {
+            return res.json({ success: false, error: 'No customer assigned to this ONT serial' });
+        }
+
+        const customer = custs[0];
+        if (!customer.pppoe_username) {
+            return res.json({ success: false, error: 'No PPPoE username configured for customer' });
+        }
+
+        const s = req.app.locals.settings || {};
+        const host = s.mikrotik_host || process.env.MIKROTIK_HOST;
+        if (!host) {
+            return res.json({ success: false, error: 'MikroTik Router belum dikonfigurasi.' });
+        }
+
+        const { RouterOSAPI } = require('node-routeros');
+        const conn = new RouterOSAPI({
+            host: host,
+            user: s.mikrotik_user || process.env.MIKROTIK_USER || 'admin',
+            password: s.mikrotik_password || process.env.MIKROTIK_PASSWORD || '',
+            port: parseInt(s.mikrotik_port || process.env.MIKROTIK_PORT || 8728, 10)
+        });
+
+        conn.on('error', () => {});
+        await conn.connect();
+        const queues = await conn.write('/queue/simple/print', [`?name=${customer.pppoe_username}`]);
+        conn.close();
+
+        if (queues.length === 0) {
+            return res.json({ success: false, error: `Queue simple tidak ditemukan untuk username: ${customer.pppoe_username}` });
+        }
+
+        const [txBps, rxBps] = queues[0].rate.split('/').map(Number);
+        const dlMbps = (rxBps / 1000000).toFixed(2);
+        const ulKbps = (txBps / 1000).toFixed(0);
+
+        res.json({
+            success: true,
+            customer: { name: customer.name, customer_id: customer.customer_id },
+            source: 'queue',
+            data: {
+                rx_display: { value: parseFloat(dlMbps), unit: 'Mbps' },
+                tx_display: { value: parseFloat(ulKbps), unit: 'Kbps' },
+                rx_rate: rxBps >= 1000000 ? `${dlMbps} Mbps` : `${(rxBps / 1000).toFixed(0)} Kbps`,
+                tx_rate: txBps >= 1000000 ? `${(txBps / 1000000).toFixed(2)} Mbps` : `${ulKbps} Kbps`,
+                dl_pct: Math.round((rxBps / (rxBps + txBps || 1)) * 100),
+                ul_pct: Math.round((txBps / (rxBps + txBps || 1)) * 100)
+            }
+        });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/genieacs/devices/:id/customer [NEW]
+app.get('/api/genieacs/devices/:id/customer', authenticateAPI, async (req, res) => {
+    try {
+        const decoded = decodeURIComponent(req.params.id);
+        const parts = decoded.split('-');
+        const serial = parts.length >= 3 ? parts.slice(2).join('-') : decoded;
+
+        const [rows] = await db.query('SELECT id, name, customer_id, status, phone FROM customers WHERE ont_sn = ? OR customer_id = ? LIMIT 1', [serial, req.params.id]);
+        if (rows.length === 0) {
+            return res.json({ success: false, message: 'Not assigned' });
+        }
+        res.json({ success: true, data: rows[0] });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// GET /api/genieacs/customers/search [NEW]
+app.get('/api/genieacs/customers/search', authenticateAPI, async (req, res) => {
+    const q = req.query.q || '';
+    try {
+        const [rows] = await db.query(
+            'SELECT id, name, customer_id, status, ont_sn FROM customers WHERE name LIKE ? OR customer_id LIKE ? OR phone LIKE ? LIMIT 10',
+            [`%${q}%`, `%${q}%`, `%${q}%`]
+        );
+        res.json({ success: true, data: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// POST /api/genieacs/devices/:id/assign [NEW]
+app.post('/api/genieacs/devices/:id/assign', authenticateAPI, async (req, res) => {
+    const { customer_id, serial } = req.body;
+    try {
+        if (customer_id) {
+            // Unassign from anyone else first
+            await db.query('UPDATE customers SET ont_sn = NULL WHERE ont_sn = ?', [serial]);
+            await db.query('UPDATE customers SET ont_sn = ? WHERE id = ?', [serial, customer_id]);
+        } else {
+            await db.query('UPDATE customers SET ont_sn = NULL WHERE ont_sn = ?', [serial]);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // Ping Monitor APIs
@@ -1806,85 +2763,234 @@ app.post('/api/monitoring/ping/targets/:id/check', authenticateAPI, (req, res) =
 });
 
 // Device Monitor APIs (Mocked fallbacks)
-app.get('/api/device-monitor/devices', authenticateAPI, (req, res) => {
-    res.json({
-        success: true,
-        data: [
-            { id: 1, name: 'Core Router', ip_address: '192.168.88.1' },
-            { id: 2, name: 'Distribution Switch', ip_address: '192.168.88.2' }
-        ]
-    });
+app.get('/api/device-monitor/devices', authenticateAPI, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM devices ORDER BY id ASC');
+        res.json({ success: true, data: rows });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
 });
 
-app.get('/api/device-monitor/:id/realtime', authenticateAPI, (req, res) => {
-    res.json({
-        success: true,
-        data: {
-            cpu: Math.floor(Math.random() * 40) + 10,
-            memPercent: Math.floor(Math.random() * 30) + 40,
-            memUsed: 1024,
-            memTotal: 2048,
-            diskPercent: 20,
-            diskFree: 8000,
-            diskTotal: 10000,
-            totalRxMbps: Math.random() * 50,
-            totalTxMbps: Math.random() * 20,
-            reachable: true,
-            uptime: '5d 12h',
-            firmware: 'v6.48.6',
-            protocol: 'api',
-            interfaces: [
-                { name: 'ether1', type: 'ether', running: true, rxMbps: Math.random() * 25, txMbps: Math.random() * 10 },
-                { name: 'ether2', type: 'ether', running: true, rxMbps: Math.random() * 25, txMbps: Math.random() * 10 }
-            ]
+app.get('/api/device-monitor/:id/realtime', authenticateAPI, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM devices WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) return res.json({ success: false, message: 'Device not found' });
+        const dev = rows[0];
+
+        if (dev.monitoring_type === 'api' || !dev.monitoring_type) {
+            const { RouterOSAPI } = require('node-routeros');
+            const conn = new RouterOSAPI({
+                host: dev.ip_address,
+                port: dev.api_port || 8728,
+                user: dev.api_username || 'admin',
+                password: dev.api_password || ''
+            });
+            conn.on('error', () => {});
+            try {
+                await conn.connect();
+                const resources = await conn.write('/system/resource/print');
+                const intfs = await conn.write('/interface/print');
+                const traffic = await conn.write('/interface/monitor-traffic', ['=interface=all', '=once=']);
+                conn.close();
+
+                let cpu = 0;
+                let memUsed = 0;
+                let memTotal = 0;
+                let memPercent = 0;
+                let diskFree = 0;
+                let diskTotal = 0;
+                let diskPercent = 0;
+                let uptime = '';
+                let firmware = '';
+                let model = '';
+
+                if (resources && resources.length > 0) {
+                    const r = resources[0];
+                    cpu = parseInt(r['cpu-load'] || '0', 10);
+                    const totalRam = parseInt(r['total-memory'] || '1', 10);
+                    const freeRam = parseInt(r['free-memory'] || '0', 10);
+                    memTotal = Math.round(totalRam / 1024 / 1024);
+                    memUsed = Math.round((totalRam - freeRam) / 1024 / 1024);
+                    memPercent = Math.round((memUsed / memTotal) * 100);
+
+                    const totalHdd = parseInt(r['total-hdd-space'] || '1', 10);
+                    const freeHdd = parseInt(r['free-hdd-space'] || '0', 10);
+                    diskTotal = Math.round(totalHdd / 1024 / 1024);
+                    diskFree = Math.round(freeHdd / 1024 / 1024);
+                    diskPercent = Math.round(((diskTotal - diskFree) / diskTotal) * 100);
+
+                    uptime = r['uptime'] || '0s';
+                    firmware = r['version'] || 'N/A';
+                    model = r['board-name'] || 'Unknown';
+                }
+
+                let totalRx = 0, totalTx = 0;
+                const interfaces = intfs.map(i => {
+                    const t = traffic.find(tf => tf.name === i.name) || {};
+                    const rxBps = parseInt(t['rx-bits-per-second'] || '0', 10);
+                    const txBps = parseInt(t['tx-bits-per-second'] || '0', 10);
+                    totalRx += rxBps;
+                    totalTx += txBps;
+                    return {
+                        name: i.name,
+                        type: i.type,
+                        running: i.running === 'true' || i.running === true,
+                        rxMbps: parseFloat((rxBps / 1000000).toFixed(2)),
+                        txMbps: parseFloat((txBps / 1000000).toFixed(2))
+                    };
+                });
+
+                res.json({
+                    success: true,
+                    data: {
+                        cpu,
+                        memPercent,
+                        memUsed,
+                        memTotal,
+                        diskPercent,
+                        diskFree,
+                        diskTotal,
+                        totalRxMbps: parseFloat((totalRx / 1000000).toFixed(2)),
+                        totalTxMbps: parseFloat((totalTx / 1000000).toFixed(2)),
+                        reachable: true,
+                        uptime,
+                        firmware,
+                        protocol: 'api',
+                        interfaces
+                    }
+                });
+            } catch (connErr) {
+                res.json({ success: true, data: { reachable: false, error: connErr.message } });
+            }
+        } else {
+            res.json({ success: true, data: { reachable: false, error: 'SNMP realtime not implemented' } });
         }
-    });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
 });
 
-app.get('/api/device-monitor/:id/summary', authenticateAPI, (req, res) => {
-    res.json({
-        success: true,
-        data: {
-            id: req.params.id,
-            name: req.params.id == 1 ? 'Core Router' : 'Distribution Switch',
-            ip_address: req.params.id == 1 ? '192.168.88.1' : '192.168.88.2',
-            firmware: 'v6.48.6',
-            brand: 'MikroTik',
-            model: 'CCR1009',
-            monitoring_type: 'api'
+app.get('/api/device-monitor/:id/summary', authenticateAPI, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM devices WHERE id = ?', [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ success: false, message: 'Device not found' });
+        const dev = rows[0];
+        res.json({
+            success: true,
+            data: {
+                id: dev.id,
+                name: dev.name,
+                ip_address: dev.ip_address,
+                firmware: 'N/A',
+                brand: 'MikroTik',
+                model: 'RouterOS Device',
+                monitoring_type: dev.monitoring_type || 'api'
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+app.get('/api/device-monitor/:id/history', authenticateAPI, async (req, res) => {
+    const hours = parseInt(req.query.hours, 10) || 1;
+    try {
+        const [rows] = await db.query(
+            'SELECT cpu_load as cpu, memory_usage as memory, disk_usage as disk, rx_mbps as rx, tx_mbps as tx, created_at FROM device_metrics_history WHERE device_id = ? AND created_at >= NOW() - INTERVAL ? HOUR ORDER BY created_at ASC LIMIT 500',
+            [req.params.id, hours]
+        );
+
+        const timestamps = rows.map(r => new Date(r.created_at).getTime());
+        const cpu = rows.map(r => r.cpu);
+        const memory = rows.map(r => r.memory);
+        const disk = rows.map(r => r.disk);
+        const rx = rows.map(r => parseFloat(r.rx));
+        const tx = rows.map(r => parseFloat(r.tx));
+
+        res.json({
+            success: true,
+            data: { timestamps, cpu, memory, disk, rx, tx }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+app.post('/api/device-monitor/test-connection', authenticateAPI, async (req, res) => {
+    const { ip_address, monitoring_type, api_port, api_username, api_password, snmp_community, snmp_version, snmp_port } = req.body;
+
+    if (monitoring_type === 'api' || !monitoring_type) {
+        const { RouterOSAPI } = require('node-routeros');
+        const conn = new RouterOSAPI({
+            host: ip_address,
+            port: parseInt(api_port || 8728, 10),
+            user: api_username || 'admin',
+            password: api_password || ''
+        });
+        conn.on('error', () => {});
+        try {
+            await conn.connect();
+            conn.close();
+            res.json({ success: true, message: 'Koneksi API RouterOS Berhasil!' });
+        } catch (err) {
+            res.json({ success: false, error: err.message });
         }
-    });
+    } else if (monitoring_type === 'snmp') {
+        const snmp = require('net-snmp');
+        try {
+            const session = snmp.createSession(ip_address, snmp_community || 'public', {
+                port: parseInt(snmp_port || 161, 10),
+                timeout: 3000,
+                retries: 1
+            });
+            session.get(['1.3.6.1.2.1.1.1.0'], (error, varbinds) => {
+                if (error) {
+                    res.json({ success: false, error: error.message });
+                } else {
+                    res.json({ success: true, message: 'Koneksi SNMP Berhasil!' });
+                }
+                session.close();
+            });
+        } catch (err) {
+            res.json({ success: false, error: err.message });
+        }
+    }
 });
 
-app.get('/api/device-monitor/:id/history', authenticateAPI, (req, res) => {
-    const hours = req.query.hours || 1;
-    const points = hours * 60;
-    const timestamps = Array.from({ length: points }, (_, i) => Date.now() - (points - i) * 60000);
-    const cpu = Array.from({ length: points }, () => Math.floor(Math.random() * 40) + 10);
-    const memory = Array.from({ length: points }, () => Math.floor(Math.random() * 30) + 40);
-    const disk = Array.from({ length: points }, () => 20);
-    const rx = Array.from({ length: points }, () => Math.random() * 50);
-    const tx = Array.from({ length: points }, () => Math.random() * 20);
-    res.json({
-        success: true,
-        data: { timestamps, cpu, memory, disk, rx, tx }
-    });
+app.post('/api/device-monitor/devices', authenticateAPI, async (req, res) => {
+    const { name, ip_address, monitoring_type, api_port, api_username, api_password, snmp_community, snmp_version, snmp_port } = req.body;
+    try {
+        const [result] = await db.query(
+            'INSERT INTO devices (name, ip_address, monitoring_type, api_port, api_username, api_password, snmp_community, snmp_version, snmp_port, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [name, ip_address, monitoring_type || 'api', api_port || 8728, api_username || 'admin', api_password || '', snmp_community || 'public', snmp_version || '2', snmp_port || 161, 'offline']
+        );
+        res.json({ success: true, data: { id: result.insertId } });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Database error: ' + err.message });
+    }
 });
 
-app.post('/api/device-monitor/test-connection', authenticateAPI, (req, res) => {
-    res.json({ success: true, message: 'Connection successful!' });
+app.put('/api/device-monitor/devices/:id', authenticateAPI, async (req, res) => {
+    const { name, ip_address, monitoring_type, api_port, api_username, api_password, snmp_community, snmp_version, snmp_port } = req.body;
+    try {
+        await db.query(
+            'UPDATE devices SET name=?, ip_address=?, monitoring_type=?, api_port=?, api_username=?, api_password=?, snmp_community=?, snmp_version=?, snmp_port=? WHERE id=?',
+            [name, ip_address, monitoring_type || 'api', api_port || 8728, api_username || 'admin', api_password || '', snmp_community || 'public', snmp_version || '2', snmp_port || 161, req.params.id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Database error: ' + err.message });
+    }
 });
 
-app.post('/api/device-monitor/devices', authenticateAPI, (req, res) => {
-    res.json({ success: true, data: { id: 3 } });
-});
-
-app.put('/api/device-monitor/devices/:id', authenticateAPI, (req, res) => {
-    res.json({ success: true });
-});
-
-app.delete('/api/device-monitor/devices/:id', authenticateAPI, (req, res) => {
-    res.json({ success: true });
+app.delete('/api/device-monitor/devices/:id', authenticateAPI, async (req, res) => {
+    try {
+        await db.query('DELETE FROM devices WHERE id=?', [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Database error: ' + err.message });
+    }
 });
 
 // Todos & Users APIs
@@ -2070,7 +3176,26 @@ app.get('/api/dashboard/ticket-stats', authenticateAPI, async (req, res) => {
 });
 
 app.get('/api/dashboard/bandwidth-trends', authenticateAPI, (req, res) => {
-    res.json({ success: true, data: [] });
+    const period = req.query.period || 'daily';
+
+    // For realtime, return the in-memory polled history (last 60 mins).
+    // For daily/weekly, we return the same since we don't have a DB traffic history table yet.
+    // Ensure newest items come first if the frontend expects reversed arrays.
+    const reversedHistory = [...mikrotikCache.history].reverse();
+
+    // Ensure we have at least 1 point to prevent frontend errors
+    if (reversedHistory.length === 0) {
+        const now = new Date();
+        reversedHistory.push({
+            date: now.toISOString().split('T')[0],
+            hour: now.getHours(),
+            minute: now.getMinutes(),
+            avg_download_mbps: (mikrotikCache.rx_bps / 1000000).toFixed(2),
+            avg_upload_mbps: (mikrotikCache.tx_bps / 1000000).toFixed(2)
+        });
+    }
+
+    res.json({ success: true, data: reversedHistory });
 });
 
 app.get('/api/dashboard/customer-growth', authenticateAPI, async (req, res) => {
@@ -2180,16 +3305,33 @@ app.get('/api/system/resources/data', authenticateAPI, async (req, res) => {
     const usedMem = totalMem - freeMem;
     const memUsage = Math.round((usedMem / totalMem) * 100);
 
-    const cpus = os.cpus();
-    // Very rough estimation for CPU usage just for show
-    const cpuLoad = Math.round(Math.random() * 20 + 5);
+    const getCpuTimes = () => {
+        const cpuInfos = os.cpus();
+        let user = 0, nice = 0, sys = 0, idle = 0, irq = 0;
+        for (const cpu of cpuInfos) {
+            user += cpu.times.user;
+            nice += cpu.times.nice;
+            sys += cpu.times.sys;
+            idle += cpu.times.idle;
+            irq += cpu.times.irq;
+        }
+        const total = user + nice + sys + idle + irq;
+        return { idle, total };
+    };
+
+    const startTimes = getCpuTimes();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const endTimes = getCpuTimes();
+    const idleDiff = endTimes.idle - startTimes.idle;
+    const totalDiff = endTimes.total - startTimes.total;
+    const cpuLoad = totalDiff > 0 ? Math.max(0, Math.min(100, 100 - Math.round((100 * idleDiff) / totalDiff))) : 0;
 
     const uptimeHours = Math.floor(os.uptime() / 3600);
     const uptimeMinutes = Math.floor((os.uptime() % 3600) / 60);
 
     const s = req.app.locals.settings || {};
     const host = s.mikrotik_host || process.env.MIKROTIK_HOST;
-    
+
     let routerData = {
         board: 'Not Connected',
         version: 'N/A',
@@ -2207,7 +3349,7 @@ app.get('/api/system/resources/data', authenticateAPI, async (req, res) => {
             await conn.connect();
             const resources = await conn.write('/system/resource/print');
             conn.close();
-            
+
             if (resources && resources.length > 0) {
                 const r = resources[0];
                 const totalRam = parseInt(r['total-memory'] || '1', 10);
@@ -2216,7 +3358,7 @@ app.get('/api/system/resources/data', authenticateAPI, async (req, res) => {
                 const totalHdd = parseInt(r['total-hdd-space'] || '1', 10);
                 const freeHdd = parseInt(r['free-hdd-space'] || '0', 10);
                 const usedHdd = totalHdd - freeHdd;
-                
+
                 routerData = {
                     board: r['board-name'] || 'Unknown',
                     version: r['version'] || 'Unknown',
@@ -2259,10 +3401,10 @@ io.on('connection', (socket) => {
     const interval = setInterval(() => {
         socket.emit('monitoring:metrics', {
             timestamp: new Date(),
-            cpu: Math.floor(Math.random() * 10) + 2,
+            cpu: mikrotikCache.cpu || 2,
             ram: 42,
-            bandwidth_rx: Math.random() * 5000000 + 1000000,
-            bandwidth_tx: Math.random() * 2000000 + 500000
+            bandwidth_rx: mikrotikCache.rx_bps || 0,
+            bandwidth_tx: mikrotikCache.tx_bps || 0
         });
     }, 2000);
 
@@ -2535,23 +3677,35 @@ app.post('/api/keuangan/sync', authenticateAPI, async (req, res) => {
 });
 
 // --- WHATSAPP API ---
-let _waCfg = {
-    engine: 'thirdparty',
-    baileys: { status: 'Disconnected' },
-    thirdparty: { provider: 'fonnte', url: '', token: '' }
-};
 
 app.get('/api/whatsapp/config', authenticateAPI, (req, res) => {
     res.json({ success: true, data: _waCfg });
 });
 
-app.post('/api/whatsapp/config', authenticateAPI, (req, res) => {
+app.post('/api/whatsapp/config', authenticateAPI, async (req, res) => {
     _waCfg = { ..._waCfg, ...req.body };
-    res.json({ success: true });
+    try {
+        await db.query(
+            'INSERT INTO app_settings (setting_key, setting_value, category, description) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = ?',
+            ['whatsapp_config', JSON.stringify(_waCfg), 'integration', 'Konfigurasi WhatsApp Gateway', JSON.stringify(_waCfg)]
+        );
+        if (req.app.locals.settings) {
+            req.app.locals.settings.whatsapp_config = JSON.stringify(_waCfg);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Database error: ' + err.message });
+    }
 });
 
-app.post('/api/whatsapp/test', authenticateAPI, (req, res) => {
-    res.json({ success: true, message: `Pesan test berhasil dikirim via ${_waCfg.engine}` });
+app.post('/api/whatsapp/test', authenticateAPI, async (req, res) => {
+    const { to } = req.body;
+    try {
+        const result = await sendWhatsAppMessage(to || '081234567890', 'Test koneksi WhatsApp CRM RTRW Net berhasil!');
+        res.json({ success: true, message: `Pesan test berhasil dikirim via ${_waCfg.engine}`, data: result.data });
+    } catch (err) {
+        res.json({ success: false, message: 'Gagal mengirim WhatsApp: ' + err.message });
+    }
 });
 
 // ============================================
@@ -2842,6 +3996,13 @@ app.post('/api/payments/record', authenticateAPI, async (req, res) => {
             "UPDATE invoices SET status = 'paid', paid_date = ? WHERE id = ?",
             [payment_date || new Date(), invoiceId]
         );
+
+        // Process reward points!
+        try {
+            await rewardsRouter.processPaymentReward(invoiceId);
+        } catch (e) {
+            console.error('Failed to process payment reward:', e);
+        }
 
         // Insert payment
         const ref = reference_no + (bank ? ` (${bank})` : '');

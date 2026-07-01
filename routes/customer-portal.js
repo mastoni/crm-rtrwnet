@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const db = require('../db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey';
@@ -59,17 +60,24 @@ router.get('/tickets', authenticatePortal, (req, res) => {
 router.post('/api/auth/login', async (req, res) => {
     try {
         const { phone, password } = req.body;
-        // Mock authentication for portal
-        // In real system, check against customers table
         const [customers] = await db.query('SELECT * FROM customers WHERE phone = ? LIMIT 1', [phone]);
-        
+
         if (customers.length === 0) {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
-        
+
         const customer = customers[0];
-        // Skip password check for demo simplicity, or add password to customers table
-        
+        let isMatch = false;
+        if (!customer.portal_password) {
+            isMatch = (password === customer.phone);
+        } else {
+            isMatch = await bcrypt.compare(password, customer.portal_password);
+        }
+
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+
         const token = jwt.sign({ id: customer.id, name: customer.name, role: 'customer' }, JWT_SECRET, { expiresIn: '1d' });
         res.cookie('portal_token', token, { httpOnly: true });
         res.json({ success: true, message: 'Login successful' });

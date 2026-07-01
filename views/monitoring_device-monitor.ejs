@@ -22,11 +22,7 @@
             --dm-accent: #3b82f6;
         }
 
-        body {
-            background: var(--dm-bg);
-            color: var(--dm-text);
-            transition: background .2s, color .2s;
-        }
+        /* body override removed to maintain layout and theme consistency with other pages */
 
         /* ── Header ────────────────────────────────────────────── */
         /* ── Modern Header ──────────────────────────────────────── */
@@ -548,20 +544,24 @@
                 <select class="dm-device-select" id="deviceSelect" onchange="selectDevice(this.value)">
                     <option value="">— Pilih Device —</option>
                 </select>
+                <div id="headerDeviceActions" style="display:none; gap:6px; align-items:center;">
+                    <button onclick="openEditDevice(selectedDeviceId)"
+                        style="display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:8px;background:var(--dm-card);color:var(--dm-text);border:1px solid var(--dm-border);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;"
+                        onmouseover="this.style.background='var(--dm-panel)'" onmouseout="this.style.background='var(--dm-card)'">
+                        ✏ Edit
+                    </button>
+                    <button onclick="deleteDevice(selectedDeviceId, document.getElementById('sbName')?.textContent || '')"
+                        style="display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:8px;background:#fef2f2;color:#dc2626;border:1px solid #fee2e2;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;"
+                        onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                        ✕ Hapus
+                    </button>
+                </div>
                 <div class="dm-interval-btns">
                     <button class="dm-int-btn active" data-ms="3000">3s</button>
                     <button class="dm-int-btn" data-ms="5000">5s</button>
                     <button class="dm-int-btn" data-ms="10000">10s</button>
                     <button class="dm-int-btn" data-ms="30000">30s</button>
                 </div>
-                <button class="dm-theme-btn" id="themeToggle" onclick="toggleDmTheme()" title="Toggle dark mode">
-                    <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <circle cx="12" cy="12" r="5" />
-                        <path
-                            d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                    </svg>
-                </button>
                 <button onclick="openAddDevice()"
                     style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;background:#1e78ff;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(30,120,255,.3);transition:all .15s;"
                     onmouseover="this.style.background='#0052cc'" onmouseout="this.style.background='#1e78ff'">

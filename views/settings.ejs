@@ -351,18 +351,42 @@
             <div id="panel-network" class="settings-panel">
                 <div class="panel-header">
                     <h3>Jaringan & Mikrotik</h3>
-                    <p>Profil default untuk pelanggan dan status blokir.</p>
+                    <p>Profil default untuk pelanggan, status isolir, dan kredensial koneksi Mikrotik.</p>
                 </div>
 
-                <div class="setting-row">
-                    <label>PPPoE Profile Default</label>
-                    <input type="text" class="form-input" name="default_pppoe_profile" id="inp_default_pppoe_profile" placeholder="default">
+                <div class="setting-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label>PPPoE Profile Default</label>
+                        <input type="text" class="form-input" name="default_pppoe_profile" id="inp_default_pppoe_profile" placeholder="default">
+                    </div>
+                    <div>
+                        <label>Isolir Profile (Block)</label>
+                        <input type="text" class="form-input" name="isolir_profile" id="inp_isolir_profile" placeholder="ISOLIR">
+                    </div>
                 </div>
 
-                <div class="setting-row">
-                    <label>Isolir Profile (Block)</label>
-                    <input type="text" class="form-input" name="isolir_profile" id="inp_isolir_profile" placeholder="ISOLIR">
-                    <span class="setting-desc">Profil Mikrotik yang diterapkan secara otomatis kepada pelanggan menunggak.</span>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+
+                <div class="setting-row" style="display: grid; grid-template-columns: 3fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label>IP / Host Mikrotik</label>
+                        <input type="text" class="form-input" name="mikrotik_host" id="inp_mikrotik_host" placeholder="192.168.88.1">
+                    </div>
+                    <div>
+                        <label>API Port</label>
+                        <input type="number" class="form-input" name="mikrotik_port" id="inp_mikrotik_port" placeholder="8728">
+                    </div>
+                </div>
+
+                <div class="setting-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label>Username Mikrotik</label>
+                        <input type="text" class="form-input" name="mikrotik_user" id="inp_mikrotik_user" placeholder="admin">
+                    </div>
+                    <div>
+                        <label>Password Mikrotik</label>
+                        <input type="password" class="form-input" name="mikrotik_password" id="inp_mikrotik_password" placeholder="••••••••">
+                    </div>
                 </div>
             </div>
 
@@ -370,7 +394,7 @@
             <div id="panel-integration" class="settings-panel">
                 <div class="panel-header">
                     <h3>Integrasi & API</h3>
-                    <p>Hubungkan sistem dengan pihak ketiga.</p>
+                    <p>Hubungkan sistem dengan server NBI GenieACS dan WhatsApp Gateway.</p>
                 </div>
 
                 <div class="setting-row">
@@ -378,9 +402,22 @@
                     <input type="text" class="form-input" name="wa_api_url" id="inp_wa_api_url" placeholder="http://localhost:8000/send">
                 </div>
 
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+
                 <div class="setting-row">
-                    <label>GenieACS API URL</label>
-                    <input type="text" class="form-input" name="genieacs_api_url" id="inp_genieacs_api_url" placeholder="http://genieacs:7557">
+                    <label>GenieACS NBI API URL</label>
+                    <input type="text" class="form-input" name="genieacs_nbi_url" id="inp_genieacs_nbi_url" placeholder="http://localhost:7557">
+                </div>
+
+                <div class="setting-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label>GenieACS Username</label>
+                        <input type="text" class="form-input" name="genieacs_username" id="inp_genieacs_username" placeholder="Masukkan username NBI...">
+                    </div>
+                    <div>
+                        <label>GenieACS Password</label>
+                        <input type="password" class="form-input" name="genieacs_password" id="inp_genieacs_password" placeholder="Masukkan password NBI...">
+                    </div>
                 </div>
             </div>
 

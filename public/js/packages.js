@@ -145,9 +145,19 @@ function buildCard(p) {
         (!active ? '<span class="pkg-inactive-tag">Non-Aktif</span>' : '') +
         '<div class="pkg-type-label">' + catLabel(cat) + '</div>' +
         '<div class="pkg-name">' + esc(p.name) + '</div>' +
+        '<div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">' +
         '<div class="pkg-speed-badge">' +
         '<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>' +
         '<span>' + fmtSpd(p.speed_down) + ' / ' + fmtSpd(p.speed_up) + '</span>' +
+        '</div>' +
+        (p.is_reward_enabled
+            ? '<div class="pkg-reward-badge active">' +
+              '<span>★ ' + (p.reward_points || 0) + ' Pts</span>' +
+              '</div>'
+            : '<div class="pkg-reward-badge inactive">' +
+              '<span>★ Reward Off</span>' +
+              '</div>'
+        ) +
         '</div>' +
         '</div>' +
         '<div class="pkg-card-body">' +
@@ -260,7 +270,7 @@ function closeModal() {
 }
 
 function clearForm() {
-    ['f_name', 'f_speed_down', 'f_speed_up', 'f_price', 'f_description'].forEach(function (id) {
+    ['f_name', 'f_speed_down', 'f_speed_up', 'f_price', 'f_description', 'f_reward_points'].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.value = '';
     });
@@ -268,6 +278,8 @@ function clearForm() {
     if (catEl) catEl.value = 'home';
     var actEl = document.getElementById('f_is_active');
     if (actEl) actEl.value = '1';
+    var rewEl = document.getElementById('f_is_reward_enabled');
+    if (rewEl) rewEl.value = '1';
     syncColor('home');
 }
 
@@ -278,9 +290,11 @@ function fillForm(p) {
     setVal('f_speed_up', p.speed_up || '');
     setVal('f_price', p.price || '');
     setVal('f_description', p.description || '');
+    setVal('f_reward_points', p.reward_points || 0);
     var cat = p.category || detectCat(p);
     setVal('f_category', cat);
     setVal('f_is_active', p.is_active ? '1' : '0');
+    setVal('f_is_reward_enabled', p.is_reward_enabled ? '1' : '0');
     syncColor(cat);
 }
 
@@ -305,6 +319,9 @@ async function savePkg() {
     var category = catEl ? catEl.value : 'home';
     var actEl = document.getElementById('f_is_active');
     var is_active = actEl ? actEl.value === '1' : true;
+    var reward_points = parseInt(document.getElementById('f_reward_points')?.value) || 0;
+    var rewEl = document.getElementById('f_is_reward_enabled');
+    var is_reward_enabled = rewEl ? rewEl.value === '1' : true;
 
     if (!name) return showErr('Nama paket wajib diisi');
     if (!speed_down) return showErr('Kecepatan download wajib diisi');
@@ -319,7 +336,7 @@ async function savePkg() {
     try {
         var url = editingId ? API + '/packages/' + editingId : API + '/packages';
         var method = editingId ? 'PUT' : 'POST';
-        var r = await fetch(url, { method: method, headers: authH(), body: JSON.stringify({ name: name, speed_down: speed_down, speed_up: speed_up, price: price, description: description, category: category, is_active: is_active }) });
+        var r = await fetch(url, { method: method, headers: authH(), body: JSON.stringify({ name: name, speed_down: speed_down, speed_up: speed_up, price: price, description: description, category: category, is_active: is_active, reward_points: reward_points, is_reward_enabled: is_reward_enabled }) });
         var j = await r.json();
         if (!j.success) throw new Error(j.message);
         closeModal();

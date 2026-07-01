@@ -63,8 +63,38 @@ router.delete('/:id', async (req, res) => {
 
 // TEST OLT SNMP
 router.post('/:id/test', async (req, res) => {
-    // Mock SNMP Test implementation
-    res.json({ success: true, sysName: 'OLT-Test', sysDescr: 'Mock OLT Device' });
+    try {
+        const [olts] = await db.query('SELECT * FROM olts WHERE id = ?', [req.params.id]);
+        if (olts.length === 0) return res.json({ success: false, error: 'OLT not found' });
+        const olt = olts[0];
+
+        const snmp = require('net-snmp');
+        const session = snmp.createSession(olt.host, olt.community || 'public', {
+            port: olt.snmpPort || 161,
+            timeout: 3000,
+            retries: 1
+        });
+
+        const oids = ['1.3.6.1.2.1.1.1.0', '1.3.6.1.2.1.1.5.0'];
+        session.get(oids, (error, varbinds) => {
+            if (error) {
+                res.json({ success: false, error: error.message });
+            } else {
+                let sysDescr = 'Unknown OLT';
+                let sysName = 'OLT';
+                if (varbinds[0] && !snmp.isVarbindError(varbinds[0])) {
+                    sysDescr = varbinds[0].value.toString();
+                }
+                if (varbinds[1] && !snmp.isVarbindError(varbinds[1])) {
+                    sysName = varbinds[1].value.toString();
+                }
+                res.json({ success: true, sysName, sysDescr });
+            }
+            session.close();
+        });
+    } catch (err) {
+        res.json({ success: false, error: err.message });
+    }
 });
 
 // SYNC ONE OLT

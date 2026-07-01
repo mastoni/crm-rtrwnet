@@ -219,7 +219,7 @@ const OltPage = {
 
     onBrandChange() {
         const brand = document.getElementById('oltBrand').value;
-        const mibMap = { hsgq: 'hsgq', zte: 'zte', huawei: 'zte', fiberhome: 'gpon' };
+        const mibMap = { hsgq: 'hsgq', zte: 'zte', huawei: 'zte', fiberhome: 'gpon', hioso: 'epon' };
         document.getElementById('oltMibMode').value = mibMap[brand] || 'auto';
     },
 

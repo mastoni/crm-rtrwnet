@@ -439,6 +439,37 @@
             color: #fff;
         }
 
+        .pkg-reward-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 8px;
+            padding: 5px 11px;
+            backdrop-filter: blur(4px);
+        }
+
+        .pkg-reward-badge.active {
+            background: #fffdf5;
+            border: 1.5px solid #fde68a;
+        }
+
+        .pkg-reward-badge.active span {
+            color: #d97706 !important;
+            font-size: 12.5px;
+            font-weight: 800;
+        }
+
+        .pkg-reward-badge.inactive {
+            background: rgba(255, 255, 255, .12);
+            border: 1.5px solid rgba(255, 255, 255, .15);
+        }
+
+        .pkg-reward-badge.inactive span {
+            color: rgba(255, 255, 255, .60) !important;
+            font-size: 12.5px;
+            font-weight: 700;
+        }
+
         .pkg-inactive-tag {
             position: absolute;
             top: 12px;
@@ -1118,6 +1149,17 @@
                         <select id="f_is_active" class="finput">
                             <option value="1">Aktif (Tersedia)</option>
                             <option value="0">Non-Aktif (Sembunyikan)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="flbl">Reward Points</label>
+                        <input type="number" id="f_reward_points" class="finput" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="flbl">Status Reward</label>
+                        <select id="f_is_reward_enabled" class="finput">
+                            <option value="1">Reward Aktif</option>
+                            <option value="0">Reward Non-Aktif</option>
                         </select>
                     </div>
                     <div>

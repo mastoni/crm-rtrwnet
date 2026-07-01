@@ -42,6 +42,12 @@ async function loadBillStats() {
     _setBar('fcUnpaidBar', unpaid / total);
     _setBar('fcOverdueBar', overdue / total);
 
+    // Draw sparklines
+    drawSparkline('sp-paid', s.paidTrend);
+    drawSparkline('sp-unpaid', s.unpaidTrend);
+    drawSparkline('sp-overdue', s.overdueTrend);
+    drawSparkline('sp-revenue', s.revenueTrend);
+
     const now = new Date();
     _setText('billHeaderSub',
         `${paid + unpaid + overdue} invoice total · ${overdue} overdue · ${MONTHS[now.getMonth() + 1]} ${now.getFullYear()}`
@@ -131,7 +137,10 @@ async function loadInvoices() {
             '<td><span style="font-family:monospace;font-size:12px;font-weight:700;color:#0d1b3e;">' + _esc(i.invoice_number) + '</span></td>' +
             '<td>' +
             '<div style="font-weight:600;color:#0d1b3e;">' + _esc(i.customer?.name || '–') + '</div>' +
-            '<div style="font-size:11px;color:#94a3b8;font-family:monospace;">' + _esc(i.customer?.customer_id || '') + '</div>' +
+            '<div style="font-size:11px;color:#94a3b8;font-family:monospace;display:flex;align-items:center;gap:6px;margin-top:2px;">' +
+            '<span>' + _esc(i.customer?.customer_id || '') + '</span>' +
+            '<span style="background:#fef3c7;color:#d97706;padding:1px 5px;border-radius:4px;font-size:9.5px;font-weight:bold;">★ ' + (i.customer?.points || 0) + ' pts</span>' +
+            '</div>' +
             '</td>' +
             '<td style="font-weight:700;color:#1a6ef5;font-size:14px;font-family:monospace;">' + fmtAmt + '</td>' +
             '<td><div style="line-height:1.4;">' + dueTxt + '</div></td>' +
@@ -282,3 +291,46 @@ window.bilCardClick = function (el) {
     _billPage = 1;
     loadInvoices();
 };
+
+// ── SPARKLINE GENERATOR ─────────────────────────────────────────
+function drawSparkline(svgId, dataPoints) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+    const fillPath = document.getElementById(svgId + '-fill');
+    const linePath = document.getElementById(svgId + '-line');
+    const dot = document.getElementById(svgId + '-dot');
+    
+    if (!dataPoints || dataPoints.length < 2) {
+        dataPoints = [10, 15, 8, 12, 20, 15, 25];
+    }
+    
+    const width = 72;
+    const height = 36;
+    const min = Math.min(...dataPoints);
+    const max = Math.max(...dataPoints);
+    const range = max - min || 1;
+    
+    const points = dataPoints.map((val, idx) => {
+        const x = (idx / (dataPoints.length - 1)) * width;
+        const y = height - ((val - min) / range) * (height - 6) - 3;
+        return { x, y };
+    });
+    
+    let pathD = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+        pathD += ` L ${points[i].x} ${points[i].y}`;
+    }
+    
+    if (linePath) linePath.setAttribute('d', pathD);
+    
+    if (fillPath) {
+        const fillD = `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+        fillPath.setAttribute('d', fillD);
+    }
+    
+    if (dot) {
+        const lastPoint = points[points.length - 1];
+        dot.setAttribute('cx', lastPoint.x);
+        dot.setAttribute('cy', lastPoint.y);
+    }
+}

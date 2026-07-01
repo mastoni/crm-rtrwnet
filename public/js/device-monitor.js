@@ -132,7 +132,11 @@ async function loadDeviceList() {
 
 // ── Select device ─────────────────────────────────────────────
 function selectDevice(id) {
-    if (!id) return;
+    if (!id) {
+        const act = $('headerDeviceActions');
+        if (act) act.style.display = 'none';
+        return;
+    }
     selectedDeviceId = id;
     localStorage.setItem('dm_device', id);
 
@@ -140,6 +144,9 @@ function selectDevice(id) {
     $('dmEmpty').style.display = 'none';
     $('dmDashboard').style.display = 'block';
     $('dmLive').style.display = 'flex';
+
+    const act = $('headerDeviceActions');
+    if (act) act.style.display = 'inline-flex';
 
     // Destroy old charts
     destroyCharts();
@@ -793,6 +800,8 @@ async function deleteDevice(id, name) {
                 $('dmEmpty').style.display = 'block';
                 $('dmLive').style.display = 'none';
                 destroyCharts();
+                const act = $('headerDeviceActions');
+                if (act) act.style.display = 'none';
             }
             await loadDeviceList();
         } else {

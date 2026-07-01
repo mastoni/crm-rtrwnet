@@ -2196,6 +2196,45 @@
             </div>
         </div>
 
+        <!-- Modal Settings -->
+        <div class="ot-modal-overlay" id="modal-settings">
+            <div class="ot-modal-box settings-modal-box">
+                <div class="ot-modal-hdr">
+                    <div class="modal-hdr-top">
+                        <div class="ot-modal-hdr-l">
+                            <h3>Pengaturan Server</h3>
+                            <p>Konfigurasi koneksi API ke GenieACS</p>
+                        </div>
+                        <div class="ot-modal-hdr-r">
+                            <button class="btn ot-modal-close" onclick="GeniePage.closeModal('modal-settings')" style="display:flex;align-items:center;justify-content:center;padding:8px">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="ot-modal-body">
+                    <div class="settings-form-row">
+                        <label>GenieACS NBI URL</label>
+                        <input type="text" id="cfg-nbi-url" placeholder="http://192.168.99.104:7557">
+                        <small>URL endpoint Northbound API GenieACS.</small>
+                    </div>
+                    <div class="settings-form-row">
+                        <label>Username</label>
+                        <input type="text" id="cfg-username" placeholder="Kosongkan jika tidak ada">
+                    </div>
+                    <div class="settings-form-row">
+                        <label>Password</label>
+                        <input type="password" id="cfg-password" placeholder="Kosongkan jika tidak ada">
+                    </div>
+                    <div id="cfg-test-result" style="display:none;margin-top:10px;"></div>
+                </div>
+                <div class="ot-modal-footer" style="display:flex;justify-content:flex-end;gap:10px">
+                    <button class="btn btn-outline" onclick="GeniePage.testConn()">Test Koneksi</button>
+                    <button class="btn btn-blue" onclick="GeniePage.saveSettings()">Simpan Konfigurasi</button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <%- include('layouts/footer') %>
